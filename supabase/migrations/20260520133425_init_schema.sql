@@ -215,6 +215,7 @@ CREATE TABLE public.waiver_requests (
   agent_remarks TEXT,
   status public.waiver_status_enum NOT NULL DEFAULT 'Pending',
   reviewed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  routed_to UUID[] DEFAULT '{}'::uuid[],
   manager_remarks TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL

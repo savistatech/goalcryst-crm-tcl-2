@@ -14,6 +14,7 @@ import {
   Filter,
   ReceiptText,
   ShieldAlert,
+  Users,
 } from "lucide-react";
 
 interface AgentWaiverTrackerProps {
@@ -127,17 +128,16 @@ export default function AgentWaiverTrackerView({ myWaivers }: AgentWaiverTracker
           <button
             key={s}
             onClick={() => setFilterStatus(s)}
-            className={`h-7 px-3 rounded-full text-[11.5px] font-semibold border transition-all cursor-pointer ${
-              filterStatus === s
+            className={`h-7 px-3 rounded-full text-[11.5px] font-semibold border transition-all cursor-pointer ${filterStatus === s
                 ? s === "All"
                   ? "bg-ink text-surface border-ink"
                   : s === "Pending"
-                  ? "bg-warn-bg text-warn border-warn/30"
-                  : s === "Approved"
-                  ? "bg-good-bg text-good border-good/30"
-                  : "bg-bad-bg text-bad border-bad/30"
+                    ? "bg-warn-bg text-warn border-warn/30"
+                    : s === "Approved"
+                      ? "bg-good-bg text-good border-good/30"
+                      : "bg-bad-bg text-bad border-bad/30"
                 : "bg-surface text-ink-3 border-border-custom hover:bg-bg-warm"
-            }`}
+              }`}
           >
             {s}
             {s !== "All" && (
@@ -225,6 +225,17 @@ export default function AgentWaiverTrackerView({ myWaivers }: AgentWaiverTracker
                         </div>
                       </div>
                     )}
+                    <div className="flex items-start gap-2">
+                      <Users className="w-3.5 h-3.5 text-ink-3 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Requested To</p>
+                        <p className="text-[12.5px] text-ink font-medium leading-snug">
+                          {waiver.routed_to_names && waiver.routed_to_names.length > 0
+                            ? waiver.routed_to_names.join(", ")
+                            : "—"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Manager decision panel */}

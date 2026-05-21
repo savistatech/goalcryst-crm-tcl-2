@@ -175,6 +175,7 @@ export async function raiseWaiverRequest(
   requestedWaiverAmount: number,
   customerPayableAmount: number,
   reason: string,
+  routedTo: string[],
   agentRemarks?: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
@@ -208,6 +209,7 @@ export async function raiseWaiverRequest(
       requested_waiver_amount: requestedWaiverAmount,
       customer_payable_amount: customerPayableAmount,
       reason,
+      routed_to: routedTo,
       agent_remarks: agentRemarks || null,
       status: "Pending"
     });

@@ -258,3 +258,23 @@ export async function getCurrentUserPermissions(): Promise<Record<string, boolea
   const { getUserPermissions } = await import("@/utils/permissions");
   return await getUserPermissions(user.id);
 }
+
+/**
+ * Fetches all active users who can approve waivers to populate the routing multi-select.
+ */
+export async function getSupervisorsForRouting(): Promise<{ id: string; full_name: string; role: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .in("role", ["Branch Manager", "Assistant Manager", "Team Leader"])
+    .eq("is_active", true)
+    .order("role", { ascending: true })
+    .order("full_name", { ascending: true });
+
+  if (error || !data) {
+    console.error("Error fetching supervisors:", error);
+    return [];
+  }
+  return data;
+}

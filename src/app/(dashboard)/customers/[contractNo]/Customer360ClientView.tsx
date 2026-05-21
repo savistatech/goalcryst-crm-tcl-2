@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { type Customer360Data, logCallDisposition, raiseWaiverRequest } from "@/app/actions/customerActions";
+import { getSupervisorsForRouting } from "@/app/actions/userActions";
 import { type PermissionKey } from "@/utils/permissions";
 import {
   Phone,
@@ -56,7 +57,16 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
   const [payableAmount, setPayableAmount] = useState("");
   const [waiverReason, setWaiverReason] = useState("");
   const [waiverRemarks, setWaiverRemarks] = useState("");
+  const [routedTo, setRoutedTo] = useState<string[]>([]);
+  const [supervisors, setSupervisors] = useState<{ id: string; full_name: string; role: string }[]>([]);
   const [waiverSubmitting, setWaiverSubmitting] = useState(false);
+
+  // Fetch supervisors when modal opens
+  useEffect(() => {
+    if (isWaiverOpen && supervisors.length === 0) {
+      getSupervisorsForRouting().then(res => setSupervisors(res));
+    }
+  }, [isWaiverOpen]);
 
   // Start stopwatch on dispo modal open
   useEffect(() => {
@@ -203,6 +213,11 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
       return;
     }
 
+    if (routedTo.length === 0) {
+      alert("Please select at least one supervisor to route this request to.");
+      return;
+    }
+
     setWaiverSubmitting(true);
     try {
       const res = await raiseWaiverRequest(
@@ -210,6 +225,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
         waiverVal,
         Number(payableAmount),
         waiverReason,
+        routedTo,
         waiverRemarks
       );
 
@@ -231,6 +247,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
         setWaiverAmount("");
         setWaiverReason("");
         setWaiverRemarks("");
+        setRoutedTo([]);
       } else {
         alert(res.error);
       }
@@ -1087,6 +1104,36 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                   onChange={(e) => setWaiverRemarks(e.target.value)}
                   className="w-full bg-bg border border-border-custom rounded-lg p-2.5 text-xs text-ink placeholder-ink-3"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Route to Supervisors (Select at least one)</label>
+                <div className="border border-border-custom rounded-lg p-3 bg-bg max-h-40 overflow-y-auto space-y-2">
+                  {supervisors.length === 0 ? (
+                    <div className="text-xs text-ink-3 flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Fetching available supervisors...</div>
+                  ) : (
+                    supervisors.map(sup => (
+                      <label key={sup.id} className="flex items-start gap-2.5 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="mt-0.5 rounded border-border-custom text-accent-custom focus:ring-accent-custom bg-bg-warm"
+                          checked={routedTo.includes(sup.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setRoutedTo(prev => [...prev, sup.id]);
+                            } else {
+                              setRoutedTo(prev => prev.filter(id => id !== sup.id));
+                            }
+                          }}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold text-ink group-hover:text-accent-custom transition-colors">{sup.full_name}</span>
+                          <span className="text-[10px] text-ink-3">{sup.role}</span>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end gap-2.5 pt-2">

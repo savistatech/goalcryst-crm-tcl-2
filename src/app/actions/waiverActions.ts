@@ -14,6 +14,7 @@ export interface PendingWaiver {
   customer_payable_amount: number;
   reason: string;
   agent_remarks: string;
+  routed_to: string[];
   created_at: string;
 }
 
@@ -28,6 +29,8 @@ export interface MyWaiverRequest {
   agent_remarks: string;
   status: "Pending" | "Approved" | "Rejected";
   manager_remarks: string | null;
+  routed_to: string[];
+  routed_to_names: string[];
   created_at: string;
   updated_at: string | null;
 }
@@ -54,6 +57,7 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       agent_remarks,
       status,
       manager_remarks,
+      routed_to,
       created_at,
       updated_at,
       contracts(customer_name)
@@ -66,8 +70,15 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
     return [];
   }
 
+  const { getSupervisorsForRouting } = await import("./userActions");
+  const supervisors = await getSupervisorsForRouting();
+  const supMap = new Map(supervisors.map(s => [s.id, s.full_name]));
+
   return list.map((row: any) => {
     const contracts = row.contracts || {};
+    const routedIds: string[] = row.routed_to || [];
+    const routedNames = routedIds.map(id => supMap.get(id) || "Unknown Manager");
+
     return {
       id: row.id,
       contract_no: row.contract_no,
@@ -79,6 +90,8 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       agent_remarks: row.agent_remarks || "",
       status: row.status as "Pending" | "Approved" | "Rejected",
       manager_remarks: row.manager_remarks || null,
+      routed_to: routedIds,
+      routed_to_names: routedNames,
       created_at: row.created_at,
       updated_at: row.updated_at || null,
     };
@@ -91,7 +104,7 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
 export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
   const supabase = await createClient();
 
-  const { data: list, error } = await supabase
+  let query = supabase
     .from("waiver_requests")
     .select(`
       id,
@@ -101,12 +114,22 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       customer_payable_amount,
       reason,
       agent_remarks,
+      routed_to,
       created_at,
       contracts(customer_name),
       agent_profile:profiles!waiver_requests_agent_id_fkey(full_name)
     `)
-    .eq("status", "Pending")
-    .order("created_at", { ascending: true });
+    .eq("status", "Pending");
+
+  const user = await getActiveUser();
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (profile && profile.role !== "Admin") {
+      query = query.contains("routed_to", [user.id]);
+    }
+  }
+
+  const { data: list, error } = await query.order("created_at", { ascending: true });
 
   if (error || !list) {
     console.error("Error fetching pending waivers:", error);
@@ -126,6 +149,7 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       customer_payable_amount: Number(row.customer_payable_amount || 0),
       reason: row.reason,
       agent_remarks: row.agent_remarks || "",
+      routed_to: row.routed_to || [],
       created_at: row.created_at
     };
   });
