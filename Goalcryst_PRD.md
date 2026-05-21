@@ -56,7 +56,7 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 
 ## 4. User Roles
 
-### Admin
+### Admin (Global Access)
 
 * Manage users
 * Manage roles and permissions
@@ -65,15 +65,29 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 * Configure statuses and dispositions
 * View audit logs
 
-### Manager / Team Lead
+### Branch Manager (Branch Operations)
+
+* Full operations control at the branch level
+* View regional reports and dashboards
+* Review and approve waiver requests
+* View all team activity
+
+### Assistant Manager (Operations)
 
 * Search and view customer records
-* View reports and dashboards
-* Review waiver requests
-* Approve/reject waiver requests if permission is given
+* View operational reports and dashboards
+* Review and approve waiver requests
 * View agent activity
+* Export reports (if permitted)
 
-### Agent
+### Team Leader (Team Management)
+
+* Search and view customer records
+* View team reports and dashboards
+* Review and approve waiver requests
+* Monitor direct report agent activity
+
+### Agent (Dedicated Recovery)
 
 * Search customer by phone number or contract number
 * View permitted Customer 360 fields
@@ -81,11 +95,7 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 * Add notes
 * Add follow-up date
 * Raise waiver request
-
-### Auditor / Viewer
-
-* View selected records and reports
-* No edit access unless permitted
+* Export reports (if permitted)
 
 ---
 
@@ -234,13 +244,13 @@ Agents should be able to raise waiver requests when customers ask for discount/s
 * Status: Pending / Approved / Rejected
 * Requested by
 * Approved/rejected by
-* Manager remarks
+* Supervisor remarks
 * Created date
 * Updated date
 
 ### Waiver Workflow
 
-Agent raises waiver request → Manager/Head reviews → Approve or Reject → Status updated in CRM
+Agent raises waiver request → Supervisor (Team Leader, AM, BM, or Admin) reviews → Approve or Reject → Status updated in CRM
 
 ---
 
@@ -285,15 +295,20 @@ The system should provide simple operational reports.
 * Waiver request report
 * Approved/rejected waiver report
 
-### Dashboard Metrics
+### Dashboard Metrics (12-Card Grid)
 
-* Total contracts
-* Total searched customers
-* Total dispositions today
-* Follow-ups due today
-* Pending waiver requests
-* Approved waivers
-* Rejected waivers
+* Total Contracts
+* Active Contracts
+* Active Users
+* Upload Batches
+* Total Dispositions
+* Contactable
+* Non-Contactable
+* Promise to Pay (PTP)
+* Agree to Pay
+* Part Paid
+* Broken PTP
+* Pending Waiver Requests
 
 ---
 
@@ -367,8 +382,7 @@ The system should maintain audit logs for important actions.
 
 ## 9. Open Questions
 
-* Who can approve waiver requests: Team Lead, Manager, or Head?
-* Is there one-level approval or multi-level approval?
+* Is there one-level approval or multi-level approval for waivers?
 * What exact Excel columns are mandatory?
 * Should agents see full phone numbers or masked numbers?
 * Should reports be exportable to Excel/PDF?

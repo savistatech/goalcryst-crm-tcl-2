@@ -55,22 +55,28 @@ export async function getActiveUser() {
         email: "admin@goalcryst.com"
       };
     }
-    if (email.includes("manager@goalcryst.com")) {
+    if (email.includes("bm@goalcryst.com")) {
       return {
         id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
-        email: "manager@goalcryst.com"
+        email: "bm@goalcryst.com"
+      };
+    }
+    if (email.includes("am@goalcryst.com")) {
+      return {
+        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15",
+        email: "am@goalcryst.com"
+      };
+    }
+    if (email.includes("tl@goalcryst.com")) {
+      return {
+        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16",
+        email: "tl@goalcryst.com"
       };
     }
     if (email.includes("agent@goalcryst.com")) {
       return {
         id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13",
         email: "agent@goalcryst.com"
-      };
-    }
-    if (email.includes("auditor@goalcryst.com")) {
-      return {
-        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14",
-        email: "auditor@goalcryst.com"
       };
     }
   }
