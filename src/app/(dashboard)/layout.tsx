@@ -206,11 +206,12 @@ export default function DashboardLayout({
       <aside className="w-60 flex-shrink-0 flex flex-col bg-bg-warm border-r border-border-custom">
         {/* Brand */}
         <div className="px-6 py-7 flex flex-col select-none">
-          <div className="flex items-baseline gap-1.5">
+          <img src="/logo.png" alt="GoalCryst Logo" className="h-16 w-auto object-contain mb-2 self-start" />
+          {/* <div className="flex items-baseline gap-1.5">
             <span className="text-3xl font-semibold tracking-tight text-ink font-serif">GoalCryst</span>
             <span className="w-1.5 h-1.5 rounded-full bg-accent-custom" />
-          </div>
-          <span className="text-[10px] uppercase tracking-[0.18em] text-ink-3 font-medium mt-0.5">Recovery CRM</span>
+          </div> */}
+          {/* <span className="text-[10px] uppercase tracking-[0.18em] text-ink-3 font-medium mt-0.5">Recovery CRM</span> */}
         </div>
 
         {/* Navigation */}
@@ -231,8 +232,8 @@ export default function DashboardLayout({
                       key={item.path}
                       href={item.path}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] transition-all ${isActive
-                          ? "bg-surface text-ink font-semibold border-l-2 border-accent-custom shadow-sm"
-                          : "text-ink-2 hover:bg-surface/50 hover:text-ink"
+                        ? "bg-surface text-ink font-semibold border-l-2 border-accent-custom shadow-sm"
+                        : "text-ink-2 hover:bg-surface/50 hover:text-ink"
                         }`}
                     >
                       <Icon className={`w-4 h-4 ${isActive ? "text-accent-custom" : "text-ink-3"}`} />

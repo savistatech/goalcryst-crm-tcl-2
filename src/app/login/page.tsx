@@ -44,7 +44,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md space-y-6">
         {/* Brand header */}
-        <div className="text-center select-none">
+        <div className="text-center select-none flex flex-col items-center">
+          <img src="/logo.png" alt="GoalCryst Logo" className="h-12 w-auto object-contain mb-3" />
           <div className="inline-flex items-baseline gap-1.5 justify-center">
             <span className="text-4xl font-semibold tracking-tight text-ink font-serif">GoalCryst</span>
             <span className="w-2 h-2 rounded-full bg-accent-custom" />

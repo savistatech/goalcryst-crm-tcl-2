@@ -847,7 +847,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
             {/* Stopwatch widget in modal */}
             <div className="flex justify-between items-center pb-2 border-b border-border-custom">
               <div>
-                <h3 className="text-base font-semibold text-ink">Log Calling Outcome attempt</h3>
+                <h3 className="text-base font-semibold text-ink">Add Disposition</h3>
                 <span className="text-xs text-ink-3">Customer Target: {data.contract.customer_name}</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-soft text-accent-ink font-mono font-bold text-xs">
@@ -1016,7 +1016,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                   className="h-9 px-4 bg-ink hover:bg-black text-surface text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
                 >
                   {dispoSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Call Outcome</span>
+                  <span>Save Disposition</span>
                 </button>
               </div>
             </form>
