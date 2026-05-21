@@ -4,26 +4,26 @@ import React from "react";
 import Link from "next/link";
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   BarChart,
-  Bar,
-  Cell
+  Bar
 } from "recharts";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   PhoneForwarded,
   Upload,
-  UserSquare2,
-  CheckCircle,
   CalendarDays,
-  FileSpreadsheet,
-  Coins
+  Coins,
+  Database,
+  Users,
+  Activity,
+  Phone
 } from "lucide-react";
 import { type DashboardMetrics } from "@/app/actions/dashboardActions";
 
@@ -32,47 +32,6 @@ interface DashboardProps {
 }
 
 export default function DashboardClientView({ metrics }: DashboardProps) {
-  
-  // Custom formatters for Indian Currency limits representation
-  const formatExposure = (val: number) => {
-    if (val >= 10000000) {
-      return `₹${(val / 10000000).toFixed(2)} Cr`;
-    }
-    if (val >= 100000) {
-      return `₹${(val / 100000).toFixed(1)} L`;
-    }
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0
-    }).format(val);
-  };
-
-  const formatMoneyShort = (val: number) => {
-    if (val >= 100000) {
-      return `₹${(val / 100000).toFixed(1)} L`;
-    }
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0
-    }).format(val);
-  };
-
-  // Dynamically map monthly trend chart, putting active MTD values at the last coordinate
-  const activeMonthStr = new Date().toLocaleString("default", { month: "short" });
-  const RECOVERY_TREND_DATA = [
-    { month: "Dec", recovered: 18.2, target: 25.0 },
-    { month: "Jan", recovered: 22.4, target: 25.0 },
-    { month: "Feb", recovered: 29.8, target: 30.0 },
-    { month: "Mar", recovered: 35.1, target: 35.0 },
-    { month: "Apr", recovered: 32.7, target: 35.0 },
-    { month: activeMonthStr, recovered: Number((metrics.recoveredMtd / 100000).toFixed(1)), target: Number((metrics.recoveredTarget / 100000).toFixed(1)) }
-  ];
-
-  const mtdPercent = metrics.recoveredTarget > 0 
-    ? Math.round((metrics.recoveredMtd / metrics.recoveredTarget) * 100) 
-    : 0;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -109,167 +68,208 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
         </div>
       </div>
 
-      {/* ===== 4 KPI METRICS METALLIC CARDS GRID ===== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1 */}
-        <div className="bg-surface border border-border-custom rounded-2xl p-5 shadow-sm">
+      {/* ===== 12 COMPACT KPI METRICS CARDS (6x2 GRID) ===== */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Row 1 */}
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Active Exposure</span>
-            <span className="flex items-center text-xs font-semibold text-good">
-              <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-              <span>Stable</span>
-            </span>
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Total Contracts</span>
+            <Database className="w-3.5 h-3.5 text-ink-3" />
           </div>
-          <div className="text-3xl font-bold tracking-tight text-ink mt-2 font-mono">
-            {formatExposure(metrics.activeOutstanding)}
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.totalContracts}
           </div>
-          <p className="text-[11.5px] text-ink-2 mt-2 truncate">
-            across {metrics.contractCount} contracts · {metrics.productCount} products
-          </p>
         </div>
 
-        {/* Card 2 */}
-        <div className="bg-surface border border-border-custom rounded-2xl p-5 shadow-sm">
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Recovered MTD</span>
-            <span className="flex items-center text-xs font-semibold text-good">
-              <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-              <span>{mtdPercent}%</span>
-            </span>
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Active Contracts</span>
+            <Database className="w-3.5 h-3.5 text-ink-3" />
           </div>
-          <div className="text-3xl font-bold tracking-tight text-accent-custom mt-2 font-mono">
-            {formatMoneyShort(metrics.recoveredMtd)}
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.activeContracts}
           </div>
-          <p className="text-[11.5px] text-ink-2 mt-2 truncate">
-            Target {formatMoneyShort(metrics.recoveredTarget)} · {mtdPercent}% achieved
-          </p>
         </div>
 
-        {/* Card 3 */}
-        <div className="bg-surface border border-border-custom rounded-2xl p-5 shadow-sm">
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">PTP Value Pending</span>
-            <span className="flex items-center text-xs font-semibold text-good">
-              <ArrowUpRight className="w-3.5 h-3.5 mr-0.5 animate-pulse" />
-              <span>Active</span>
-            </span>
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Total Users</span>
+            <Users className="w-3.5 h-3.5 text-ink-3" />
           </div>
-          <div className="text-3xl font-bold tracking-tight text-ink mt-2 font-mono">
-            {formatMoneyShort(metrics.ptpPendingValue)}
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.totalUsers}
           </div>
-          <p className="text-[11.5px] text-ink-2 mt-2 truncate">
-            {metrics.ptpCount} commitment promises active
-          </p>
         </div>
 
-        {/* Card 4 */}
-        <div className="bg-surface border border-border-custom rounded-2xl p-5 shadow-sm">
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Call Contactability</span>
-            <span className="flex items-center text-xs font-semibold text-good">
-              <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-              <span>Ready</span>
-            </span>
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Upload Batches</span>
+            <Upload className="w-3.5 h-3.5 text-ink-3" />
           </div>
-          <div className="text-3xl font-bold tracking-tight text-ink mt-2 font-mono">
-            {metrics.contactabilityRate}%
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.totalBatches}
           </div>
-          <p className="text-[11.5px] text-ink-2 mt-2 truncate">
-            {metrics.connectedCallsLogged} connected / {metrics.totalCallsLogged} logged attempts
-          </p>
+        </div>
+
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Total Dispositions</span>
+            <Activity className="w-3.5 h-3.5 text-accent-custom" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-accent-custom mt-3 font-mono">
+            {metrics.totalDispositions}
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Call Backs</span>
+            <PhoneForwarded className="w-3.5 h-3.5 text-ink-3" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.callbackDispositions}
+          </div>
+        </div>
+
+        {/* Row 2 */}
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Contactable</span>
+            <Phone className="w-3.5 h-3.5 text-ink-3" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.contactableDispositions}
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Non-Contactable</span>
+            <Phone className="w-3.5 h-3.5 text-ink-3 opacity-50" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-ink-2 mt-3 font-mono">
+            {metrics.nonContactableDispositions}
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Promise to Pay</span>
+            <CalendarDays className="w-3.5 h-3.5 text-ink-3" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.ptpDispositions}
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-bad font-semibold">Broken PTP</span>
+            <CalendarDays className="w-3.5 h-3.5 text-bad" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-bad mt-3 font-mono">
+            {metrics.brokenPtpDispositions}
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Agree to Pay</span>
+            <Coins className="w-3.5 h-3.5 text-good" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-good mt-3 font-mono">
+            {metrics.agreeToPayDispositions}
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border-custom rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:bg-bg-warm/30 transition-colors">
+          <div className="flex justify-between items-start">
+            <span className="text-[9.5px] uppercase tracking-wider text-ink-3 font-semibold">Part Paid</span>
+            <Coins className="w-3.5 h-3.5 text-ink-3" />
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-ink mt-3 font-mono">
+            {metrics.partPaidDispositions}
+          </div>
         </div>
       </div>
 
       {/* ===== RECHARTS DYNAMIC CHARTS SEGMENT ===== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Recovery trend line chart */}
-        <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm lg:col-span-2">
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Recovery vs Target</span>
-              <h3 className="text-lg font-semibold tracking-tight text-ink mt-0.5">Last 6 Months Trend</h3>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-ink-2 font-medium select-none">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-accent-custom" />
-                <span>Recovered (Lakhs)</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-0.5 border-t border-dashed border-ink-3" />
-                <span>Target</span>
-              </span>
-            </div>
+        {/* Disposition Outcomes Doughnut Chart */}
+        <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm lg:col-span-2 flex flex-col justify-between">
+          <div>
+            <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Call Outcomes Distribution</span>
+            <h3 className="text-lg font-semibold tracking-tight text-ink mt-0.5">Disposition Breakdown</h3>
           </div>
 
-          <div className="h-64 w-full select-none">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={RECOVERY_TREND_DATA} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EAE3D5" vertical={false} />
-                <XAxis dataKey="month" stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#FFFFFF", borderColor: "#EAE3D5", borderRadius: "8px" }}
-                  labelStyle={{ fontWeight: "bold", color: "#1A1714", fontSize: "12px" }}
-                  itemStyle={{ fontSize: "12px", padding: "2px 0" }}
-                  formatter={(value: any) => [`₹${value} L`, ""]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="recovered"
-                  stroke="#B8431F"
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: "#B8431F" }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="target"
-                  stroke="#9A9285"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="h-64 w-full select-none flex items-center justify-center">
+            {metrics.dispositionOutcomes.length === 0 ? (
+              <div className="text-sm text-ink-3 text-center">No dispositions logged yet.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={metrics.dispositionOutcomes}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={105}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {metrics.dispositionOutcomes.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: "var(--surface)", borderColor: "var(--border-custom)", borderRadius: "8px" }}
+                    itemStyle={{ fontSize: "12px", color: "var(--ink)", fontWeight: 600 }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36} 
+                    iconType="circle" 
+                    wrapperStyle={{ fontSize: '11.5px', paddingTop: '15px' }} 
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
-        {/* Bucket aging bar chart */}
+        {/* PTP Analysis chart */}
         <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Portfolio by Bucket</span>
-            <h3 className="text-lg font-semibold tracking-tight text-ink mt-0.5">Aging Snapshot</h3>
+            <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Collection Momentum</span>
+            <h3 className="text-lg font-semibold tracking-tight text-ink mt-0.5">PTP Analysis — Last 4 Weeks</h3>
           </div>
 
           <div className="h-44 w-full my-4 select-none">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={metrics.bucketDist} margin={{ top: 5, right: 0, left: -25, bottom: 5 }}>
+              <BarChart data={metrics.ptpAnalysis} margin={{ top: 5, right: 0, left: -25, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EAE3D5" vertical={false} />
-                <XAxis dataKey="name" stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}L`} />
+                <XAxis dataKey="week" stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#FFFFFF", borderColor: "#EAE3D5", borderRadius: "8px" }}
+                  contentStyle={{ backgroundColor: "var(--surface)", borderColor: "var(--border-custom)", borderRadius: "8px" }}
                   itemStyle={{ fontSize: "12px" }}
-                  formatter={(value: any, name: any, props: any) => [`₹${value} L (${props.payload.count} cases)`, "Outstanding"]}
                 />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={30}>
-                  {metrics.bucketDist.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} opacity={0.8} />
-                  ))}
-                </Bar>
+                <Bar dataKey="ptpCount" name="PTP Commitments" fill="#1C5732" radius={[4, 4, 0, 0]} maxBarSize={20} opacity={0.85} />
+                <Bar dataKey="contactable" name="Connected Calls" fill="#9A9285" radius={[4, 4, 0, 0]} maxBarSize={20} opacity={0.6} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Aging legend details list */}
-          <div className="grid grid-cols-3 gap-2 text-[10.5px] select-none">
-            {metrics.bucketDist.map((b) => (
-              <div key={b.name} className="flex items-center gap-1.5 border border-border-custom px-2 py-1 rounded bg-bg-warm/30">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: b.color }} />
-                <span className="font-semibold text-ink">{b.name}</span>
-                <span className="text-ink-3">({b.count})</span>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-3 text-[11px]">
+            <div className="flex items-center gap-2 border border-border-custom px-2.5 py-1.5 rounded-lg bg-bg-warm/30">
+              <span className="w-2 h-2 rounded-sm bg-[#1C5732]" />
+              <span className="text-ink-2">PTP commitments: <strong className="text-ink">{metrics.ptpAnalysis.reduce((a, w) => a + w.ptpCount, 0)}</strong></span>
+            </div>
+            <div className="flex items-center gap-2 border border-border-custom px-2.5 py-1.5 rounded-lg bg-bg-warm/30">
+              <span className="w-2 h-2 rounded-sm bg-[#9A9285]" />
+              <span className="text-ink-2">Connected calls: <strong className="text-ink">{metrics.ptpAnalysis.reduce((a, w) => a + w.contactable, 0)}</strong></span>
+            </div>
           </div>
         </div>
       </div>

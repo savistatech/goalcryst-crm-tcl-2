@@ -7,7 +7,6 @@ export interface SearchResult {
   customer_name: string;
   product: string;
   branch: string;
-  bucket: number;
   bom_dpd: number;
 }
 
@@ -29,7 +28,6 @@ export async function searchContracts(query: string): Promise<SearchResult[]> {
       customer_name,
       product,
       branch,
-      bucket,
       bom_dpd
     `)
     .or(`contract_no.ilike.%${cleanQuery}%,customer_name.ilike.%${cleanQuery}%`);
@@ -48,7 +46,6 @@ export async function searchContracts(query: string): Promise<SearchResult[]> {
         customer_name,
         product,
         branch,
-        bucket,
         bom_dpd
       )
     `)

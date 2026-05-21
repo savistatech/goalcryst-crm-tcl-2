@@ -14,8 +14,6 @@ export interface ImportRow {
   region: string;
   bom_dpd: number;
   mob?: number;
-  bucket: number;
-  bom_bucket: number;
   secured_product_flag?: string;
   product_detail?: string;
   allocation_category?: string;
@@ -174,8 +172,6 @@ export async function commitImportBatch(
         allocation_category: row.allocation_category || "LOS",
         bom_dpd: Number(row.bom_dpd || 0),
         mob: Number(row.mob || 0),
-        bucket: Number(row.bucket || 0),
-        bom_bucket: Number(row.bom_bucket || 0),
         secured_product_flag: row.secured_product_flag || "LOS",
         product_detail: row.product_detail || row.product || "LAP",
         allocation_dpd_category: row.allocation_dpd_category || "LOS",

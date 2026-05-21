@@ -57,8 +57,6 @@ CREATE TABLE public.contracts (
   allocation_category TEXT,
   bom_dpd INT NOT NULL DEFAULT 0,
   mob INT NOT NULL DEFAULT 0,
-  bucket INT NOT NULL DEFAULT 0,
-  bom_bucket INT NOT NULL DEFAULT 0,
   secured_product_flag TEXT,
   product_detail TEXT,
   allocation_dpd_category TEXT,
@@ -235,7 +233,6 @@ CREATE TABLE public.audit_logs (
 
 -- Create highly performant indices on commonly searched fields
 CREATE INDEX idx_contracts_customer_name ON public.contracts(customer_name);
-CREATE INDEX idx_contracts_bucket ON public.contracts(bucket);
 CREATE INDEX idx_contracts_allocated_to ON public.contracts(allocated_to);
 CREATE INDEX idx_dispositions_contract_no ON public.dispositions(contract_no);
 CREATE INDEX idx_dispositions_created_at ON public.dispositions(created_at);

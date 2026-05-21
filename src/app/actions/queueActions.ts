@@ -8,7 +8,6 @@ export interface QueueItem {
   product: string;
   branch: string;
   bom_dpd: number;
-  bucket: number;
   total_outstanding: number;
   primary_mobile: string;
   last_call_date: string | null;
@@ -54,7 +53,6 @@ export async function getCallingQueue(): Promise<QueueSummary> {
       product,
       branch,
       bom_dpd,
-      bucket,
       allocated_to,
       contract_contacts(primary_mobile, mobile_1),
       contract_financials(total_outstanding),
@@ -97,7 +95,6 @@ export async function getCallingQueue(): Promise<QueueSummary> {
       product: row.product,
       branch: row.branch,
       bom_dpd: Number(row.bom_dpd || 0),
-      bucket: Number(row.bucket || 0),
       total_outstanding,
       primary_mobile,
       last_call_date,
@@ -105,9 +102,8 @@ export async function getCallingQueue(): Promise<QueueSummary> {
     };
   });
 
-  // Prioritization Algorithm: Sort by Bucket DESC, DPD DESC, last call oldest/never first
+  // Prioritization: Sort by BOM DPD DESC (highest overdue first), then oldest/never contacted
   items.sort((a, b) => {
-    if (b.bucket !== a.bucket) return b.bucket - a.bucket;
     if (b.bom_dpd !== a.bom_dpd) return b.bom_dpd - a.bom_dpd;
     
     // Sort never contacted first

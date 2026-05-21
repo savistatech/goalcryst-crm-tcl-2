@@ -39,9 +39,7 @@ const TARGET_FIELDS: FieldDefinition[] = [
   { key: "area", label: "Allocated Area", required: false, type: "string", aliases: ["area", "customer area"] },
   { key: "region", label: "Region", required: false, type: "string", aliases: ["region", "customer region"] },
   { key: "bom_dpd", label: "BOM DPD Days", required: false, type: "number", aliases: ["bom_dpd", "dpd", "overdue days", "dpd days"] },
-  { key: "bucket", label: "Current Bucket", required: false, type: "number", aliases: ["bucket", "current_bucket", "bom_bucket", "current bucket"] },
-  { key: "bom_bucket", label: "BOM Bucket", required: false, type: "number", aliases: ["bom_bucket", "bucket_bom"] },
-  
+
   // Contacts
   { key: "mobile_1", label: "Primary Phone (Mobile 1)", required: false, type: "string", aliases: ["mobile_1", "mobile 1", "phone", "phone 1", "mobile", "primary_mobile"] },
   { key: "mobile_no", label: "Alternate Phone (Mobile 2)", required: false, type: "string", aliases: ["mobile_no", "mobile 2", "mobile_no", "phone 2", "phone_no"] },

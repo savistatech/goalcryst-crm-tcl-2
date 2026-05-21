@@ -19,7 +19,6 @@ export async function getReportData(reportType: string): Promise<any[]> {
           branch,
           state,
           bom_dpd,
-          bucket,
           contract_financials(total_outstanding)
         `);
       return (data || []).map((row: any) => ({
@@ -29,7 +28,6 @@ export async function getReportData(reportType: string): Promise<any[]> {
         "Branch": row.branch,
         "State": row.state,
         "BOM DPD": row.bom_dpd,
-        "Bucket": `B${row.bucket}`,
         "Total Outstanding": Number(row.contract_financials?.total_outstanding || 0)
       }));
     }

@@ -78,7 +78,7 @@ VALUES ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20', 'Inputs for CRM Creation.xlsx', 
 -- 3. Insert customer contracts (16 Account & Allocation fields)
 INSERT INTO public.contracts (
   contract_no, customer_name, product, branch, state, area, region, 
-  secured_category, allocation_category, bom_dpd, mob, bucket, bom_bucket, 
+  secured_category, allocation_category, bom_dpd, mob,
   secured_product_flag, product_detail, allocation_dpd_category, allocated_to, batch_id
 ) VALUES
 (
@@ -93,8 +93,6 @@ INSERT INTO public.contracts (
   'LOS', 
   143, 
   115, 
-  5, 
-  5, 
   'LOS', 
   'LAP', 
   'LOS',
@@ -113,8 +111,6 @@ INSERT INTO public.contracts (
   'LOS', 
   78, 
   45, 
-  3, 
-  3, 
   'LOS', 
   'AUTO', 
   'LOS',
@@ -133,8 +129,6 @@ INSERT INTO public.contracts (
   'LOS', 
   110, 
   88, 
-  4, 
-  4, 
   'LOS', 
   'LAP', 
   'LOS',

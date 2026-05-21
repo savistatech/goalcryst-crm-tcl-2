@@ -37,7 +37,7 @@ export default function ReportsPage() {
       name: "Portfolio Allocation Summary",
       category: "operations",
       desc: "Aggregated outstanding summaries, contract assignments, product codes, and locations.",
-      columns: ["Contract No", "Customer Name", "Product", "Branch", "State", "BOM DPD", "Bucket", "Total Outstanding"],
+      columns: ["Contract No", "Customer Name", "Product", "Branch", "State", "BOM DPD", "Total Outstanding"],
       icon: TrendingUp
     },
     {
@@ -95,14 +95,6 @@ export default function ReportsPage() {
       desc: "Calculations of daily logged attempt frequencies, call times, and contact connection rates.",
       columns: ["Agent Name", "Total Allocations", "Calls Logged", "Connected Rate", "PTP Promises"],
       icon: BookOpen
-    },
-    {
-      id: "bucket_aging",
-      name: "Bucket DPD Aging Distribution Report",
-      category: "operations",
-      desc: "Overview comparing contract frequencies and totals outstanding grouped strictly by aging buckets B0 to B5.",
-      columns: ["Bucket DPD", "Cases Count", "Total Outstanding", "Average BOM DPD"],
-      icon: FileSpreadsheet
     },
     {
       id: "branch_performance",

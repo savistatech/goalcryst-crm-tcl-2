@@ -4,19 +4,27 @@ import { createClient, getActiveUser } from "@/utils/supabase/server";
 
 
 export interface DashboardMetrics {
-  activeOutstanding: number;
-  contractCount: number;
-  productCount: number;
-  recoveredMtd: number;
-  recoveredTarget: number;
-  ptpPendingValue: number;
-  ptpCount: number;
-  contactabilityRate: number;
-  totalCallsLogged: number;
-  connectedCallsLogged: number;
+  // Row 1: System
+  totalContracts: number;
+  activeContracts: number;
+  totalUsers: number;
+  totalBatches: number;
   
-  // Real charts lists
-  bucketDist: { name: string; count: number; value: number; color: string; desc: string }[];
+  // Row 2: Dispositions
+  totalDispositions: number;
+  contactableDispositions: number;
+  nonContactableDispositions: number;
+  ptpDispositions: number;
+  
+  // Row 3: Payments & Follow-ups
+  agreeToPayDispositions: number;
+  partPaidDispositions: number;
+  brokenPtpDispositions: number;
+  callbackDispositions: number;
+
+  // Charts data
+  dispositionOutcomes: { name: string; value: number; fill: string }[];
+  ptpAnalysis: { week: string; ptpCount: number; ptpValue: number; contactable: number }[];
   leaderboard: { rank: string; name: string; team: string; calls: number; ptp: string; achieved: string }[];
   recentCalls: { agent: string; customer: string; dispo: string; amt: string | null; date: string; time: string; type: string }[];
 }
@@ -27,90 +35,77 @@ export interface DashboardMetrics {
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const supabase = await createClient();
 
-  // 1. Fetch Outstanding and Portfolios details
-  const { data: financials } = await supabase
-    .from("contract_financials")
-    .select("total_outstanding");
+  // 1. Fetch System Data (Contracts, Users, Batches)
+  const [{ count: totalContracts }, { count: totalUsers }, { count: totalBatches }] = await Promise.all([
+    supabase.from("contracts").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("import_batches").select("*", { count: "exact", head: true })
+  ]);
 
-  const totalOutstanding = (financials || []).reduce((acc, row) => acc + Number(row.total_outstanding || 0), 0);
-
-  const { data: contractsList } = await supabase
-    .from("contracts")
-    .select("contract_no, product, bucket");
-
-  const contractCount = contractsList?.length || 0;
-  const uniqueProducts = new Set((contractsList || []).map(c => c.product));
-  const productCount = uniqueProducts.size;
-
-  // 2. Fetch MTD Recoveries (From Part Paid dispo logs in current month)
-  const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  
-  const { data: mtdPaid } = await supabase
+  // 2. Fetch Disposition Analytics & Payments
+  const { data: allDispos } = await supabase
     .from("dispositions")
-    .select("paid_amount")
-    .eq("sub_disposition", "Part Paid")
-    .gte("created_at", firstDayOfMonth);
+    .select("main_disposition, sub_disposition");
 
-  const recoveredMtd = (mtdPaid || []).reduce((acc, row) => acc + Number(row.paid_amount || 0), 0);
-  const recoveredTarget = 4000000; // Mock target limit (40 Lakhs)
+  const dispoList = allDispos || [];
+  const totalDispositions = dispoList.length;
+  let contactableDispositions = 0;
+  let nonContactableDispositions = 0;
+  let ptpDispositions = 0;
+  let agreeToPayDispositions = 0;
+  let partPaidDispositions = 0;
+  let brokenPtpDispositions = 0;
+  let callbackDispositions = 0;
 
-  // 3. Fetch PTP value pending (Future ptp commitments)
-  const todayStr = now.toISOString().split("T")[0];
-  const { data: ptpList } = await supabase
-    .from("dispositions")
-    .select("ptp_amount")
-    .eq("sub_disposition", "Promise to Pay")
-    .gte("ptp_date", todayStr);
-
-  const ptpPendingValue = (ptpList || []).reduce((acc, row) => acc + Number(row.ptp_amount || 0), 0);
-  const ptpCount = ptpList?.length || 0;
-
-  // 4. Fetch Contactability (Connected calls / total calls)
-  const { data: attempts } = await supabase
-    .from("dispositions")
-    .select("main_disposition");
-
-  const totalCallsLogged = attempts?.length || 0;
-  const connectedCallsLogged = (attempts || []).filter(c => c.main_disposition === "Contactable").length;
-  const contactabilityRate = totalCallsLogged > 0 ? Math.round((connectedCallsLogged / totalCallsLogged) * 100) : 0;
-
-  // 5. Query Real Bucket distributions B0 to B5
-  const bucketsMap: Record<number, { count: number; value: number; color: string; desc: string }> = {
-    0: { count: 0, value: 0, color: "#1C5732", desc: "0-30 DPD" },
-    1: { count: 0, value: 0, color: "#5C6918", desc: "31-60 DPD" },
-    2: { count: 0, value: 0, color: "#7E6212", desc: "61-90 DPD" },
-    3: { count: 0, value: 0, color: "#864214", desc: "91-120 DPD" },
-    4: { count: 0, value: 0, color: "#922F18", desc: "121-150 DPD" },
-    5: { count: 0, value: 0, color: "#7E1E12", desc: "151+ DPD" }
-  };
-
-  // Sum outstanding per bucket
-  if (contractsList && contractsList.length > 0) {
-    const { data: fins } = await supabase.from("contract_financials").select("contract_no, total_outstanding");
-    const finsMap = new Map((fins || []).map(f => [f.contract_no, Number(f.total_outstanding || 0)]));
-
-    contractsList.forEach(c => {
-      const bKey = c.bucket >= 5 ? 5 : c.bucket;
-      const val = finsMap.get(c.contract_no) || 0;
-      if (bucketsMap[bKey]) {
-        bucketsMap[bKey].count++;
-        bucketsMap[bKey].value += val;
-      }
-    });
-  }
-
-  const bucketDist = Object.keys(bucketsMap).map(k => {
-    const key = Number(k);
-    return {
-      name: `B${key}`,
-      count: bucketsMap[key].count,
-      // Represent in Lakhs for chart visualization ease
-      value: Number((bucketsMap[key].value / 100000).toFixed(2)),
-      color: bucketsMap[key].color,
-      desc: bucketsMap[key].desc
-    };
+  dispoList.forEach(d => {
+    if (d.main_disposition === "Contactable") contactableDispositions++;
+    if (d.main_disposition === "Non-Contactable") nonContactableDispositions++;
+    if (d.sub_disposition === "Promise to Pay") ptpDispositions++;
+    if (d.sub_disposition === "Agree to Pay") agreeToPayDispositions++;
+    if (d.sub_disposition === "Part Paid") partPaidDispositions++;
+    if (d.sub_disposition === "Broken PTP") brokenPtpDispositions++;
+    if (d.sub_disposition === "Call Back" || d.sub_disposition === "Callback Scheduled") callbackDispositions++;
   });
+
+  // Doughnut Chart Data
+  const dispositionOutcomes = [
+    { name: "Contactable", value: contactableDispositions, fill: "#1C5732" },
+    { name: "Non-Contactable", value: nonContactableDispositions, fill: "#9A9285" },
+    { name: "Promise to Pay", value: ptpDispositions, fill: "#B8431F" },
+    { name: "Agree to Pay", value: agreeToPayDispositions, fill: "#EAE3D5" },
+    { name: "Part Paid", value: partPaidDispositions, fill: "#5C6918" }
+  ].filter(item => item.value > 0); // Only show segments with data
+
+
+  // 5. PTP Analysis — weekly PTP count, value, and contactability for last 4 weeks
+  const fourWeeksAgo = new Date();
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+  const { data: ptpRaw } = await supabase
+    .from("dispositions")
+    .select("sub_disposition, main_disposition, ptp_amount, created_at")
+    .gte("created_at", fourWeeksAgo.toISOString());
+
+  // Group by ISO week (week number within the last 4 weeks)
+  const weekMap = new Map<string, { ptpCount: number; ptpValue: number; contactable: number }>();
+  const weekLabels = ["Week 1", "Week 2", "Week 3", "Week 4"];
+  weekLabels.forEach(w => weekMap.set(w, { ptpCount: 0, ptpValue: 0, contactable: 0 }));
+
+  (ptpRaw || []).forEach(row => {
+    const daysAgo = Math.floor((Date.now() - new Date(row.created_at).getTime()) / 86400000);
+    const weekIdx = Math.min(3, Math.floor(daysAgo / 7));
+    const weekKey = weekLabels[3 - weekIdx]; // Week 4 = most recent
+    const entry = weekMap.get(weekKey)!;
+    if (row.sub_disposition === "Promise to Pay") {
+      entry.ptpCount++;
+      entry.ptpValue += Number(row.ptp_amount || 0);
+    }
+    if (row.main_disposition === "Contactable") {
+      entry.contactable++;
+    }
+  });
+
+  const ptpAnalysis = weekLabels.map(w => ({ week: w, ...weekMap.get(w)! }));
 
   // 6. Fetch Leaderboard Performance (Today attempts and commitments values per agent)
   const startOfToday = new Date();
@@ -225,17 +220,20 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   ];
 
   return {
-    activeOutstanding: totalOutstanding,
-    contractCount,
-    productCount,
-    recoveredMtd,
-    recoveredTarget,
-    ptpPendingValue,
-    ptpCount,
-    contactabilityRate,
-    totalCallsLogged,
-    connectedCallsLogged,
-    bucketDist,
+    totalContracts: totalContracts || 0,
+    activeContracts: totalContracts || 0, // Fallback as there's no active flag for contracts
+    totalUsers: totalUsers || 0,
+    totalBatches: totalBatches || 0,
+    totalDispositions,
+    contactableDispositions,
+    nonContactableDispositions,
+    ptpDispositions,
+    agreeToPayDispositions,
+    partPaidDispositions,
+    brokenPtpDispositions,
+    callbackDispositions,
+    dispositionOutcomes,
+    ptpAnalysis,
     leaderboard: leaderboard as any,
     recentCalls: recentCalls.length > 0 ? recentCalls : defaultRecent
   };

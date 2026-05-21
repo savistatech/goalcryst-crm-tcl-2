@@ -268,7 +268,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-2 mt-1">
             <span>Product: <strong className="text-ink font-semibold">{data.contract.product}</strong></span>
             <span>·</span>
-            <span>BOM Bucket: <strong className="text-ink font-mono font-semibold">{data.contract.bom_bucket}</strong> (DPD {data.contract.bom_dpd})</span>
+            <span>BOM DPD: <strong className="text-ink font-mono font-semibold">{data.contract.bom_dpd} days</strong></span>
             <span>·</span>
             <span>Allocated To: <strong className="text-ink font-semibold">{data.contract.allocated_to_profile?.full_name || "Unassigned"}</strong></span>
           </div>

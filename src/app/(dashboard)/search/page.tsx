@@ -144,7 +144,6 @@ export default function SearchPage() {
                       <th className="py-2.5 px-4">Product</th>
                       <th className="py-2.5 px-4">Location</th>
                       <th className="py-2.5 px-4 text-center">BOM DPD</th>
-                      <th className="py-2.5 px-4 text-center">Bucket</th>
                       <th className="py-2.5 px-5 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -160,12 +159,6 @@ export default function SearchPage() {
                         </td>
                         <td className="py-3.5 px-4 text-ink-2">{row.branch}</td>
                         <td className="py-3.5 px-4 text-center font-mono text-ink-2">{row.bom_dpd}</td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className={`px-2 py-0.5 rounded text-[10.5px] font-mono font-semibold ${row.bucket >= 5 ? "bg-bad-bg text-bad" : row.bucket >= 3 ? "bg-warn-bg text-warn" : "bg-good-bg text-good"
-                            }`}>
-                            B{row.bucket}
-                          </span>
-                        </td>
                         <td className="py-3.5 px-5 text-right">
                           <Link
                             href={`/customers/${row.contract_no}`}
