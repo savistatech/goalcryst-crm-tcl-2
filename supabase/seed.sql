@@ -23,7 +23,7 @@ INSERT INTO auth.users (
   '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
-  '{"full_name":"Super Admin","role":"Super Admin"}', 
+  '{"full_name":"System Admin","role":"Admin"}', 
   FALSE, 
   'authenticated', 
   'authenticated'
@@ -31,11 +31,35 @@ INSERT INTO auth.users (
 (
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 
   '00000000-0000-0000-0000-000000000000', 
-  'manager@goalcryst.com', 
+  'bm@goalcryst.com', 
   '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
-  '{"full_name":"Vikram Naidu","role":"Manager"}', 
+  '{"full_name":"Vikram Naidu","role":"Branch Manager"}', 
+  FALSE, 
+  'authenticated', 
+  'authenticated'
+),
+(
+  'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 
+  '00000000-0000-0000-0000-000000000000', 
+  'am@goalcryst.com', 
+  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
+  NOW(), NOW(), NOW(), 
+  '{"provider":"email","providers":["email"]}', 
+  '{"full_name":"Syed Imran","role":"Assistant Manager"}', 
+  FALSE, 
+  'authenticated', 
+  'authenticated'
+),
+(
+  'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', 
+  '00000000-0000-0000-0000-000000000000', 
+  'tl@goalcryst.com', 
+  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
+  NOW(), NOW(), NOW(), 
+  '{"provider":"email","providers":["email"]}', 
+  '{"full_name":"Karthik Reddy","role":"Team Leader"}', 
   FALSE, 
   'authenticated', 
   'authenticated'
@@ -51,25 +75,14 @@ INSERT INTO auth.users (
   FALSE, 
   'authenticated', 
   'authenticated'
-),
-(
-  'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 
-  '00000000-0000-0000-0000-000000000000', 
-  'auditor@goalcryst.com', 
-  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
-  NOW(), NOW(), NOW(), 
-  '{"provider":"email","providers":["email"]}', 
-  '{"full_name":"Syed Imran","role":"Auditor"}', 
-  FALSE, 
-  'authenticated', 
-  'authenticated'
 );
 
 -- Note: The triggers will automatically create rows in public.profiles:
--- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' -> Super Admin
--- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12' -> Manager
+-- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' -> Admin
+-- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12' -> Branch Manager
+-- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15' -> Assistant Manager
+-- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16' -> Team Leader
 -- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13' -> Agent
--- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14' -> Auditor
 
 -- 2. Create sample import batch
 INSERT INTO public.import_batches (id, filename, uploaded_by, total_rows, imported_count, duplicates_skipped, failed_count)
@@ -354,3 +367,12 @@ INSERT INTO public.dispositions (
   NULL,
   NULL
 );
+
+-- 6. Insert sample audit logs to populate the Compliance Monitoring page
+INSERT INTO public.audit_logs (user_id, action, entity_type, entity_id, metadata, created_at) VALUES
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'LOGIN', 'auth.users', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', '{"ip": "192.168.1.104", "browser": "Chrome"}', NOW() - INTERVAL '3 hours'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'EXCEL_IMPORT', 'import_batches', 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a20', '{"filename": "Inputs for CRM Creation.xlsx", "total_rows": 3, "imported_count": 3}', NOW() - INTERVAL '2 hours 45 minutes'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'LOGIN', 'auth.users', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', '{"ip": "10.0.0.52", "browser": "Safari"}', NOW() - INTERVAL '2 hours'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 'CALL_LOG', 'dispositions', 'GC-LOS-231029', '{"disposition": "Promise to Pay", "ptp_amount": 45000}', NOW() - INTERVAL '1 hour 30 minutes'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 'WAIVER_REQUEST', 'waiver_requests', 'GC-LOS-110022', '{"requested_amount": 45000, "reason": "Hardship settlement"}', NOW() - INTERVAL '1 hour 15 minutes'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'WAIVER_APPROVE', 'waiver_requests', 'GC-LOS-110022', '{"approved_amount": 45000, "manager_remarks": "Approved due to prolonged delinquency"}', NOW() - INTERVAL '30 minutes');

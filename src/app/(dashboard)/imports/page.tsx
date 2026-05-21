@@ -213,22 +213,40 @@ export default function ImportsPage() {
     document.body.removeChild(link);
   };
 
+  // Download XLSX template dynamically based on TARGET_FIELDS
+  const downloadTemplate = () => {
+    const headers = TARGET_FIELDS.map(f => f.label);
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Upload_Template");
+    XLSX.writeFile(wb, "GoalCryst_Import_Template.xlsx");
+  };
+
   return (
     <PermissionGuard permission="can_upload_excel">
       <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
       {/* Header title */}
-      <div>
-        <div className="flex items-center gap-1.5 text-xs text-ink-3">
-          <span>GoalCryst CRM</span>
-          <span>·</span>
-          <span>Operations Admin Console</span>
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-1.5 text-xs text-ink-3">
+            <span>GoalCryst CRM</span>
+            <span>·</span>
+            <span>Operations Admin Console</span>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
+            Bulk Allocation Import Wizard
+          </h1>
+          <p className="text-[13px] text-ink-2 mt-1">
+            Perform secure, chunked spreadsheet uploads. Overwriting pre-existing contact records is prohibited.
+          </p>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
-          Bulk Allocation Import Wizard
-        </h1>
-        <p className="text-[13px] text-ink-2 mt-1">
-          Perform secure, chunked spreadsheet uploads. Overwriting pre-existing contact records is prohibited.
-        </p>
+        <button
+          onClick={downloadTemplate}
+          className="flex items-center gap-2 h-9 px-4 rounded-lg bg-surface border border-border-custom text-[13.5px] font-medium text-ink hover:bg-bg-warm transition-all shadow-sm cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5 text-accent-custom" />
+          <span>Download Template</span>
+        </button>
       </div>
 
       {/* ===== STEP INDICATOR BAR ===== */}

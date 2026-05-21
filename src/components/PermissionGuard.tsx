@@ -31,16 +31,18 @@ export default function PermissionGuard({ permission, children }: PermissionGuar
         const session = cookies["goalcryst_session"] || "";
         let role = "Agent";
         if (session.includes("admin@goalcryst.com")) {
-          role = "Super Admin";
-        } else if (session.includes("manager@goalcryst.com")) {
-          role = "Manager";
-        } else if (session.includes("auditor@goalcryst.com")) {
-          role = "Auditor";
+          role = "Admin";
+        } else if (session.includes("bm@goalcryst.com")) {
+          role = "Branch Manager";
+        } else if (session.includes("am@goalcryst.com")) {
+          role = "Assistant Manager";
+        } else if (session.includes("tl@goalcryst.com")) {
+          role = "Team Leader";
         }
 
         setUserRole(role);
 
-        if (role === "Super Admin") {
+        if (role === "Admin") {
           setHasAccess(true);
         } else {
           setHasAccess(!!perms[permission]);
@@ -80,7 +82,7 @@ export default function PermissionGuard({ permission, children }: PermissionGuar
         </p>
         <div className="pt-2">
           <p className="text-[11px] text-ink-3">
-            Contact your recovery super administrator to request manual override mapping.
+            Contact your CRM Administrator to request manual override mapping.
           </p>
         </div>
       </div>

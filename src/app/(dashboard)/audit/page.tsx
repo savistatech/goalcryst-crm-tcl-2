@@ -46,7 +46,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
         <div className="flex items-center gap-1.5 text-xs text-ink-3">
           <span>GoalCryst CRM</span>
           <span>·</span>
-          <span>Security & Auditor Controls</span>
+          <span>Security & Audit Controls</span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
           Compliance Monitoring Logs

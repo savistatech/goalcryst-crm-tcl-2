@@ -22,12 +22,17 @@ export default async function WaiversPage() {
       const parsed = JSON.parse(decodeURIComponent(sessionCookie));
       role = parsed.role || "Agent";
     } catch {
-      // ignore malformed cookie
+      const decoded = decodeURIComponent(sessionCookie).toLowerCase();
+      if (decoded.includes("admin")) role = "Admin";
+      else if (decoded.includes("bm@")) role = "Branch Manager";
+      else if (decoded.includes("am@")) role = "Assistant Manager";
+      else if (decoded.includes("tl@")) role = "Team Leader";
+      else role = "Agent";
     }
   }
 
-  const canApprove = role === "Super Admin" || role === "Manager";
-  const canRaise = ["Super Admin", "Manager", "Agent"].includes(role);
+  const canApprove = ["Admin", "Branch Manager", "Assistant Manager", "Team Leader"].includes(role);
+  const canRaise = true; // All 5 roles can raise waivers
 
   if (canApprove) {
     const pendingWaivers = await getPendingWaiverRequests();

@@ -30,7 +30,7 @@ export default function UsersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState<"Super Admin" | "Manager" | "Agent" | "Auditor">("Agent");
+  const [newRole, setNewRole] = useState<"Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent">("Agent");
   const [newCanApprove, setNewCanApprove] = useState(false);
   const [newCanImport, setNewCanImport] = useState(false);
   const [newCanViewAudit, setNewCanViewAudit] = useState(false);
@@ -319,12 +319,14 @@ export default function UsersPage() {
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 rounded text-[11px] font-semibold tracking-wide ${
-                          row.role === "Super Admin"
+                          row.role === "Admin"
                             ? "bg-bad-bg text-bad border border-bad/10"
-                            : row.role === "Manager"
+                            : row.role === "Branch Manager"
                             ? "bg-accent-soft text-accent-ink border border-accent-custom/10"
-                            : row.role === "Auditor"
-                            ? "bg-warn-bg text-warn border border-warn/10"
+                            : row.role === "Assistant Manager"
+                            ? "bg-accent-soft text-accent-ink border border-accent-custom/10 opacity-90"
+                            : row.role === "Team Leader"
+                            ? "bg-bg-warm text-ink border border-border-custom"
                             : "bg-good-bg text-good border border-good/10"
                         }`}>
                           {row.role}
@@ -406,13 +408,14 @@ export default function UsersPage() {
                 <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">System Access Role</label>
                 <select
                   value={newRole}
-                  onChange={(e) => setNewRole(e.target.value as "Super Admin" | "Manager" | "Agent" | "Auditor")}
+                  onChange={(e) => setNewRole(e.target.value as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent")}
                   className="w-full px-3 py-2 border border-border-custom bg-bg/50 focus:border-accent-custom rounded-xl text-sm text-ink outline-none cursor-pointer transition-colors"
                 >
                   <option value="Agent">Agent (Dedicated Recovery)</option>
-                  <option value="Manager">Manager (Team Supervisor)</option>
-                  <option value="Auditor">Auditor (Compliance Auditor)</option>
-                  <option value="Super Admin">Super Admin (Global Access)</option>
+                  <option value="Team Leader">Team Leader (Team Management)</option>
+                  <option value="Assistant Manager">Assistant Manager (Operations)</option>
+                  <option value="Branch Manager">Branch Manager (Branch Operations)</option>
+                  <option value="Admin">Admin (Global Access)</option>
                 </select>
               </div>
 

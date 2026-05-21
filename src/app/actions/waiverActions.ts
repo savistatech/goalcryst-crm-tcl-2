@@ -86,7 +86,7 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
 }
 
 /**
- * Fetches all Pending waiver discount requests for Manager review.
+ * Fetches all Pending waiver discount requests for Supervisor review.
  */
 export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
   const supabase = await createClient();

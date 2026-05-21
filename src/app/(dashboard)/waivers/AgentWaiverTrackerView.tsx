@@ -232,7 +232,7 @@ export default function AgentWaiverTrackerView({ myWaivers }: AgentWaiverTracker
                     <div className="flex items-center gap-1.5 mb-2">
                       <Icon className={`w-3.5 h-3.5 ${cfg.text}`} />
                       <p className={`text-[10px] uppercase tracking-wider font-bold ${cfg.text}`}>
-                        Manager Decision
+                        Supervisor Decision
                       </p>
                     </div>
                     {waiver.status === "Pending" ? (

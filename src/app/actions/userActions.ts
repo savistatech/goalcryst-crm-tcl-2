@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 export interface OperatorRecord {
   id: string;
   full_name: string;
-  role: "Super Admin" | "Manager" | "Agent" | "Auditor";
+  role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent";
   is_active: boolean;
   created_at: string;
   permissions: {
@@ -60,14 +60,14 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
     const assignedKeys = perms.map((p) => p?.permission_key).filter(Boolean);
 
     // Inherit standard base privileges from primary role
-    const defaultCanApprove = row.role === "Super Admin" || row.role === "Manager";
-    const defaultCanImport = row.role === "Super Admin";
-    const defaultCanViewAudit = row.role === "Super Admin" || row.role === "Auditor";
+    const defaultCanApprove = ["Admin", "Branch Manager", "Assistant Manager", "Team Leader"].includes(row.role);
+    const defaultCanImport = row.role === "Admin";
+    const defaultCanViewAudit = row.role === "Admin";
 
     return {
       id: row.id,
       full_name: row.full_name,
-      role: row.role as "Super Admin" | "Manager" | "Agent" | "Auditor",
+      role: row.role as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent",
       is_active: row.is_active,
       created_at: row.created_at,
       permissions: {
@@ -87,7 +87,7 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
 export async function createOperator(data: {
   name: string;
   email: string;
-  role: "Super Admin" | "Manager" | "Agent" | "Auditor";
+  role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent";
   canApprove: boolean;
   canImport: boolean;
   canViewAudit: boolean;

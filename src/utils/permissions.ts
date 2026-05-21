@@ -1,6 +1,6 @@
 import { createClient } from "./supabase/server";
 
-export type UserRole = "Super Admin" | "Manager" | "Agent" | "Auditor";
+export type UserRole = "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent";
 
 export const PERMISSION_KEYS = [
   "can_upload_excel",
@@ -24,8 +24,8 @@ export type PermissionKey = typeof PERMISSION_KEYS[number];
 
 // Default maps matching implementation plan security matrix
 export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
-  "Super Admin": [...PERMISSION_KEYS],
-  "Manager": [
+  "Admin": [...PERMISSION_KEYS],
+  "Branch Manager": [
     "can_search_customer",
     "can_view_contact_numbers",
     "can_view_financial_data",
@@ -38,22 +38,38 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     "can_export_reports",
     "can_view_all_dispositions"
   ],
+  "Assistant Manager": [
+    "can_search_customer",
+    "can_view_contact_numbers",
+    "can_view_financial_data",
+    "can_view_legal_data",
+    "can_view_asset_data",
+    "can_add_disposition",
+    "can_raise_waiver",
+    "can_approve_waiver",
+    "can_view_reports",
+    "can_export_reports",
+    "can_view_all_dispositions"
+  ],
+  "Team Leader": [
+    "can_search_customer",
+    "can_view_contact_numbers",
+    "can_view_financial_data",
+    "can_view_legal_data",
+    "can_add_disposition",
+    "can_raise_waiver",
+    "can_approve_waiver",
+    "can_view_reports",
+    "can_view_all_dispositions"
+  ],
   "Agent": [
     "can_search_customer",
     "can_view_contact_numbers",
     "can_view_financial_data",
     "can_view_legal_data",
     "can_add_disposition",
-    "can_raise_waiver"
-  ],
-  "Auditor": [
-    "can_search_customer",
-    "can_view_financial_data",
-    "can_view_legal_data",
-    "can_view_asset_data",
-    "can_view_reports",
-    "can_view_audit_logs",
-    "can_view_all_dispositions"
+    "can_raise_waiver",
+    "can_export_reports"
   ]
 };
 

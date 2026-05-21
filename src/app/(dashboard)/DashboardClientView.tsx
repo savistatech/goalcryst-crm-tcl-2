@@ -56,7 +56,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
             className="flex items-center gap-2 h-9 px-4 rounded-lg bg-surface border border-border-custom text-[13.5px] font-medium text-ink hover:bg-bg-warm transition-all shadow-sm cursor-pointer"
           >
             <PhoneForwarded className="w-3.5 h-3.5 text-accent-custom" />
-            <span>Search Workbench</span>
+            <span>Search Contract</span>
           </Link>
           <Link
             href="/imports"
@@ -222,15 +222,15 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: "var(--surface)", borderColor: "var(--border-custom)", borderRadius: "8px" }}
                     itemStyle={{ fontSize: "12px", color: "var(--ink)", fontWeight: 600 }}
                   />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36} 
-                    iconType="circle" 
-                    wrapperStyle={{ fontSize: '11.5px', paddingTop: '15px' }} 
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: '11.5px', paddingTop: '15px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -340,9 +340,8 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
             {metrics.recentCalls.map((c, i) => (
               <div key={i} className="relative group text-[12.5px]">
                 {/* Connection badge */}
-                <span className={`absolute -left-[17.5px] top-1.5 w-2 h-2 rounded-full border border-surface shadow-sm ${
-                  c.type === "good" ? "bg-good animate-pulse" : "bg-ink-3"
-                }`} />
+                <span className={`absolute -left-[17.5px] top-1.5 w-2 h-2 rounded-full border border-surface shadow-sm ${c.type === "good" ? "bg-good animate-pulse" : "bg-ink-3"
+                  }`} />
 
                 <div className="flex justify-between items-baseline gap-2">
                   <span className="font-semibold text-ink truncate">

@@ -1,5 +1,5 @@
 -- 1. Create Custom PostgreSQL Enums
-CREATE TYPE public.user_role AS ENUM ('Super Admin', 'Manager', 'Agent', 'Auditor');
+CREATE TYPE public.user_role AS ENUM ('Admin', 'Branch Manager', 'Assistant Manager', 'Team Leader', 'Agent');
 CREATE TYPE public.main_dispo_enum AS ENUM ('Contactable', 'Non-Contactable');
 CREATE TYPE public.waiver_status_enum AS ENUM ('Pending', 'Approved', 'Rejected');
 

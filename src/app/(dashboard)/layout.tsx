@@ -98,22 +98,25 @@ export default function DashboardLayout({
       if (session) {
         const email = session.toLowerCase().trim();
         if (email.includes("admin@goalcryst.com")) {
-          setCurrentUser({ name: "Vikram Naidu", role: "Super Admin", scope: "All regions · All permissions", avatar: "VN" });
-          role = "Super Admin";
-        } else if (email.includes("manager@goalcryst.com")) {
-          setCurrentUser({ name: "Vikram Naidu", role: "Manager", scope: "South Region · Approvals active", avatar: "VN" });
-          role = "Manager";
+          setCurrentUser({ name: "System Admin", role: "Admin", scope: "All regions · All permissions", avatar: "SA" });
+          role = "Admin";
+        } else if (email.includes("bm@goalcryst.com")) {
+          setCurrentUser({ name: "Vikram Naidu", role: "Branch Manager", scope: "South Region · Full operations", avatar: "VN" });
+          role = "Branch Manager";
+        } else if (email.includes("am@goalcryst.com")) {
+          setCurrentUser({ name: "Syed Imran", role: "Assistant Manager", scope: "South Region · Operations", avatar: "SI" });
+          role = "Assistant Manager";
+        } else if (email.includes("tl@goalcryst.com")) {
+          setCurrentUser({ name: "Karthik Reddy", role: "Team Leader", scope: "South Team · Collections", avatar: "KR" });
+          role = "Team Leader";
         } else if (email.includes("agent@goalcryst.com")) {
           setCurrentUser({ name: "Anjali Rao", role: "Agent", scope: "South Team · Cases allocated", avatar: "AR" });
           role = "Agent";
-        } else if (email.includes("auditor@goalcryst.com")) {
-          setCurrentUser({ name: "Syed Imran", role: "Auditor", scope: "National Portfolio · View only", avatar: "SI" });
-          role = "Auditor";
         }
       }
 
-      // Super Admins bypass all permission checks — grant full access instantly
-      if (role === "Super Admin") {
+      // Admins bypass all permission checks — grant full access instantly
+      if (role === "Admin") {
         setPerms({ _superAdmin: true } as Record<string, boolean>);
         setPermsLoaded(true);
         return;
@@ -163,7 +166,7 @@ export default function DashboardLayout({
     { label: "Search Contracts", path: "/search", icon: Search, section: "Command center", badge: undefined, requiredPermission: "can_search_customer" },
     { label: "PTP Follow-up", path: "/ptp", icon: CalendarCheck, section: "Command center", badge: "4", requiredPermission: "can_add_disposition" },
     {
-      label: currentUser.role === "Manager" || currentUser.role === "Super Admin" ? "Waiver Approvals" : "My Waivers",
+      label: currentUser.role !== "Agent" ? "Waiver Approvals" : "My Waivers",
       path: "/waivers", icon: ShieldCheck, section: "Command center", badge: undefined, requiredPermission: "can_raise_waiver"
     },
     { label: "Bulk Import", path: "/imports", icon: UploadCloud, section: "Admin setup", badge: undefined, requiredPermission: "can_upload_excel" },
@@ -185,10 +188,11 @@ export default function DashboardLayout({
 
   // Role badge color map
   const roleBadgeColor: Record<string, string> = {
-    "Super Admin": "bg-accent-custom text-white",
-    "Manager": "bg-good-bg text-good",
+    "Admin": "bg-accent-custom text-white",
+    "Branch Manager": "bg-good-bg text-good",
+    "Assistant Manager": "bg-good-bg text-good opacity-90",
+    "Team Leader": "bg-bg-warm border border-border-custom text-ink",
     "Agent": "bg-warn-bg text-warn",
-    "Auditor": "bg-bg-warm border border-border-custom text-ink-2",
   };
 
   const sections = ["Command center", "Admin setup"];

@@ -72,7 +72,7 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
         <div className="flex items-center gap-1.5 text-xs text-ink-3">
           <span>GoalCryst CRM</span>
           <span>·</span>
-          <span>Manager Controls Panel</span>
+          <span>Approval Controls Panel</span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
           Settlement Waiver Approvals
@@ -207,7 +207,7 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
 
               {/* Justification remarks */}
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Manager notes / approval remarks</label>
+                <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Supervisor notes / approval remarks</label>
                 <textarea
                   required
                   rows={3}

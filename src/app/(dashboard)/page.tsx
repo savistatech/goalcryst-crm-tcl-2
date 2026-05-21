@@ -6,9 +6,8 @@ import AgentOverviewClientView from "./AgentOverviewClientView";
 
 /**
  * Role-aware Overview page:
- *  - Super Admin / Manager → Full operational command center (DashboardClientView)
+ *  - Admin / Branch Mgr / Asst Mgr / Team Leader → Full operational command center (DashboardClientView)
  *  - Agent                 → Personal productivity dashboard (AgentOverviewClientView)
- *  - Auditor               → Full dashboard (read-only, same as Manager view for now)
  */
 export default async function OverviewPage() {
   const cookieStore = await cookies();
@@ -22,16 +21,17 @@ export default async function OverviewPage() {
     } catch {
       // Fallback: try simple string match from older cookie format
       const decoded = decodeURIComponent(sessionCookie).toLowerCase();
-      if (decoded.includes("admin")) role = "Super Admin";
-      else if (decoded.includes("manager")) role = "Manager";
-      else if (decoded.includes("auditor")) role = "Auditor";
+      if (decoded.includes("admin")) role = "Admin";
+      else if (decoded.includes("bm@")) role = "Branch Manager";
+      else if (decoded.includes("am@")) role = "Assistant Manager";
+      else if (decoded.includes("tl@")) role = "Team Leader";
       else role = "Agent";
     }
   }
 
-  const isAdminOrManager = role === "Super Admin" || role === "Manager" || role === "Auditor";
+  const isSupervisor = role !== "Agent";
 
-  if (isAdminOrManager) {
+  if (isSupervisor) {
     const metrics = await getDashboardMetrics();
     return <DashboardClientView metrics={metrics} />;
   }

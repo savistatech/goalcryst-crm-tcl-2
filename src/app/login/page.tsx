@@ -19,7 +19,7 @@ export default function LoginPage() {
     // Simulate database lookup and auth session
     setTimeout(() => {
       const emailTrim = email.trim().toLowerCase();
-      const validEmails = ["admin@goalcryst.com", "manager@goalcryst.com", "agent@goalcryst.com", "auditor@goalcryst.com"];
+      const validEmails = ["admin@goalcryst.com", "bm@goalcryst.com", "am@goalcryst.com", "tl@goalcryst.com", "agent@goalcryst.com"];
 
       if (validEmails.includes(emailTrim) && password === "password123") {
         // Write dynamic local session cookie
@@ -85,7 +85,7 @@ export default function LoginPage() {
               <div className="flex justify-between items-center">
                 <label className="text-[11.5px] uppercase tracking-wider text-ink-3 font-semibold block">Security Password</label>
                 <a
-                  onClick={() => alert("Password reset is managed by the Super Admin in dynamic profile permissions.")}
+                  onClick={() => alert("Password reset is managed by the Admin in dynamic profile permissions.")}
                   className="text-xs text-ink-3 hover:text-ink cursor-pointer hover:underline"
                 >
                   Forgot?
@@ -125,9 +125,10 @@ export default function LoginPage() {
             <span className="font-semibold text-ink uppercase tracking-wide text-[9.5px] block">Quick Sign-In Credentials (Password: password123)</span>
             <div className="grid grid-cols-2 gap-2 text-[10px]">
               <div>Admin: <strong className="text-ink font-mono">admin@goalcryst.com</strong></div>
-              <div>Manager: <strong className="text-ink font-mono">manager@goalcryst.com</strong></div>
+              <div>Branch Mgr: <strong className="text-ink font-mono">bm@goalcryst.com</strong></div>
+              <div>Asst Mgr: <strong className="text-ink font-mono">am@goalcryst.com</strong></div>
+              <div>Team Leader: <strong className="text-ink font-mono">tl@goalcryst.com</strong></div>
               <div>Agent: <strong className="text-ink font-mono">agent@goalcryst.com</strong></div>
-              <div>Auditor: <strong className="text-ink font-mono">auditor@goalcryst.com</strong></div>
             </div>
           </div>
         </div>
