@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #F4F6F9;
+  --color-bg-warm: #E9EDF2;
+  --color-surface: #FFFFFF;
+  --color-border-custom: #E1E6EB;
+  --color-border-strong: #CBD3DC;
+  --color-ink: #0F172A;
+  --color-ink-2: #475569;
+  --color-ink-3: #94A3B8;
+  --color-accent-custom: #1E40AF;
+  --color-accent-soft: #EFF6FF;
+  --color-accent-ink: #1E3A8A;
+  --color-good: #059669;
+  --color-good-bg: #D1FAE5;
+  --color-warn: #D97706;
+  --color-warn-bg: #FEF3C7;
+  --color-bad: #DC2626;
+  --color-bad-bg: #FEE2E2;
+}
+
+:root {
+  --background: #F4F6F9;
+  --foreground: #0F172A;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.02;
+  z-index: 1000;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E1E6EB;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #CBD3DC;
+}
+
+/* Premium Dark Mode Supporting Sleek Royal Blues & Space Cadets */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0B0F19;
+    --foreground: #F9FAFB;
+    
+    --color-bg: #0B0F19;
+    --color-bg-warm: #171E2E;
+    --color-surface: #111827;
+    --color-border-custom: #1F2937;
+    --color-border-strong: #374151;
+    --color-ink: #F9FAFB;
+    --color-ink-2: #9CA3AF;
+    --color-ink-3: #6B7280;
+    --color-accent-custom: #3B82F6;
+    --color-accent-soft: #172554;
+    --color-accent-ink: #93C5FD;
+    --color-good: #34D399;
+    --color-good-bg: #064E3B;
+    --color-warn: #FBBF24;
+    --color-warn-bg: #78350F;
+    --color-bad: #F87171;
+    --color-bad-bg: #7F1D1D;
+  }
+
+  body::before {
+    mix-blend-mode: overlay;
+    opacity: 0.035;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1F2937;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+  }
+}
+
+/* Explicit Manual Theme Overrides (.dark & .light Classes) */
+.dark {
+  --background: #0B0F19;
+  --foreground: #F9FAFB;
+  
+  --color-bg: #0B0F19;
+  --color-bg-warm: #171E2E;
+  --color-surface: #111827;
+  --color-border-custom: #1F2937;
+  --color-border-strong: #374151;
+  --color-ink: #F9FAFB;
+  --color-ink-2: #9CA3AF;
+  --color-ink-3: #6B7280;
+  --color-accent-custom: #3B82F6;
+  --color-accent-soft: #172554;
+  --color-accent-ink: #93C5FD;
+  --color-good: #34D399;
+  --color-good-bg: #064E3B;
+  --color-warn: #FBBF24;
+  --color-warn-bg: #78350F;
+  --color-bad: #F87171;
+  --color-bad-bg: #7F1D1D;
+}
+.dark body::before {
+  mix-blend-mode: overlay;
+  opacity: 0.035;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #1F2937;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+.light {
+  --background: #F4F6F9;
+  --foreground: #0F172A;
+  
+  --color-bg: #F4F6F9;
+  --color-bg-warm: #E9EDF2;
+  --color-surface: #FFFFFF;
+  --color-border-custom: #E1E6EB;
+  --color-border-strong: #CBD3DC;
+  --color-ink: #0F172A;
+  --color-ink-2: #475569;
+  --color-ink-3: #94A3B8;
+  --color-accent-custom: #1E40AF;
+  --color-accent-soft: #EFF6FF;
+  --color-accent-ink: #1E3A8A;
+  --color-good: #059669;
+  --color-good-bg: #D1FAE5;
+  --color-warn: #D97706;
+  --color-warn-bg: #FEF3C7;
+  --color-bad: #DC2626;
+  --color-bad-bg: #FEE2E2;
+}
+.light body::before {
+  mix-blend-mode: multiply;
+  opacity: 0.02;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #E1E6EB;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #CBD3DC;
+}
