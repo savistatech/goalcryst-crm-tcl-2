@@ -62,7 +62,7 @@ export default function ContractsMasterPage() {
             All Contracts
           </h1>
           <p className="text-[13px] text-ink-2 mt-1">
-            Global view of all imported contracts. Manage system visibility and archiving.
+            Manage all contracts and archiving.
           </p>
         </div>
 

@@ -335,13 +335,13 @@ export default function ImportsPage() {
           <div className="flex items-center gap-1.5 text-xs text-ink-3">
             <span>GoalCryst CRM</span>
             <span>·</span>
-            <span>Operations Admin Console</span>
+            <span>Data</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
-            Bulk Allocation Import Wizard
+            Bulk Import
           </h1>
           <p className="text-[13px] text-ink-2 mt-1">
-            Perform secure, chunked spreadsheet uploads. Overwriting pre-existing contact records is prohibited.
+            Upload Excel files to assign accounts.
           </p>
         </div>
         <button

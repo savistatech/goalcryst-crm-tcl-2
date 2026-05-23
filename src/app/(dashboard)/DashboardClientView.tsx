@@ -41,13 +41,13 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
           <div className="flex items-center gap-2 text-xs text-ink-3">
             <span>GoalCryst CRM</span>
             <span>·</span>
-            <span>Operations Command Center</span>
+            <span>Overview</span>
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-ink mt-1 font-serif">
-            Portfolio Performance Dashboard
+            Dashboard
           </h1>
           <p className="text-[13.5px] text-ink-2 mt-1">
-            Real-time operations center tracking active portfolios, agent call logs, and collections trends.
+            Overview of key system metrics.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -56,7 +56,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
             className="flex items-center gap-2 h-9 px-4 rounded-lg bg-surface border border-border-custom text-[13.5px] font-medium text-ink hover:bg-bg-warm transition-all shadow-sm cursor-pointer"
           >
             <PhoneForwarded className="w-3.5 h-3.5 text-accent-custom" />
-            <span>Search Contract</span>
+            <span>Search</span>
           </Link>
           <Link
             href="/imports"

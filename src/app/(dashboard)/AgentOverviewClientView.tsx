@@ -65,7 +65,7 @@ export default function AgentOverviewClientView({ metrics }: AgentOverviewProps)
           <div className="flex items-center gap-1.5 text-xs text-ink-3 mb-1">
             <span>GoalCryst CRM</span>
             <span>·</span>
-            <span>My Dashboard</span>
+            <span>Overview</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-ink font-serif">
             Good day, {metrics.agentName.split(" ")[0]}
@@ -80,7 +80,7 @@ export default function AgentOverviewClientView({ metrics }: AgentOverviewProps)
             className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-accent-custom hover:bg-accent-ink text-surface text-[13px] font-semibold transition-all shadow-sm"
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Search Contracts</span>
+            <span>Search</span>
           </Link>
         </div>
       </div>
@@ -239,8 +239,8 @@ export default function AgentOverviewClientView({ metrics }: AgentOverviewProps)
         <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-3 mb-3">Quick Actions</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "Search Contracts", icon: Search, href: "/search", desc: "Look up customer accounts" },
-            { label: "PTP Follow-up", icon: CalendarCheck, href: "/ptp", desc: "Review pending commitments" },
+            { label: "Search", icon: Search, href: "/search", desc: "Look up customer accounts" },
+            { label: "Follow-ups", icon: CalendarCheck, href: "/ptp", desc: "Review pending commitments" },
             { label: "My Waivers", icon: FileText, href: "/waivers", desc: "Track waiver request statuses" },
             { label: "Log Disposition", icon: PhoneCall, href: "/search", desc: "Search a customer to log a call" },
           ].map((action) => (

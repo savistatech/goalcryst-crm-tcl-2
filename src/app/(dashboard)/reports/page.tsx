@@ -124,13 +124,13 @@ export default function ReportsPage() {
         <div className="flex items-center gap-1.5 text-xs text-ink-3">
           <span>GoalCryst CRM</span>
           <span>·</span>
-          <span>Reporting & BI Center</span>
+          <span>Data</span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
-          Standard Recovery Reports
+          Reports
         </h1>
         <p className="text-[13px] text-ink-2 mt-1">
-          Export portfolio allocations, call dialers, PTP follow-ups, litigations, and compliance logs in standard Excel spreadsheets.
+          Export system data to Excel.
         </p>
       </div>
 
@@ -196,7 +196,7 @@ export default function ReportsPage() {
                   className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-bg-warm border border-border-custom hover:bg-ink hover:text-surface text-[12.5px] font-semibold text-ink transition-all shadow-sm cursor-pointer disabled:opacity-75"
                 >
                   <Download className={`w-3.5 h-3.5 ${exportingId === row.id ? "animate-bounce" : ""}`} />
-                  <span>{exportingId === row.id ? "Exporting..." : "Export to Excel (XLSX)"}</span>
+                  <span>{exportingId === row.id ? "Exporting..." : "Export"}</span>
                 </button>
               </div>
             </div>

@@ -163,18 +163,18 @@ export default function DashboardLayout({
 
   // Nav items — each declares a `requiredPermission` key (null = always visible)
   const allNavItems = [
-    { label: "Overview", path: "/", icon: LayoutDashboard, section: "Command center", badge: undefined, requiredPermission: null },
-    { label: "Search Contracts", path: "/search", icon: Search, section: "Command center", badge: undefined, requiredPermission: "can_search_customer" },
-    { label: "PTP Follow-up", path: "/ptp", icon: CalendarCheck, section: "Command center", badge: "4", requiredPermission: "can_add_disposition" },
+    { label: "Overview", path: "/", icon: LayoutDashboard, section: "Main", badge: undefined, requiredPermission: null },
+    { label: "Search", path: "/search", icon: Search, section: "Main", badge: undefined, requiredPermission: "can_search_customer" },
+    { label: "Follow-ups", path: "/ptp", icon: CalendarCheck, section: "Main", badge: "4", requiredPermission: "can_add_disposition" },
     {
-      label: currentUser.role !== "Agent" ? "Waiver Approvals" : "My Waivers",
-      path: "/waivers", icon: ShieldCheck, section: "Command center", badge: undefined, requiredPermission: "can_raise_waiver"
+      label: "Waivers",
+      path: "/waivers", icon: ShieldCheck, section: "Main", badge: undefined, requiredPermission: "can_raise_waiver"
     },
-    { label: "Bulk Import", path: "/imports", icon: UploadCloud, section: "Admin setup", badge: undefined, requiredPermission: "can_upload_excel" },
-    { label: "All Contract", path: "/contracts", icon: Database, section: "Admin setup", badge: undefined, requiredPermission: "can_manage_users" },
-    { label: "Reports", path: "/reports", icon: BarChart3, section: "Admin setup", badge: undefined, requiredPermission: "can_view_reports" },
-    { label: "Users & Roles", path: "/users", icon: UsersIcon, section: "Admin setup", badge: undefined, requiredPermission: "can_manage_users" },
-    { label: "Audits", path: "/audit", icon: ListChecks, section: "Admin setup", badge: undefined, requiredPermission: "can_view_audit_logs" },
+    { label: "Bulk Import", path: "/imports", icon: UploadCloud, section: "Admin", badge: undefined, requiredPermission: "can_upload_excel" },
+    { label: "Contracts", path: "/contracts", icon: Database, section: "Admin", badge: undefined, requiredPermission: "can_manage_users" },
+    { label: "Reports", path: "/reports", icon: BarChart3, section: "Admin", badge: undefined, requiredPermission: "can_view_reports" },
+    { label: "Users", path: "/users", icon: UsersIcon, section: "Admin", badge: undefined, requiredPermission: "can_manage_users" },
+    { label: "Audits", path: "/audit", icon: ListChecks, section: "Admin", badge: undefined, requiredPermission: "can_view_audit_logs" },
   ];
 
   const isSuperAdmin = perms["_superAdmin"] === true;
@@ -197,7 +197,7 @@ export default function DashboardLayout({
     "Agent": "bg-warn-bg text-warn",
   };
 
-  const sections = ["Command center", "Admin setup"];
+  const sections = ["Main", "Admin"];
 
   return (
     <div className="flex min-h-screen bg-bg text-ink relative font-sans">
