@@ -19,7 +19,7 @@ import {
   Search
 } from "lucide-react";
 
-type ImportStep = 1 | 2 | 3 | 4;
+type ImportStep = 1 | 2 | 3;
 
 interface FieldDefinition {
   key: keyof ImportRow;
@@ -29,33 +29,130 @@ interface FieldDefinition {
   aliases: string[];
 }
 
-// 20 Core database columns target fields
 const TARGET_FIELDS: FieldDefinition[] = [
-  { key: "contract_no", label: "Contract/Agreement No", required: true, type: "string", aliases: ["contract_no", "contract no", "agreement no", "agreement_no", "lan", "loan account number"] },
+  // Base
+  { key: "contract_no", label: "Contract No", required: true, type: "string", aliases: ["contract_no", "contract no", "agreement no", "agreement_no", "lan", "loan account number"] },
   { key: "customer_name", label: "Customer Name", required: true, type: "string", aliases: ["customer_name", "customer name", "client name", "borrower name", "name"] },
-  { key: "product", label: "Product Class", required: false, type: "string", aliases: ["product", "product_class", "product type", "secured_product"] },
-  { key: "branch", label: "Allocated Branch", required: false, type: "string", aliases: ["branch", "branch name", "location", "branch_name"] },
-  { key: "state", label: "Allocated State", required: false, type: "string", aliases: ["state", "state_name", "customer state"] },
-  { key: "area", label: "Allocated Area", required: false, type: "string", aliases: ["area", "customer area"] },
+  { key: "product", label: "Product", required: false, type: "string", aliases: ["product", "product_class", "product type"] },
+  { key: "branch", label: "Branch", required: false, type: "string", aliases: ["branch", "branch name", "location", "branch_name"] },
+  { key: "state", label: "State", required: false, type: "string", aliases: ["state", "state_name", "customer state"] },
+  { key: "area", label: "Area", required: false, type: "string", aliases: ["area", "customer area"] },
   { key: "region", label: "Region", required: false, type: "string", aliases: ["region", "customer region"] },
-  { key: "bom_dpd", label: "BOM DPD Days", required: false, type: "number", aliases: ["bom_dpd", "dpd", "overdue days", "dpd days"] },
+  { key: "secured_category", label: "Secured Category", required: false, type: "string", aliases: ["secured category", "secured_category"] },
+  { key: "allocation_category", label: "Allocation Category", required: false, type: "string", aliases: ["allocation category", "allocation_category"] },
+  { key: "bom_dpd", label: "BOM DPD", required: false, type: "number", aliases: ["bom dpd", "bom_dpd", "dpd"] },
+  { key: "mob", label: "MOB", required: false, type: "number", aliases: ["mob", "months on book"] },
+  { key: "bucket", label: "Bucket", required: false, type: "string", aliases: ["bucket"] },
+  { key: "bom_bucket", label: "BOM Bucket", required: false, type: "string", aliases: ["bom bucket", "bom_bucket"] },
+  { key: "secured_product_flag", label: "Secured Product Flag", required: false, type: "string", aliases: ["secured product flag", "secured_product_flag"] },
+  { key: "product_detail", label: "Product Detail", required: false, type: "string", aliases: ["product detail", "product_detail"] },
+  { key: "allocation_dpd_category", label: "Allocation DPD Category", required: false, type: "string", aliases: ["allocation dpd category", "allocation_dpd_category"] },
 
   // Contacts
-  { key: "mobile_1", label: "Primary Phone (Mobile 1)", required: false, type: "string", aliases: ["mobile_1", "mobile 1", "phone", "phone 1", "mobile", "primary_mobile"] },
-  { key: "mobile_no", label: "Alternate Phone (Mobile 2)", required: false, type: "string", aliases: ["mobile_no", "mobile 2", "mobile_no", "phone 2", "phone_no"] },
-  { key: "base_address", label: "Master Base Address", required: false, type: "string", aliases: ["base_address", "address", "address 1", "primary_address", "master_address"] },
-  { key: "pincode", label: "Postal Pincode", required: false, type: "string", aliases: ["pincode", "zip", "zipcode", "postal_code"] },
+  { key: "mobile_1", label: "Contact No 1 - Mobile 1", required: false, type: "string", aliases: ["contact no 1 - mobile 1", "mobile 1", "mobile_1", "phone"] },
+  { key: "mobile_no", label: "Contact No 2 - Mobile No", required: false, type: "string", aliases: ["contact no 2 - mobile no", "mobile 2", "mobile_no"] },
+  { key: "primary_mobile", label: "Contact No 3 - Primary Mobile", required: false, type: "string", aliases: ["contact no 3 - primary mobile", "primary mobile", "primary_mobile"] },
+  { key: "ref_name_1", label: "Reference Name 1", required: false, type: "string", aliases: ["reference name 1", "ref name 1", "ref_name_1"] },
+  { key: "ref_mobile_1", label: "Contact No 4 - Reference Mobile 1", required: false, type: "string", aliases: ["contact no 4 - reference mobile 1", "reference mobile 1", "ref_mobile_1"] },
+  { key: "ref_name_2", label: "Reference Name 2", required: false, type: "string", aliases: ["reference name 2", "ref name 2", "ref_name_2"] },
+  { key: "ref_mobile_2", label: "Contact No 5 - Reference Mobile 2", required: false, type: "string", aliases: ["contact no 5 - reference mobile 2", "reference mobile 2", "ref_mobile_2"] },
+  { key: "base_address", label: "Address 1 - Base Address", required: false, type: "string", aliases: ["address 1 - base address", "base address", "base_address"] },
+  { key: "landmark", label: "Landmark", required: false, type: "string", aliases: ["landmark"] },
+  { key: "pincode", label: "Pincode", required: false, type: "string", aliases: ["pincode", "zip", "postal code"] },
+  { key: "permanent_address", label: "Address 2 - Permanent Address", required: false, type: "string", aliases: ["address 2 - permanent address", "permanent address", "permanent_address"] },
+  { key: "office_address", label: "Address 3 - Office Address", required: false, type: "string", aliases: ["address 3 - office address", "office address", "office_address"] },
+  { key: "finnone_address", label: "Address 4 - Finnone Address", required: false, type: "string", aliases: ["address 4 - finnone address", "finnone address", "finnone_address"] },
+  { key: "primary_mobile_1", label: "Contact No 3 - Primary Mobile 1", required: false, type: "string", aliases: ["contact no 3 - primary mobile 1", "primary mobile 1", "primary_mobile_1"] },
+  { key: "primary_mobile_2", label: "Contact No 4 - Primary Mobile 2", required: false, type: "string", aliases: ["contact no 4 - primary mobile 2", "primary mobile 2", "primary_mobile_2"] },
+  { key: "mobile_no_2", label: "Contact No 5 - Mobile No", required: false, type: "string", aliases: ["contact no 5 - mobile no", "mobile no 2", "mobile_no_2"] },
+  { key: "latest_contact_no", label: "Contact No 6 - Latest Contact No", required: false, type: "string", aliases: ["contact no 6 - latest contact no", "latest contact no", "latest_contact_no"] },
+  { key: "ref_relation_1", label: "Reference Relationship 1", required: false, type: "string", aliases: ["reference relationship 1", "ref relation 1", "ref_relation_1"] },
+  { key: "ref_relation_2", label: "Reference Relationship 2", required: false, type: "string", aliases: ["reference relationship 2", "ref relation 2", "ref_relation_2"] },
+  { key: "master_primary_address", label: "Address 2 - Master Primary Address", required: false, type: "string", aliases: ["address 2 - master primary address", "master primary address", "master_primary_address"] },
+  { key: "permanent_address_2", label: "Address 3 - Permanent Address", required: false, type: "string", aliases: ["address 3 - permanent address", "permanent_address_2"] },
+  { key: "secondary_address", label: "Address 5 - Secondary Address", required: false, type: "string", aliases: ["address 5 - secondary address", "secondary address", "secondary_address"] },
+  { key: "office_address_2", label: "Address 6 - Office Address", required: false, type: "string", aliases: ["address 6 - office address", "office_address_2"] },
+  { key: "additional_address", label: "Address 7 - Additional Address", required: false, type: "string", aliases: ["address 7 - additional address", "additional address", "additional_address"] },
+  { key: "residential_address", label: "Address 8 - Residential Address", required: false, type: "string", aliases: ["address 8 - residential address", "residential address", "residential_address"] },
+  { key: "ref_full_address_1", label: "Address 9 - Reference Full Address 1", required: false, type: "string", aliases: ["address 9 - reference full address 1", "ref full address 1", "ref_full_address_1"] },
+  { key: "ref_full_address_2", label: "Address 10 - Reference Full Address 2", required: false, type: "string", aliases: ["address 10 - reference full address 2", "ref full address 2", "ref_full_address_2"] },
+  { key: "pdpr_address", label: "Address 11 - PDPR Address", required: false, type: "string", aliases: ["address 11 - pdpr address", "pdpr address", "pdpr_address"] },
+
+  // Assets
+  { key: "manufacturer", label: "Manufacturer", required: false, type: "string", aliases: ["manufacturer"] },
+  { key: "asset_model", label: "Asset Model", required: false, type: "string", aliases: ["asset model", "asset_model"] },
+  { key: "rc_number", label: "RC Number", required: false, type: "string", aliases: ["rc number", "rc_number"] },
+  { key: "manufacturer_2", label: "Manufacturer 2", required: false, type: "string", aliases: ["manufacturer 2", "manufacturer_2"] },
+  { key: "asset_category", label: "Asset Category", required: false, type: "string", aliases: ["asset category", "asset_category"] },
+  { key: "asset_variant", label: "Asset Variant", required: false, type: "string", aliases: ["asset variant", "asset_variant"] },
+  { key: "engine_number", label: "Engine Number", required: false, type: "string", aliases: ["engine number", "engine_number"] },
+  { key: "chassis_number", label: "Chassis Number", required: false, type: "string", aliases: ["chassis number", "chassis_number"] },
+  { key: "year_of_manufacture", label: "Year of Manufacture", required: false, type: "string", aliases: ["year of manufacture", "year_of_manufacture"] },
 
   // Financials
-  { key: "finance_amount", label: "Finance Loan Amount", required: false, type: "number", aliases: ["finance_amount", "loan_amount", "finance amount", "sanctioned_amount"] },
-  { key: "pos", label: "Principal POS", required: false, type: "number", aliases: ["pos", "principal_pos", "principal outstanding", "principal_outstanding"] },
-  { key: "emi_amount", label: "EMI Amount due", required: false, type: "number", aliases: ["emi", "emi_amount", "emi amount"] },
-  { key: "od_amount", label: "Overdue (OD) Amount", required: false, type: "number", aliases: ["od_amount", "overdue", "overdue_amount", "od amount"] },
+  { key: "finance_amount", label: "Finance Amount", required: false, type: "number", aliases: ["finance amount", "finance_amount"] },
+  { key: "total_pos_outstanding", label: "Total POS Outstanding", required: false, type: "number", aliases: ["total pos outstanding", "total_pos_outstanding"] },
+  { key: "pos", label: "POS", required: false, type: "number", aliases: ["pos"] },
+  { key: "total_amount_collectable", label: "Total Amount Collectable", required: false, type: "number", aliases: ["total amount collectable", "total_amount_collectable"] },
+  { key: "sale_price", label: "Sale Price", required: false, type: "number", aliases: ["sale price", "sale_price"] },
+  { key: "emi_amount", label: "EMI Amount", required: false, type: "number", aliases: ["emi amount", "emi_amount", "emi"] },
+  { key: "od_amount", label: "OD Amount", required: false, type: "number", aliases: ["od amount", "od_amount"] },
+  { key: "principal_overdue", label: "Principal Overdue", required: false, type: "number", aliases: ["principal overdue", "principal_overdue"] },
+  { key: "interest_overdue", label: "Interest Overdue", required: false, type: "number", aliases: ["interest overdue", "interest_overdue"] },
+  { key: "bounce_charges", label: "Bounce Charges", required: false, type: "number", aliases: ["bounce charges", "bounce_charges"] },
+  { key: "current_odc", label: "Current ODC", required: false, type: "number", aliases: ["current odc", "current_odc"] },
+  { key: "total_outstanding", label: "Total Outstanding", required: false, type: "number", aliases: ["total outstanding", "total_outstanding"] },
+  { key: "ots_amount", label: "OTS Amount", required: false, type: "number", aliases: ["ots amount", "ots_amount"] },
+  { key: "pos_waiver_amount", label: "POS Waiver Amount", required: false, type: "number", aliases: ["pos waiver amount", "pos_waiver_amount"] },
+  { key: "pos_waiver_percent", label: "POS Waiver %", required: false, type: "number", aliases: ["pos waiver %", "pos waiver percent", "pos_waiver_percent"] },
 
   // Legal
-  { key: "case_no", label: "Legal Court Case No", required: false, type: "string", aliases: ["case_no", "case number", "case_number", "court_case_no"] },
-  { key: "legal_status", label: "Legal Litigation Status", required: false, type: "string", aliases: ["legal_status", "litigation_status", "legal status"] }
+  { key: "notice_sent_sec138", label: "Notice Sent in Sec 138", required: false, type: "string", aliases: ["notice sent in sec 138", "notice sent sec138", "notice_sent_sec138"] },
+  { key: "type_of_case", label: "Type of Case", required: false, type: "string", aliases: ["type of case", "type_of_case"] },
+  { key: "cheque_amount", label: "Cheque Amount", required: false, type: "number", aliases: ["cheque amount", "cheque_amount"] },
+  { key: "cheque_date", label: "Cheque Date", required: false, type: "string", aliases: ["cheque date", "cheque_date"] },
+  { key: "cheque_no", label: "Cheque No", required: false, type: "string", aliases: ["cheque no", "cheque_no"] },
+  { key: "sec138_current_status", label: "Sec 138 Current Status", required: false, type: "string", aliases: ["sec 138 current status", "sec138_current_status"] },
+  { key: "group_stage", label: "Group Stage", required: false, type: "string", aliases: ["group stage", "group_stage"] },
+  { key: "case_no", label: "Case No", required: false, type: "string", aliases: ["case no", "case_no"] },
+  { key: "court_location", label: "Court Location", required: false, type: "string", aliases: ["court location", "court_location"] },
+  { key: "court_name", label: "Court Name", required: false, type: "string", aliases: ["court name", "court_name"] },
+  { key: "ldoh", label: "LDOH", required: false, type: "string", aliases: ["ldoh"] },
+  { key: "ndoh", label: "NDOH", required: false, type: "string", aliases: ["ndoh"] },
+  { key: "advocate", label: "Advocate", required: false, type: "string", aliases: ["advocate"] },
+  { key: "hand_summons", label: "Hand Summons", required: false, type: "string", aliases: ["hand summons", "hand_summons"] },
+  { key: "hand_warrant_1", label: "Hand Warrant 1", required: false, type: "string", aliases: ["hand warrant 1", "hand_warrant_1"] },
+  { key: "proclamation_orders", label: "Proclamation Orders", required: false, type: "string", aliases: ["proclamation orders", "proclamation_orders"] },
+  { key: "lrn_status", label: "LRN Status", required: false, type: "string", aliases: ["lrn status", "lrn_status"] },
+  { key: "lrn_date", label: "LRN Date", required: false, type: "string", aliases: ["lrn date", "lrn_date"] },
+  { key: "arb", label: "ARB", required: false, type: "string", aliases: ["arb"] },
+  { key: "sec17_orders_date", label: "Sec 17 Orders Date", required: false, type: "string", aliases: ["sec 17 orders date", "sec17_orders_date"] },
+  { key: "award_date", label: "Award Date", required: false, type: "string", aliases: ["award date", "award_date"] },
+  { key: "ep_stage", label: "EP Stage", required: false, type: "string", aliases: ["ep stage", "ep_stage"] },
+  { key: "ep_ldoh", label: "EP LDOH", required: false, type: "string", aliases: ["ep ldoh", "ep_ldoh"] },
+  { key: "ep_ndoh", label: "EP NDOH", required: false, type: "string", aliases: ["ep ndoh", "ep_ndoh"] },
+  { key: "ep_case_no", label: "EP Case No", required: false, type: "string", aliases: ["ep case no", "ep_case_no"] },
+  { key: "ep_advocate", label: "EP Advocate", required: false, type: "string", aliases: ["ep advocate", "ep_advocate"] },
+  { key: "termination_status_sa", label: "Termination Status / SA", required: false, type: "string", aliases: ["termination status / sa", "termination status sa", "termination_status_sa"] },
+  { key: "lrn_prn_status", label: "LRN/PRN Status", required: false, type: "string", aliases: ["lrn/prn status", "lrn prn status", "lrn_prn_status"] },
+  { key: "lrn_prn_issue_date", label: "LRN/PRN Issue Date", required: false, type: "string", aliases: ["lrn/prn issue date", "lrn prn issue date", "lrn_prn_issue_date"] },
+  { key: "lrn_prn_link", label: "LRN/PRN Link", required: false, type: "string", aliases: ["lrn/prn link", "lrn prn link", "lrn_prn_link"] },
+  { key: "cnr_number_cc", label: "CNR Number CC", required: false, type: "string", aliases: ["cnr number cc", "cnr_number_cc"] },
+  { key: "cnr_number_pcr", label: "CNR Number PCR", required: false, type: "string", aliases: ["cnr number pcr", "cnr_number_pcr"] },
+  { key: "current_stage", label: "Current Stage", required: false, type: "string", aliases: ["current stage", "current_stage"] },
+  { key: "filed_location", label: "Filed Location", required: false, type: "string", aliases: ["filed location", "filed_location"] },
+  { key: "court_hall", label: "Court Hall", required: false, type: "string", aliases: ["court hall", "court_hall"] },
+  { key: "hand_s_nbw_bw_pc", label: "Hand S/NBW/BW/PC", required: false, type: "string", aliases: ["hand s/nbw/bw/pc", "hand s nbw bw pc", "hand_s_nbw_bw_pc"] },
+  { key: "hand_s_nbw_bw_pc_type", label: "Hand S/NBW/BW/PC Type", required: false, type: "string", aliases: ["hand s/nbw/bw/pc type", "hand s nbw bw pc type", "hand_s_nbw_bw_pc_type"] },
+  { key: "claim_amount", label: "Claim Amount", required: false, type: "number", aliases: ["claim amount", "claim_amount"] },
+  { key: "arbitration_group_stage", label: "Arbitration Group Stage", required: false, type: "string", aliases: ["arbitration group stage", "arbitration_group_stage"] },
+  { key: "sec17_orders", label: "Sec 17 Orders", required: false, type: "string", aliases: ["sec 17 orders", "sec17_orders"] },
+  { key: "sec17_date", label: "Sec 17 Date", required: false, type: "string", aliases: ["sec 17 date", "sec17_date"] },
+  { key: "court_bench", label: "Court Bench", required: false, type: "string", aliases: ["court bench", "court_bench"] },
+  { key: "ep_pdoh", label: "EP PDOH", required: false, type: "string", aliases: ["ep pdoh", "ep_pdoh"] },
+  { key: "legal_status", label: "Legal Status", required: false, type: "string", aliases: ["legal status", "legal_status"] }
 ];
+
 
 export default function ImportsPage() {
   const [step, setStep] = useState<ImportStep>(1);
@@ -93,15 +190,25 @@ export default function ImportsPage() {
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         
-        // Parse headers and rows
+        // Parse raw data to find the actual header row
         const data = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
         if (data.length === 0) {
           alert("Excel file appears to be completely empty.");
           return;
         }
 
-        const headers = data[0].map(h => String(h || "").trim()).filter(Boolean);
-        const rows = XLSX.utils.sheet_to_json(ws) as any[];
+        // Find which row contains the headers (look for 'Contract No' or 'Customer Name' in first 10 rows)
+        let headerRowIndex = 0;
+        for (let i = 0; i < Math.min(10, data.length); i++) {
+          const rowValues = data[i].map(h => String(h || "").toLowerCase().replace(/[^a-z0-9]/g, ""));
+          if (rowValues.includes("contractno") || rowValues.includes("customername")) {
+            headerRowIndex = i;
+            break;
+          }
+        }
+
+        const headers = data[headerRowIndex].map(h => String(h || "").trim()).filter(Boolean);
+        const rows = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex }) as any[];
 
         setExcelHeaders(headers);
         setExcelRows(rows);
@@ -125,7 +232,33 @@ export default function ImportsPage() {
         });
 
         setMappings(initialMappings);
-        setStep(2);
+        
+        // Auto validate using initialMappings
+        const missingRequired = TARGET_FIELDS.filter(f => f.required && !initialMappings[f.key]);
+        if (missingRequired.length > 0) {
+          alert(`File is missing required columns: ${missingRequired.map(f => f.label).join(", ")}`);
+          return;
+        }
+
+        const contractNoHeader = initialMappings["contract_no"];
+        const seenContracts = new Set<string>();
+        const dupes: string[] = [];
+        let valid = 0;
+
+        rows.forEach(row => {
+          const cNo = String(row[contractNoHeader] || "").trim();
+          if (!cNo) return;
+          if (seenContracts.has(cNo)) {
+            dupes.push(cNo);
+          } else {
+            seenContracts.add(cNo);
+            valid++;
+          }
+        });
+
+        setInnerDuplicates(dupes);
+        setValidCount(valid);
+        setStep(2); // Skip mapping step, go directly to validation summary
       } catch (err) {
         console.error(err);
         alert("Error parsing Excel file. Verify file format and try again.");
@@ -136,36 +269,7 @@ export default function ImportsPage() {
     reader.readAsBinaryString(file);
   };
 
-  // Step 2: Proceed to Validation
-  const handleProceedToValidation = () => {
-    // Check that all required fields are mapped
-    const missingRequired = TARGET_FIELDS.filter(f => f.required && !mappings[f.key]);
-    if (missingRequired.length > 0) {
-      alert(`Please map all required fields: ${missingRequired.map(f => f.label).join(", ")}`);
-      return;
-    }
 
-    // Scan for inner duplicates within sheet itself
-    const contractNoHeader = mappings["contract_no"];
-    const seenContracts = new Set<string>();
-    const dupes: string[] = [];
-    let valid = 0;
-
-    excelRows.forEach(row => {
-      const cNo = String(row[contractNoHeader] || "").trim();
-      if (!cNo) return;
-      if (seenContracts.has(cNo)) {
-        dupes.push(cNo);
-      } else {
-        seenContracts.add(cNo);
-        valid++;
-      }
-    });
-
-    setInnerDuplicates(dupes);
-    setValidCount(valid);
-    setStep(3);
-  };
 
   // Step 3: Trigger Transaction Commit
   const handleCommitImport = async () => {
@@ -189,7 +293,7 @@ export default function ImportsPage() {
 
       const result = await commitImportBatch(filename, formattedRows);
       setImportSummary(result);
-      setStep(4);
+      setStep(3);
     } catch (err: any) {
       alert("Error committing import batch: " + err.message);
     } finally {
@@ -253,9 +357,8 @@ export default function ImportsPage() {
       <div className="grid grid-cols-4 gap-2">
         {[
           { num: 1, label: "Upload Sheets" },
-          { num: 2, label: "Map Columns" },
-          { num: 3, label: "Validate Data" },
-          { num: 4, label: "Commit Logs" }
+          { num: 2, label: "Validate Data" },
+          { num: 3, label: "Commit Logs" }
         ].map((item) => {
           const isActive = step === item.num;
           const isDone = step > item.num;
@@ -331,62 +434,8 @@ export default function ImportsPage() {
         </div>
       )}
 
-      {/* ==================== STEP 2: MAP FIELDS ==================== */}
+      {/* ==================== STEP 2: VALIDATION ==================== */}
       {step === 2 && (
-        <div className="space-y-6 animate-scale-up">
-          <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-4">
-            <div>
-              <h3 className="text-base font-semibold text-ink">Map Excel Headers to CRM Parameters</h3>
-              <p className="text-xs text-ink-2">Columns with close matching descriptors have been auto-paired.</p>
-            </div>
-
-            <div className="max-h-[350px] overflow-y-auto pr-2 space-y-3 divide-y divide-border-custom/50">
-              {TARGET_FIELDS.map((field) => (
-                <div key={field.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 first:pt-0">
-                  <div className="flex items-center gap-1.5 text-[13px]">
-                    <span className="font-semibold text-ink">{field.label}</span>
-                    {field.required && (
-                      <span className="px-1.5 py-0.5 text-[8.5px] bg-bad-bg text-bad font-semibold uppercase rounded">REQUIRED</span>
-                    )}
-                  </div>
-
-                  <select
-                    className="w-full sm:w-64 bg-bg border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-ink focus:border-accent-custom"
-                    value={mappings[field.key] || ""}
-                    onChange={(e) => setMappings(prev => ({ ...prev, [field.key]: e.target.value }))}
-                  >
-                    <option value="">-- Skip Field --</option>
-                    {excelHeaders.map(h => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Nav Actions buttons */}
-          <div className="flex justify-between items-center">
-            <button
-              onClick={() => setStep(1)}
-              className="flex items-center gap-1.5 h-9 px-4 border border-border-custom hover:bg-bg-warm text-xs font-semibold text-ink-2 rounded-lg transition-all cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back</span>
-            </button>
-            <button
-              onClick={handleProceedToValidation}
-              className="flex items-center gap-1.5 h-9 px-4 bg-ink hover:bg-black text-surface text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
-            >
-              <span>Proceed to Validation</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ==================== STEP 3: VALIDATION ==================== */}
-      {step === 3 && (
         <div className="space-y-6 animate-scale-up">
           <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-4">
             <div>
@@ -427,7 +476,12 @@ export default function ImportsPage() {
           {/* Commit Actions buttons */}
           <div className="flex justify-between items-center">
             <button
-              onClick={() => setStep(2)}
+              onClick={() => {
+                setExcelRows([]);
+                setExcelHeaders([]);
+                setMappings({});
+                setStep(1);
+              }}
               className="flex items-center gap-1.5 h-9 px-4 border border-border-custom hover:bg-bg-warm text-xs font-semibold text-ink-2 rounded-lg transition-all cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -454,8 +508,8 @@ export default function ImportsPage() {
         </div>
       )}
 
-      {/* ==================== STEP 4: COMMIT LOG SUMMARY ==================== */}
-      {step === 4 && importSummary && (
+      {/* ==================== STEP 3: COMMIT LOG SUMMARY ==================== */}
+      {step === 3 && importSummary && (
         <div className="space-y-6 animate-scale-up">
           <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
             <div className="text-center space-y-2 select-none">

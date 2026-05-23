@@ -57,13 +57,16 @@ CREATE TABLE public.contracts (
   allocation_category TEXT,
   bom_dpd INT NOT NULL DEFAULT 0,
   mob INT NOT NULL DEFAULT 0,
+  bucket TEXT,
+  bom_bucket TEXT,
   secured_product_flag TEXT,
   product_detail TEXT,
   allocation_dpd_category TEXT,
   allocated_to UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   batch_id UUID REFERENCES public.import_batches(id) ON DELETE SET NULL,
   imported_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
+  is_archived BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- 7. Contract Contacts Table (8 phone numbers, 11 addresses, references)

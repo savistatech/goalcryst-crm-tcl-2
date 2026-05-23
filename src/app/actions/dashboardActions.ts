@@ -35,9 +35,14 @@ export interface DashboardMetrics {
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const supabase = await createClient();
 
-  // 1. Fetch System Data (Contracts, Users, Batches)
-  const [{ count: totalContracts }, { count: totalUsers }, { count: totalBatches }] = await Promise.all([
+  const [
+    { count: totalContracts },
+    { count: activeContracts },
+    { count: totalUsers },
+    { count: totalBatches }
+  ] = await Promise.all([
     supabase.from("contracts").select("*", { count: "exact", head: true }),
+    supabase.from("contracts").select("*", { count: "exact", head: true }).eq("is_archived", false),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("import_batches").select("*", { count: "exact", head: true })
   ]);
@@ -221,7 +226,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
   return {
     totalContracts: totalContracts || 0,
-    activeContracts: totalContracts || 0, // Fallback as there's no active flag for contracts
+    activeContracts: activeContracts || 0,
     totalUsers: totalUsers || 0,
     totalBatches: totalBatches || 0,
     totalDispositions,

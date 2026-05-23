@@ -57,7 +57,8 @@ export async function getCallingQueue(): Promise<QueueSummary> {
       contract_contacts(primary_mobile, mobile_1),
       contract_financials(total_outstanding),
       dispositions(created_at, sub_disposition)
-    `);
+    `)
+    .eq("is_archived", false);
 
   // Role Gate: Agents can only fetch their own assigned cases
   if (role === "Agent") {
