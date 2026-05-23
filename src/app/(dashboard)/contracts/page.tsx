@@ -11,7 +11,7 @@ export default function ContractsMasterPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
-  
+
   const limit = 20;
 
   const fetchContracts = async () => {
@@ -42,7 +42,7 @@ export default function ContractsMasterPage() {
     try {
       await toggleArchiveContract(contractNo, !currentStatus);
       // Optimistically update the UI
-      setContracts((prev) => 
+      setContracts((prev) =>
         prev.map((c) => c.contract_no === contractNo ? { ...c, is_archived: !currentStatus } : c)
       );
     } catch (err: any) {
@@ -59,13 +59,13 @@ export default function ContractsMasterPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 select-none">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink font-serif">
-            Contract Master
+            All Contracts
           </h1>
           <p className="text-[13px] text-ink-2 mt-1">
             Global view of all imported contracts. Manage system visibility and archiving.
           </p>
         </div>
-        
+
         <form onSubmit={handleSearchSubmit} className="w-full md:w-80">
           <div className="relative flex items-center bg-surface border border-border-custom rounded-lg px-3 py-2 shadow-sm focus-within:border-ink-2 transition-colors">
             <Search className="w-4 h-4 text-ink-3 mr-2" />
@@ -116,8 +116,8 @@ export default function ContractsMasterPage() {
                 </tr>
               ) : (
                 contracts.map((contract) => (
-                  <tr 
-                    key={contract.contract_no} 
+                  <tr
+                    key={contract.contract_no}
                     className={`hover:bg-bg-warm/10 transition-colors ${contract.is_archived ? "opacity-60 bg-bg-warm/50" : ""}`}
                   >
                     <td className="py-3 px-4 font-mono font-medium text-ink">
@@ -135,10 +135,10 @@ export default function ContractsMasterPage() {
                     <td className="py-3 px-4">
                       {contract.allocated_to ? (
                         <div className="flex items-center gap-2">
-                           <div className="w-5 h-5 rounded-full bg-accent-soft text-accent-ink text-[8px] font-bold flex items-center justify-center select-none">
-                              {contract.agent_name?.split(" ").map(n => n[0]).join("").substring(0,2)}
-                           </div>
-                           <span className="text-ink-2">{contract.agent_name}</span>
+                          <div className="w-5 h-5 rounded-full bg-accent-soft text-accent-ink text-[8px] font-bold flex items-center justify-center select-none">
+                            {contract.agent_name?.split(" ").map(n => n[0]).join("").substring(0, 2)}
+                          </div>
+                          <span className="text-ink-2">{contract.agent_name}</span>
                         </div>
                       ) : (
                         <span className="text-ink-3 italic text-[11px]">Unassigned</span>
@@ -159,11 +159,10 @@ export default function ContractsMasterPage() {
                       <button
                         onClick={() => handleToggleArchive(contract.contract_no, contract.is_archived)}
                         disabled={updating === contract.contract_no}
-                        className={`inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer border ${
-                          contract.is_archived 
-                            ? "bg-surface border-border-custom text-ink hover:border-ink" 
+                        className={`inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer border ${contract.is_archived
+                            ? "bg-surface border-border-custom text-ink hover:border-ink"
                             : "bg-surface border-border-custom text-bad hover:bg-bad-bg hover:border-bad/30"
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {updating === contract.contract_no ? (
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />

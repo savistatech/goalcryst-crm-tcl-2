@@ -171,10 +171,10 @@ export default function DashboardLayout({
       path: "/waivers", icon: ShieldCheck, section: "Command center", badge: undefined, requiredPermission: "can_raise_waiver"
     },
     { label: "Bulk Import", path: "/imports", icon: UploadCloud, section: "Admin setup", badge: undefined, requiredPermission: "can_upload_excel" },
-    { label: "Contract Master", path: "/contracts", icon: Database, section: "Admin setup", badge: undefined, requiredPermission: "can_manage_users" },
-    { label: "Compliance Auditing", path: "/audit", icon: ListChecks, section: "Admin setup", badge: undefined, requiredPermission: "can_view_audit_logs" },
+    { label: "All Contract", path: "/contracts", icon: Database, section: "Admin setup", badge: undefined, requiredPermission: "can_manage_users" },
     { label: "Reports", path: "/reports", icon: BarChart3, section: "Admin setup", badge: undefined, requiredPermission: "can_view_reports" },
     { label: "Users & Roles", path: "/users", icon: UsersIcon, section: "Admin setup", badge: undefined, requiredPermission: "can_manage_users" },
+    { label: "Audits", path: "/audit", icon: ListChecks, section: "Admin setup", badge: undefined, requiredPermission: "can_view_audit_logs" },
   ];
 
   const isSuperAdmin = perms["_superAdmin"] === true;

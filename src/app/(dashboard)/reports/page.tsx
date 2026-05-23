@@ -33,108 +33,60 @@ export default function ReportsPage() {
 
   const reports: ReportDef[] = [
     {
-      id: "portfolio_allocation",
-      name: "Portfolio Allocation Summary",
+      id: "all_dispositions",
+      name: "All Dispositions Report",
       category: "operations",
-      desc: "Aggregated outstanding summaries, contract assignments, product codes, and locations.",
-      columns: ["Contract No", "Customer Name", "Product", "Branch", "State", "BOM DPD", "Total Outstanding"],
-      icon: TrendingUp
-    },
-    {
-      id: "dial_log",
-      name: "Action Attempt / Dial Log Report",
-      category: "operations",
-      desc: "Comprehensive timelines of operator call attempts, dispos main/sub categories, and notes.",
-      columns: ["Contract No", "Date Logged", "Agent Name", "Calling Outcome", "Sub Category", "Remarks"],
+      desc: "Complete log of all call attempts and dispositions.",
+      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: Timer
     },
     {
-      id: "ptp_conversion",
-      name: "PTP Conversion & Commitment Report",
+      id: "ptp",
+      name: "PTP Report",
       category: "financial",
-      desc: "Future collections promise-to-pay commitment amounts, scheduled dates, and agents.",
-      columns: ["Contract No", "Date Scheduled", "Promise Date", "Promise Amount", "Agent Name"],
+      desc: "Log of Promise to Pay commitments.",
+      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: Coins
     },
     {
-      id: "mtd_collection",
-      name: "MTD Collection & Receipting Report",
+      id: "agree_to_pay",
+      name: "Agree To Pay Report",
       category: "financial",
-      desc: "Logs of part-paid collected sums, payment date coordinates, and receipt reference verification codes.",
-      columns: ["Contract No", "Payment Date", "Collected Amount", "UTR / Receipt Reference", "Agent Name"],
+      desc: "Log of Agree to Pay commitments.",
+      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: CheckCircle
     },
     {
-      id: "waiver_requests",
-      name: "Settlement Discount Waiver Report",
-      category: "compliance",
-      desc: "Audit logs of settlement discount waiver request logs raised by agents and reviewed by managers.",
-      columns: ["Contract No", "Date Raised", "Total Outstanding", "Waiver Requested", "Final Customer Payable", "Waiver Reason", "Status", "Agent Name"],
-      icon: ShieldCheck
-    },
-    {
-      id: "legal_sec138",
-      name: "Legal Litigation Sec 138 Cases",
-      category: "legal",
-      desc: "Section 138 cheque bounce lawsuit schedules, court houses, cheque values, and advocates.",
-      columns: ["Contract No", "Case Number", "Cheque No", "Cheque Amount", "Court Name", "Court Location", "Advocate In-charge", "Legal Status"],
-      icon: Scale
-    },
-    {
-      id: "audit_logs",
-      name: "Gated Access Compliance Audit Log",
-      category: "compliance",
-      desc: "Security tracking timeline auditing operator activities, bulk imports, and authorization changes.",
-      columns: ["Timestamp", "Operator", "Action Event", "Entity Reference", "Metadata Details"],
-      icon: ShieldCheck
-    },
-    {
-      id: "agent_productivity",
-      name: "Agent Calling Productivity Report",
+      id: "broken_ptp",
+      name: "Broken PTP Report",
       category: "operations",
-      desc: "Calculations of daily logged attempt frequencies, call times, and contact connection rates.",
-      columns: ["Agent Name", "Total Allocations", "Calls Logged", "Connected Rate", "PTP Promises"],
-      icon: BookOpen
+      desc: "Log of Broken Promise to Pay dispositions.",
+      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      icon: TrendingUp
     },
     {
-      id: "branch_performance",
-      name: "Branch Collections Performance",
+      id: "part_paid",
+      name: "Part Paid Report",
       category: "financial",
-      desc: "Comparisons of collectable outstanding balances and monthly recovery ratios across branches.",
-      columns: ["Branch Name", "Outstanding Balance", "MTD Collected Sum", "Collection Ratios"],
+      desc: "Log of Part Paid dispositions.",
+      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: FileSpreadsheet
     },
     {
-      id: "regional_outstanding",
-      name: "Regional/State Outstanding Summary",
-      category: "financial",
-      desc: "Outstandings distribution and collections metrics partitioned strictly by state regions.",
-      columns: ["State Region", "Total Outstanding", "Active Customer Count"],
-      icon: FileSpreadsheet
-    },
-    {
-      id: "asset_collateral",
-      name: "Vehicle Asset Collateral Inventory",
+      id: "contactable",
+      name: "Contactable Report",
       category: "operations",
-      desc: "Manufacturer models, engine numbers, chassis coordinates, and RC registration codes.",
-      columns: ["Contract No", "Manufacturer", "Asset Model", "RC Registration", "Engine Number"],
-      icon: FileSpreadsheet
+      desc: "Log of Contactable dispositions.",
+      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      icon: Timer
     },
     {
-      id: "skip_logs",
-      name: "Skipped Duplicate Allocation Report",
-      category: "compliance",
-      desc: "Safety skip summaries logging files duplicate contract codes safely skipped during Excel imports.",
-      columns: ["Batch Reference", "Row Number", "Duplicate Contract No", "Import Date"],
-      icon: ShieldCheck
-    },
-    {
-      id: "litigation_ep",
-      name: "Execution Petition (EP) Case Hearings",
-      category: "legal",
-      desc: "Hearing timelines, next dates (NDOH), advocate names, and ep stages for pending EP lawsuits.",
-      columns: ["Contract No", "EP Case Number", "Court Bench", "EP Stage", "NDOH Date"],
-      icon: Scale
+      id: "non_contactable",
+      name: "Non-Contactable Report",
+      category: "operations",
+      desc: "Log of Non-Contactable dispositions.",
+      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      icon: Timer
     }
   ];
 
@@ -187,7 +139,7 @@ export default function ReportsPage() {
         <Search className="w-4 h-4 text-ink-3 mr-2.5" />
         <input
           type="text"
-          placeholder="Search among 14 standard reports..."
+          placeholder="Search among 7 standard reports..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full bg-transparent border-0 outline-none text-xs text-ink placeholder-ink-3"
