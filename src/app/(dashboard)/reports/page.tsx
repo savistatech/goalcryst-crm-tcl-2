@@ -37,7 +37,7 @@ export default function ReportsPage() {
       name: "All Dispositions Report",
       category: "operations",
       desc: "Complete log of all call attempts and dispositions.",
-      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: Timer
     },
     {
@@ -45,7 +45,7 @@ export default function ReportsPage() {
       name: "PTP Report",
       category: "financial",
       desc: "Log of Promise to Pay commitments.",
-      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: Coins
     },
     {
@@ -53,7 +53,7 @@ export default function ReportsPage() {
       name: "Agree To Pay Report",
       category: "financial",
       desc: "Log of Agree to Pay commitments.",
-      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: CheckCircle
     },
     {
@@ -61,7 +61,7 @@ export default function ReportsPage() {
       name: "Broken PTP Report",
       category: "operations",
       desc: "Log of Broken Promise to Pay dispositions.",
-      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: TrendingUp
     },
     {
@@ -69,7 +69,7 @@ export default function ReportsPage() {
       name: "Part Paid Report",
       category: "financial",
       desc: "Log of Part Paid dispositions.",
-      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: FileSpreadsheet
     },
     {
@@ -77,7 +77,7 @@ export default function ReportsPage() {
       name: "Contactable Report",
       category: "operations",
       desc: "Log of Contactable dispositions.",
-      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: Timer
     },
     {
@@ -85,7 +85,7 @@ export default function ReportsPage() {
       name: "Non-Contactable Report",
       category: "operations",
       desc: "Log of Non-Contactable dispositions.",
-      columns: ["Contract No", "Customer Name", "Agent Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
+      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks"],
       icon: Timer
     }
   ];

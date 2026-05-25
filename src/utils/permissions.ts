@@ -1,6 +1,6 @@
 import { createClient } from "./supabase/server";
 
-export type UserRole = "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent";
+export type UserRole = "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
 
 export const PERMISSION_KEYS = [
   "can_upload_excel",
@@ -62,7 +62,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     "can_view_reports",
     "can_view_all_dispositions"
   ],
-  "Agent": [
+  "Employee": [
     "can_search_customer",
     "can_view_contact_numbers",
     "can_view_financial_data",

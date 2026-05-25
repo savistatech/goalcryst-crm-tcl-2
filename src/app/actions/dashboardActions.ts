@@ -26,7 +26,7 @@ export interface DashboardMetrics {
   dispositionOutcomes: { name: string; value: number; fill: string }[];
   ptpAnalysis: { week: string; ptpCount: number; ptpValue: number; contactable: number }[];
   leaderboard: { rank: string; name: string; team: string; calls: number; ptp: string; achieved: string }[];
-  recentCalls: { agent: string; customer: string; dispo: string; amt: string | null; date: string; time: string; type: string }[];
+  recentCalls: { employee: string; customer: string; dispo: string; amt: string | null; date: string; time: string; type: string }[];
 }
 
 /**
@@ -112,7 +112,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
   const ptpAnalysis = weekLabels.map(w => ({ week: w, ...weekMap.get(w)! }));
 
-  // 6. Fetch Leaderboard Performance (Today attempts and commitments values per agent)
+  // 6. Fetch Leaderboard Performance (Today attempts and commitments values per employee)
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
@@ -120,36 +120,36 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     .from("dispositions")
     .select(`
       ptp_amount,
-      agent_profile:profiles(id, full_name, role)
+      employee_profile:profiles(id, full_name, role)
     `)
     .gte("created_at", startOfToday.toISOString());
 
-  const agentPerformanceMap = new Map<string, { name: string; role: string; calls: number; ptpValue: number }>();
+  const employeePerformanceMap = new Map<string, { name: string; role: string; calls: number; ptpValue: number }>();
 
   (todayDispos || []).forEach(row => {
-    const agentRaw = row.agent_profile;
-    const agent: any = Array.isArray(agentRaw) ? agentRaw[0] : (agentRaw || {});
-    if (!agent || !agent.id) return;
+    const employeeRaw = row.employee_profile;
+    const employee: any = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
+    if (!employee || !employee.id) return;
 
-    if (!agentPerformanceMap.has(agent.id)) {
-      agentPerformanceMap.set(agent.id, {
-        name: agent.full_name || "System Agent",
-        role: agent.role || "Agent",
+    if (!employeePerformanceMap.has(employee.id)) {
+      employeePerformanceMap.set(employee.id, {
+        name: employee.full_name || "System Employee",
+        role: employee.role || "Employee",
         calls: 0,
         ptpValue: 0
       });
     }
 
-    const stats = agentPerformanceMap.get(agent.id)!;
+    const stats = employeePerformanceMap.get(employee.id)!;
     stats.calls++;
     if (row.ptp_amount) {
       stats.ptpValue += Number(row.ptp_amount);
     }
   });
 
-  const rawLeaderboard = Array.from(agentPerformanceMap.values()).map(a => ({
+  const rawLeaderboard = Array.from(employeePerformanceMap.values()).map(a => ({
     name: a.name,
-    team: a.role === "Agent" ? "South Team Operations" : a.role,
+    team: a.role === "Employee" ? "South Team Operations" : a.role,
     calls: a.calls,
     ptpValue: a.ptpValue
   }));
@@ -184,7 +184,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
       ptp_amount,
       created_at,
       contracts(customer_name),
-      agent_profile:profiles(full_name)
+      employee_profile:profiles(full_name)
     `)
     .order("created_at", { ascending: false })
     .limit(5);
@@ -201,15 +201,15 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
   const recentCalls = (recCallsList || []).map((row: any) => {
     const customer = Array.isArray(row.contracts) ? row.contracts[0]?.customer_name : (row.contracts?.customer_name || "Unknown Customer");
-    const agentRaw = row.agent_profile;
-    const agentObj = Array.isArray(agentRaw) ? agentRaw[0] : (agentRaw || {});
-    const agent = agentObj.full_name || "System Agent";
+    const employeeRaw = row.employee_profile;
+    const employeeObj = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
+    const employee = employeeObj.full_name || "System Employee";
     const amt = row.ptp_amount 
       ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(row.ptp_amount) 
       : null;
 
     return {
-      agent,
+      employee,
       customer,
       dispo: row.sub_disposition,
       amt,
@@ -221,7 +221,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
   // Fallback defaults for empty calls timeline
   const defaultRecent = [
-    { agent: "Vikram Naidu", customer: "Aruna Kumari Adi", dispo: "Promise to Pay", amt: "₹15,000", date: "23 May", time: "1 hr ago", type: "good" }
+    { employee: "Vikram Naidu", customer: "Aruna Kumari Adi", dispo: "Promise to Pay", amt: "₹15,000", date: "23 May", time: "1 hr ago", type: "good" }
   ];
 
   return {
@@ -244,7 +244,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   };
 }
 
-export interface AgentDashboardMetrics {
+export interface EmployeeDashboardMetrics {
   myAllocatedCount: number;
   myCallsToday: number;
   myCallsTotal: number;
@@ -261,15 +261,15 @@ export interface AgentDashboardMetrics {
     ptp_amount: number | null;
     created_at: string;
   }[];
-  agentName: string;
-  agentRole: string;
+  employeeName: string;
+  employeeRole: string;
 }
 
 /**
- * Fetches personal productivity metrics for the currently logged-in agent.
- * Powers the role-specific Agent Overview dashboard.
+ * Fetches personal productivity metrics for the currently logged-in employee.
+ * Powers the role-specific Employee Overview dashboard.
  */
-export async function getAgentDashboardMetrics(): Promise<AgentDashboardMetrics> {
+export async function getEmployeeDashboardMetrics(): Promise<EmployeeDashboardMetrics> {
   const supabase = await createClient();
 
   // Use getActiveUser which handles both real Supabase auth AND local cookie-based fallback
@@ -279,7 +279,7 @@ export async function getAgentDashboardMetrics(): Promise<AgentDashboardMetrics>
       myAllocatedCount: 0, myCallsToday: 0, myCallsTotal: 0,
       myContactableRate: 0, myPtpCount: 0, myPtpValue: 0,
       myWaiversPending: 0, myWaiversApproved: 0, myWaiversRejected: 0,
-      myRecentDispos: [], agentName: "Unknown", agentRole: "Agent"
+      myRecentDispos: [], employeeName: "Unknown", employeeRole: "Employee"
     };
   }
 
@@ -290,7 +290,7 @@ export async function getAgentDashboardMetrics(): Promise<AgentDashboardMetrics>
     .eq("id", user.id)
     .single();
 
-  // 2. My allocated contracts count (column is `allocated_to`, not `agent_id`)
+  // 2. My allocated contracts count (column is `allocated_to`, not `employee_id`)
   const { count: allocCount } = await supabase
     .from("contracts")
     .select("*", { count: "exact", head: true })
@@ -303,7 +303,7 @@ export async function getAgentDashboardMetrics(): Promise<AgentDashboardMetrics>
   const { data: allMyDispos } = await supabase
     .from("dispositions")
     .select("main_disposition, sub_disposition, ptp_amount, ptp_date, created_at, contracts(customer_name, contract_no)")
-    .eq("agent_id", user.id)
+    .eq("employee_id", user.id)
     .order("created_at", { ascending: false });
 
   const myDispos = allMyDispos || [];
@@ -321,7 +321,7 @@ export async function getAgentDashboardMetrics(): Promise<AgentDashboardMetrics>
   const { data: myWaivers } = await supabase
     .from("waiver_requests")
     .select("status")
-    .eq("agent_id", user.id);
+    .eq("employee_id", user.id);
 
   const waiverList = myWaivers || [];
   const myWaiversPending = waiverList.filter(w => w.status === "Pending").length;
@@ -351,8 +351,8 @@ export async function getAgentDashboardMetrics(): Promise<AgentDashboardMetrics>
     myWaiversApproved,
     myWaiversRejected,
     myRecentDispos,
-    agentName: profile?.full_name || "Agent",
-    agentRole: profile?.role || "Agent",
+    employeeName: profile?.full_name || "Employee",
+    employeeRole: profile?.role || "Employee",
   };
 }
 

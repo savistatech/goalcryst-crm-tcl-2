@@ -78,7 +78,7 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
           Settlement Waiver Approvals
         </h1>
         <p className="text-[13px] text-ink-2 mt-1">
-          Review and approve settlement discount requests raised by operations collection field agents.
+          Review and approve settlement discount requests raised by operations collection field employees.
         </p>
       </div>
 
@@ -145,16 +145,16 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
                     <strong className="text-ink font-medium">{row.reason}</strong>
                   </div>
 
-                  {/* Agent remarks */}
+                  {/* Employee remarks */}
                   <div className="space-y-1 text-[12.5px]">
-                    <span className="text-ink-3 uppercase font-semibold text-[9.5px] tracking-wide block">Agent remarks / justification</span>
-                    <p className="text-ink-2 italic bg-bg-warm/30 p-2.5 rounded-lg border border-border-custom/50 leading-relaxed font-sans">&quot;{row.agent_remarks}&quot;</p>
+                    <span className="text-ink-3 uppercase font-semibold text-[9.5px] tracking-wide block">Employee remarks / justification</span>
+                    <p className="text-ink-2 italic bg-bg-warm/30 p-2.5 rounded-lg border border-border-custom/50 leading-relaxed font-sans">&quot;{row.employee_remarks}&quot;</p>
                   </div>
 
                   <div className="text-[11px] text-ink-3 pt-1 border-t border-border-custom/50 flex items-center gap-1.5">
                     <UserSquare2 className="w-3.5 h-3.5" />
                     <span>Raised by:</span>
-                    <strong className="text-ink-2 font-medium">{row.agent_name}</strong>
+                    <strong className="text-ink-2 font-medium">{row.employee_name}</strong>
                   </div>
                 </div>
 

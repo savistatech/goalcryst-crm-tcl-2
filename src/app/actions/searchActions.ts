@@ -12,7 +12,7 @@ export interface SearchResult {
 
 /**
  * Dynamic exact/partial search matching across contracts and contact numbers.
- * Enforces agents search restriction (agents can only find customers by exact/partial search, no bulk listing).
+ * Enforces employees search restriction (employees can only find customers by exact/partial search, no bulk listing).
  */
 export async function searchContracts(query: string): Promise<SearchResult[]> {
   if (!query || query.trim().length < 2) return [];

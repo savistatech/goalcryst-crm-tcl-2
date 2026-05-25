@@ -14,10 +14,10 @@ import {
   Search,
   Receipt,
 } from "lucide-react";
-import { type AgentDashboardMetrics } from "@/app/actions/dashboardActions";
+import { type EmployeeDashboardMetrics } from "@/app/actions/dashboardActions";
 
-interface AgentOverviewProps {
-  metrics: AgentDashboardMetrics;
+interface EmployeeOverviewProps {
+  metrics: EmployeeDashboardMetrics;
 }
 
 const formatMoney = (val: number) =>
@@ -49,8 +49,8 @@ const DISPO_COLORS: Record<string, string> = {
   "Wrong Number": "text-ink-3",
 };
 
-export default function AgentOverviewClientView({ metrics }: AgentOverviewProps) {
-  const initials = metrics.agentName
+export default function EmployeeOverviewClientView({ metrics }: EmployeeOverviewProps) {
+  const initials = metrics.employeeName
     .split(" ")
     .map((w) => w[0])
     .join("")
@@ -68,10 +68,10 @@ export default function AgentOverviewClientView({ metrics }: AgentOverviewProps)
             <span>Overview</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-ink font-serif">
-            Good day, {metrics.agentName.split(" ")[0]}
+            Good day, {metrics.employeeName.split(" ")[0]}
           </h1>
           <p className="text-[13px] text-ink-2 mt-1">
-            {metrics.agentRole} · Here&apos;s your personal performance snapshot for today.
+            {metrics.employeeRole} · Here&apos;s your personal performance snapshot for today.
           </p>
         </div>
         <div className="flex items-center gap-3">

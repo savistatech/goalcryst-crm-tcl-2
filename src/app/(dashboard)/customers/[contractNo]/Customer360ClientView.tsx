@@ -177,7 +177,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
           remarks,
           ptp_amount: ptpAmount ? Number(ptpAmount) : null,
           ptp_date: ptpDate || null,
-          agent_profile: { full_name: "You (Active)", role: "Agent" }
+          employee_profile: { full_name: "You (Active)", role: "Employee" }
         };
         setData(prev => ({
           ...prev,
@@ -235,9 +235,9 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
           requested_waiver_amount: waiverVal,
           customer_payable_amount: Number(payableAmount),
           reason: waiverReason,
-          agent_remarks: waiverRemarks,
+          employee_remarks: waiverRemarks,
           status: "Pending",
-          agent_profile: { full_name: "You (Active)" }
+          employee_profile: { full_name: "You (Active)" }
         };
         setData(prev => ({
           ...prev,
@@ -448,7 +448,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                             Commitment: {formatMoney(dispo.ptp_amount)} on {new Date(dispo.ptp_date).toLocaleDateString()}
                           </div>
                         )}
-                        <span className="text-[10.5px] text-ink-3 block mt-1">Logged by: {dispo.agent_profile?.full_name}</span>
+                        <span className="text-[10.5px] text-ink-3 block mt-1">Logged by: {dispo.employee_profile?.full_name}</span>
                       </div>
                     ))}
                   </div>
@@ -603,7 +603,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                         <th className="py-2 px-3">Waiver Amount</th>
                         <th className="py-2 px-3">Customer Payable</th>
                         <th className="py-2 px-3">Reason</th>
-                        <th className="py-2 px-3">Agent Remarks</th>
+                        <th className="py-2 px-3">Employee Remarks</th>
                         <th className="py-2 px-3 text-center">Status</th>
                       </tr>
                     </thead>
@@ -614,7 +614,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                           <td className="py-3 px-3 font-semibold text-accent-custom font-mono">{formatMoney(w.requested_waiver_amount)}</td>
                           <td className="py-3 px-3 font-semibold text-ink font-mono">{formatMoney(w.customer_payable_amount)}</td>
                           <td className="py-3 px-3 text-ink-2 max-w-[120px] truncate">{w.reason}</td>
-                          <td className="py-3 px-3 text-ink-3 italic">{w.agent_remarks || "-"}</td>
+                          <td className="py-3 px-3 text-ink-3 italic">{w.employee_remarks || "-"}</td>
                           <td className="py-3 px-3 text-center">
                             <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${w.status === "Approved" ? "bg-good-bg text-good" : w.status === "Rejected" ? "bg-bad-bg text-bad" : "bg-warn-bg text-warn"
                               }`}>
@@ -845,7 +845,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
 
                       <div className="text-[11px] text-ink-3 flex items-center gap-1.5 pt-1.5 border-t border-border-custom/50">
                         <span>Attempt log by:</span>
-                        <strong className="text-ink-2 font-medium">{dispo.agent_profile?.full_name} ({dispo.agent_profile?.role})</strong>
+                        <strong className="text-ink-2 font-medium">{dispo.employee_profile?.full_name} ({dispo.employee_profile?.role})</strong>
                       </div>
                     </div>
                   </div>
@@ -1095,7 +1095,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Agent Justification Notes</label>
+                <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Employee Justification Notes</label>
                 <textarea
                   required
                   rows={2}

@@ -40,7 +40,8 @@ export async function getActiveUser() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) return user;
-  } catch {
+  } catch (err) {
+    console.error("DEBUG: supabase.auth.getUser() failed with error:", err);
     // Suppress auth exceptions in local container environment and continue to fallback cookie checks
   }
 
@@ -73,10 +74,10 @@ export async function getActiveUser() {
         email: "tl@goalcryst.com"
       };
     }
-    if (email.includes("agent@goalcryst.com")) {
+    if (email.includes("employee@goalcryst.com")) {
       return {
         id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13",
-        email: "agent@goalcryst.com"
+        email: "employee@goalcryst.com"
       };
     }
   }

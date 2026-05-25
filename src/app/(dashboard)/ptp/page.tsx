@@ -122,7 +122,7 @@ export default async function PtpPage() {
                   <th className="py-2.5 px-4">Promise Date</th>
                   <th className="py-2.5 px-4">Promise Amount</th>
                   <th className="py-2.5 px-4">Outstanding Balance</th>
-                  <th className="py-2.5 px-4">Agent Name</th>
+                  <th className="py-2.5 px-4">Employee Name</th>
                   <th className="py-2.5 px-5 text-right">Actions</th>
                 </tr>
               </thead>
@@ -134,7 +134,7 @@ export default async function PtpPage() {
                     <td className="py-3.5 px-4 font-semibold text-good font-mono">{new Date(row.ptp_date).toLocaleDateString()}</td>
                     <td className="py-3.5 px-4 font-semibold text-ink font-mono">{formatMoney(row.ptp_amount)}</td>
                     <td className="py-3.5 px-4 font-mono text-ink-2">{formatMoney(row.total_outstanding)}</td>
-                    <td className="py-3.5 px-4 text-ink-2">{row.agent_name}</td>
+                    <td className="py-3.5 px-4 text-ink-2">{row.employee_name}</td>
                     <td className="py-3.5 px-5 text-right">
                       <Link
                         href={`/customers/${row.contract_no}`}

@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 export interface OperatorRecord {
   id: string;
   full_name: string;
-  role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent";
+  role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
   is_active: boolean;
   created_at: string;
   permissions: {
@@ -67,7 +67,7 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
     return {
       id: row.id,
       full_name: row.full_name,
-      role: row.role as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent",
+      role: row.role as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee",
       is_active: row.is_active,
       created_at: row.created_at,
       permissions: {
@@ -87,7 +87,7 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
 export async function createOperator(data: {
   name: string;
   email: string;
-  role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent";
+  role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
   canApprove: boolean;
   canImport: boolean;
   canViewAudit: boolean;

@@ -67,7 +67,7 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .from("dispositions")
     .select(`
       *,
-      agent_profile:profiles(id, full_name, role)
+      employee_profile:profiles(id, full_name, role)
     `)
     .eq("contract_no", contractNo)
     .order("created_at", { ascending: false });
@@ -77,7 +77,7 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .from("waiver_requests")
     .select(`
       *,
-      agent_profile:profiles!waiver_requests_agent_id_fkey(id, full_name),
+      employee_profile:profiles!waiver_requests_employee_id_fkey(id, full_name),
       reviewed_by_profile:profiles!waiver_requests_reviewed_by_fkey(id, full_name)
     `)
     .eq("contract_no", contractNo)
@@ -125,7 +125,7 @@ export async function logCallDisposition(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  // Retrieve current agent session
+  // Retrieve current employee session
   const user = await getActiveUser();
   if (!user) {
     return { success: false, error: "Authentication expired. Please log in again." };
@@ -136,7 +136,7 @@ export async function logCallDisposition(
     .from("dispositions")
     .insert({
       contract_no: contractNo,
-      agent_id: user.id,
+      employee_id: user.id,
       main_disposition: mainDisposition,
       sub_disposition: subDisposition,
       remarks,
@@ -176,7 +176,7 @@ export async function raiseWaiverRequest(
   customerPayableAmount: number,
   reason: string,
   routedTo: string[],
-  agentRemarks?: string
+  employeeRemarks?: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
@@ -204,13 +204,13 @@ export async function raiseWaiverRequest(
     .from("waiver_requests")
     .insert({
       contract_no: contractNo,
-      agent_id: user.id,
+      employee_id: user.id,
       total_outstanding: totalOutstanding,
       requested_waiver_amount: requestedWaiverAmount,
       customer_payable_amount: customerPayableAmount,
       reason,
       routed_to: routedTo,
-      agent_remarks: agentRemarks || null,
+      employee_remarks: employeeRemarks || null,
       status: "Pending"
     });
 

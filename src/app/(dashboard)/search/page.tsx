@@ -50,13 +50,13 @@ export default function SearchPage() {
           <div className="flex items-center gap-1.5 text-xs text-ink-3">
             <span>GoalCryst CRM</span>
             <span>·</span>
-            <span>Agent Workspace</span>
+            <span>Employee Workspace</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
             Search Contracts
           </h1>
           <p className="text-[13px] text-ink-2 mt-1">
-            Authorized agent access only. Gated security locks active on all customer exposures.
+            Authorized employee access only. Gated security locks active on all customer exposures.
           </p>
         </div>
 

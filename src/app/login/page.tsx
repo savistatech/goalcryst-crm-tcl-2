@@ -19,13 +19,13 @@ export default function LoginPage() {
     // Simulate database lookup and auth session
     setTimeout(() => {
       const emailTrim = email.trim().toLowerCase();
-      const validEmails = ["admin@goalcryst.com", "bm@goalcryst.com", "am@goalcryst.com", "tl@goalcryst.com", "agent@goalcryst.com"];
+      const validEmails = ["admin@goalcryst.com", "bm@goalcryst.com", "am@goalcryst.com", "tl@goalcryst.com", "employee@goalcryst.com"];
 
       if (validEmails.includes(emailTrim) && password === "password123") {
         // Write dynamic local session cookie
         document.cookie = `goalcryst_session=${encodeURIComponent(emailTrim)}; path=/; max-age=86400; SameSite=Lax`;
         
-        if (emailTrim === "agent@goalcryst.com") {
+        if (emailTrim === "employee@goalcryst.com") {
           router.push("/search");
         } else {
           router.push("/");
@@ -129,7 +129,7 @@ export default function LoginPage() {
               <div>Branch Mgr: <strong className="text-ink font-mono">bm@goalcryst.com</strong></div>
               <div>Asst Mgr: <strong className="text-ink font-mono">am@goalcryst.com</strong></div>
               <div>Team Leader: <strong className="text-ink font-mono">tl@goalcryst.com</strong></div>
-              <div>Agent: <strong className="text-ink font-mono">agent@goalcryst.com</strong></div>
+              <div>Employee: <strong className="text-ink font-mono">employee@goalcryst.com</strong></div>
             </div>
           </div>
         </div>

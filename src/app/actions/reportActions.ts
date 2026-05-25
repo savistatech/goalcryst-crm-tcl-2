@@ -20,7 +20,7 @@ export async function getReportData(reportType: string): Promise<any[]> {
       remarks,
       created_at,
       contracts(customer_name),
-      agent_profile:profiles(full_name)
+      employee_profile:profiles(full_name)
     `);
 
   switch (reportType) {
@@ -68,8 +68,8 @@ export async function getReportData(reportType: string): Promise<any[]> {
 
   return (data || []).map((row: any) => {
     const contracts = Array.isArray(row.contracts) ? row.contracts[0] : (row.contracts || {});
-    const agentRaw = row.agent_profile;
-    const agent = Array.isArray(agentRaw) ? agentRaw[0] : (agentRaw || {});
+    const employeeRaw = row.employee_profile;
+    const employee = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
     
     // Some reports use ptp_amount, some use paid_amount
     let amount = "-";
@@ -79,7 +79,7 @@ export async function getReportData(reportType: string): Promise<any[]> {
     return {
       "Contract No": row.contract_no,
       "Customer Name": contracts.customer_name || "-",
-      "Agent Name": agent.full_name || "System",
+      "Employee Name": employee.full_name || "System",
       "Date Logged": new Date(row.created_at).toLocaleString(),
       "Main Disposition": row.main_disposition || "-",
       "Sub Disposition": row.sub_disposition || "-",

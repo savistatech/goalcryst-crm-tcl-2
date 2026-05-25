@@ -11,13 +11,13 @@ export interface AdminContractRow {
   bom_dpd: number;
   is_archived: boolean;
   allocated_to: string | null;
-  agent_name: string | null;
+  employee_name: string | null;
   imported_at: string;
 }
 
 /**
  * Fetches all contracts with optional search filtering and pagination.
- * Includes the agent name assigned to the contract (if any).
+ * Includes the employee name assigned to the contract (if any).
  */
 export async function getAllContracts(
   page: number = 1,
@@ -55,7 +55,7 @@ export async function getAllContracts(
       is_archived,
       allocated_to,
       imported_at,
-      agent_profile:profiles(full_name)
+      employee_profile:profiles(full_name)
     `,
       { count: "exact" }
     );
@@ -81,8 +81,8 @@ export async function getAllContracts(
   }
 
   const contracts: AdminContractRow[] = data.map((row: any) => {
-    const agentRaw = row.agent_profile;
-    const agent = Array.isArray(agentRaw) ? agentRaw[0] : (agentRaw || {});
+    const employeeRaw = row.employee_profile;
+    const employee = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
     return {
       contract_no: row.contract_no,
       customer_name: row.customer_name,
@@ -91,7 +91,7 @@ export async function getAllContracts(
       bom_dpd: Number(row.bom_dpd || 0),
       is_archived: row.is_archived || false,
       allocated_to: row.allocated_to,
-      agent_name: agent.full_name || "Unassigned",
+      employee_name: employee.full_name || "Unassigned",
       imported_at: row.imported_at,
     };
   });

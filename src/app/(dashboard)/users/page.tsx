@@ -30,7 +30,7 @@ export default function UsersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState<"Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent">("Agent");
+  const [newRole, setNewRole] = useState<"Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee">("Employee");
   const [newCanApprove, setNewCanApprove] = useState(false);
   const [newCanImport, setNewCanImport] = useState(false);
   const [newCanViewAudit, setNewCanViewAudit] = useState(false);
@@ -100,7 +100,7 @@ export default function UsersPage() {
         // Reset form and close modal
         setNewName("");
         setNewEmail("");
-        setNewRole("Agent");
+        setNewRole("Employee");
         setNewCanApprove(false);
         setNewCanImport(false);
         setNewCanViewAudit(false);
@@ -164,7 +164,7 @@ export default function UsersPage() {
   const formatEmail = (id: string, name: string) => {
     if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11") return "admin@goalcryst.com";
     if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12") return "manager@goalcryst.com";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13") return "agent@goalcryst.com";
+    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13") return "employee@goalcryst.com";
     if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14") return "auditor@goalcryst.com";
     return `${name.toLowerCase().replace(/\s+/g, ".")}@goalcryst.com`;
   };
@@ -370,10 +370,10 @@ export default function UsersPage() {
                   <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">System Access Role</label>
                   <select
                     value={newRole}
-                    onChange={(e) => setNewRole(e.target.value as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Agent")}
+                    onChange={(e) => setNewRole(e.target.value as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee")}
                     className="w-full px-3 py-2 border border-border-custom bg-bg/50 focus:border-accent-custom rounded-xl text-sm text-ink outline-none cursor-pointer transition-colors"
                   >
-                    <option value="Agent">Agent (Dedicated Recovery)</option>
+                    <option value="Employee">Employee (Dedicated Recovery)</option>
                     <option value="Team Leader">Team Leader (Team Management)</option>
                     <option value="Assistant Manager">Assistant Manager (Operations)</option>
                     <option value="Branch Manager">Branch Manager (Branch Operations)</option>

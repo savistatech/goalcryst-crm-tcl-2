@@ -281,7 +281,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
           <div className="flex items-center justify-between mb-4">
             <div>
               <span className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Shift Performance</span>
-              <h3 className="text-lg font-semibold tracking-tight text-ink mt-0.5">Agent Leaderboard — Today</h3>
+              <h3 className="text-lg font-semibold tracking-tight text-ink mt-0.5">Employee Leaderboard — Today</h3>
             </div>
             <Link
               href="/ptp"
@@ -296,7 +296,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
               <thead>
                 <tr className="border-b border-border-custom bg-bg-warm/30 text-[10px] uppercase font-semibold text-ink-3">
                   <th className="py-2.5 px-3 w-14">Rank</th>
-                  <th className="py-2.5 px-3">Agent Name</th>
+                  <th className="py-2.5 px-3">Employee Name</th>
                   <th className="py-2.5 px-3 text-center">Calls logged</th>
                   <th className="py-2.5 px-3 text-right">Commitments value</th>
                   <th className="py-2.5 px-3 text-right">Target Achieved</th>
@@ -354,7 +354,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
                     {c.dispo} {c.amt ? `(${c.amt})` : ""}
                   </span>
                   <span className="text-ink-3 text-[10.5px]">by</span>
-                  <span className="font-medium text-ink-2 text-[10.5px]">{c.agent}</span>
+                  <span className="font-medium text-ink-2 text-[10.5px]">{c.employee}</span>
                 </div>
               </div>
             ))}

@@ -94,7 +94,7 @@ export default function DashboardLayout({
     const timer = setTimeout(async () => {
       const cookies = parseCookies();
       const session = cookies["goalcryst_session"];
-      let role = "Agent";
+      let role = "Employee";
 
       if (session) {
         const email = session.toLowerCase().trim();
@@ -110,9 +110,9 @@ export default function DashboardLayout({
         } else if (email.includes("tl@goalcryst.com")) {
           setCurrentUser({ name: "Karthik Reddy", role: "Team Leader", scope: "South Team · Collections", avatar: "KR" });
           role = "Team Leader";
-        } else if (email.includes("agent@goalcryst.com")) {
-          setCurrentUser({ name: "Anjali Rao", role: "Agent", scope: "South Team · Cases allocated", avatar: "AR" });
-          role = "Agent";
+        } else if (email.includes("employee@goalcryst.com")) {
+          setCurrentUser({ name: "Anjali Rao", role: "Employee", scope: "South Team · Cases allocated", avatar: "AR" });
+          role = "Employee";
         }
       }
 
@@ -194,7 +194,7 @@ export default function DashboardLayout({
     "Branch Manager": "bg-good-bg text-good",
     "Assistant Manager": "bg-good-bg text-good opacity-90",
     "Team Leader": "bg-bg-warm border border-border-custom text-ink",
-    "Agent": "bg-warn-bg text-warn",
+    "Employee": "bg-warn-bg text-warn",
   };
 
   const sections = ["Main", "Admin"];

@@ -67,11 +67,11 @@ INSERT INTO auth.users (
 (
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 
   '00000000-0000-0000-0000-000000000000', 
-  'agent@goalcryst.com', 
+  'employee@goalcryst.com', 
   '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
-  '{"full_name":"Anjali Rao","role":"Agent"}', 
+  '{"full_name":"Anjali Rao","role":"Employee"}', 
   FALSE, 
   'authenticated', 
   'authenticated'
@@ -82,7 +82,7 @@ INSERT INTO auth.users (
 -- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12' -> Branch Manager
 -- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15' -> Assistant Manager
 -- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16' -> Team Leader
--- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13' -> Agent
+-- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13' -> Employee
 
 -- 2. Create sample import batch
 INSERT INTO public.import_batches (id, filename, uploaded_by, total_rows, imported_count, duplicates_skipped, failed_count)
@@ -345,7 +345,7 @@ INSERT INTO public.contract_legal (
 
 -- 8. Insert sample call dispositions
 INSERT INTO public.dispositions (
-  contract_no, agent_id, main_disposition, sub_disposition, remarks, follow_up_date, ptp_date, ptp_amount
+  contract_no, employee_id, main_disposition, sub_disposition, remarks, follow_up_date, ptp_date, ptp_amount
 ) VALUES
 (
   'GC-LOS-231029',

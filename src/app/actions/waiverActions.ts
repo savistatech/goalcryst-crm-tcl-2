@@ -8,12 +8,12 @@ export interface PendingWaiver {
   id: string;
   contract_no: string;
   customer_name: string;
-  agent_name: string;
+  employee_name: string;
   total_outstanding: number;
   requested_waiver_amount: number;
   customer_payable_amount: number;
   reason: string;
-  agent_remarks: string;
+  employee_remarks: string;
   routed_to: string[];
   created_at: string;
 }
@@ -26,7 +26,7 @@ export interface MyWaiverRequest {
   requested_waiver_amount: number;
   customer_payable_amount: number;
   reason: string;
-  agent_remarks: string;
+  employee_remarks: string;
   status: "Pending" | "Approved" | "Rejected";
   manager_remarks: string | null;
   routed_to: string[];
@@ -36,8 +36,8 @@ export interface MyWaiverRequest {
 }
 
 /**
- * Fetches all waiver requests raised by the currently authenticated agent.
- * Used to power the Agent's personal waiver status tracker.
+ * Fetches all waiver requests raised by the currently authenticated employee.
+ * Used to power the Employee's personal waiver status tracker.
  */
 export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
   const supabase = await createClient();
@@ -54,7 +54,7 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       requested_waiver_amount,
       customer_payable_amount,
       reason,
-      agent_remarks,
+      employee_remarks,
       status,
       manager_remarks,
       routed_to,
@@ -62,11 +62,11 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       updated_at,
       contracts(customer_name)
     `)
-    .eq("agent_id", user.id)
+    .eq("employee_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error || !list) {
-    console.error("Error fetching agent waiver requests:", error);
+    console.error("Error fetching employee waiver requests:", error);
     return [];
   }
 
@@ -87,7 +87,7 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       requested_waiver_amount: Number(row.requested_waiver_amount || 0),
       customer_payable_amount: Number(row.customer_payable_amount || 0),
       reason: row.reason || "",
-      agent_remarks: row.agent_remarks || "",
+      employee_remarks: row.employee_remarks || "",
       status: row.status as "Pending" | "Approved" | "Rejected",
       manager_remarks: row.manager_remarks || null,
       routed_to: routedIds,
@@ -113,11 +113,11 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       requested_waiver_amount,
       customer_payable_amount,
       reason,
-      agent_remarks,
+      employee_remarks,
       routed_to,
       created_at,
       contracts(customer_name),
-      agent_profile:profiles!waiver_requests_agent_id_fkey(full_name)
+      employee_profile:profiles!waiver_requests_employee_id_fkey(full_name)
     `)
     .eq("status", "Pending");
 
@@ -138,17 +138,17 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
 
   return list.map((row: any) => {
     const contracts = row.contracts || {};
-    const agent = row.agent_profile || {};
+    const employee = row.employee_profile || {};
     return {
       id: row.id,
       contract_no: row.contract_no,
       customer_name: contracts.customer_name || "Unknown Customer",
-      agent_name: agent.full_name || "System Operator",
+      employee_name: employee.full_name || "System Operator",
       total_outstanding: Number(row.total_outstanding || 0),
       requested_waiver_amount: Number(row.requested_waiver_amount || 0),
       customer_payable_amount: Number(row.customer_payable_amount || 0),
       reason: row.reason,
-      agent_remarks: row.agent_remarks || "",
+      employee_remarks: row.employee_remarks || "",
       routed_to: row.routed_to || [],
       created_at: row.created_at
     };

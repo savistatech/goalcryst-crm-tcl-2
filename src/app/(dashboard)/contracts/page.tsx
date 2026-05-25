@@ -95,7 +95,7 @@ export default function ContractsMasterPage() {
                 <th className="py-3 px-4">Customer Name</th>
                 <th className="py-3 px-4">Branch</th>
                 <th className="py-3 px-4 text-center">BOM DPD</th>
-                <th className="py-3 px-4">Allocated Agent</th>
+                <th className="py-3 px-4">Allocated Employee</th>
                 <th className="py-3 px-4 text-center">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
@@ -136,9 +136,9 @@ export default function ContractsMasterPage() {
                       {contract.allocated_to ? (
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 rounded-full bg-accent-soft text-accent-ink text-[8px] font-bold flex items-center justify-center select-none">
-                            {contract.agent_name?.split(" ").map(n => n[0]).join("").substring(0, 2)}
+                            {contract.employee_name?.split(" ").map(n => n[0]).join("").substring(0, 2)}
                           </div>
-                          <span className="text-ink-2">{contract.agent_name}</span>
+                          <span className="text-ink-2">{contract.employee_name}</span>
                         </div>
                       ) : (
                         <span className="text-ink-3 italic text-[11px]">Unassigned</span>

@@ -24,7 +24,7 @@ export interface QueueSummary {
 
 /**
  * Resolves and fetches the prioritized calling queue for the logged-in operator.
- * Enforces role access limits: Agents only get their allocated portfolios.
+ * Enforces role access limits: Employees only get their allocated portfolios.
  */
 export async function getCallingQueue(): Promise<QueueSummary> {
   const supabase = await createClient();
@@ -42,7 +42,7 @@ export async function getCallingQueue(): Promise<QueueSummary> {
     .eq("id", user.id)
     .single();
 
-  const role = profile ? profile.role : "Agent";
+  const role = profile ? profile.role : "Employee";
 
   // 3. Query contracts
   let query = supabase
@@ -60,8 +60,8 @@ export async function getCallingQueue(): Promise<QueueSummary> {
     `)
     .eq("is_archived", false);
 
-  // Role Gate: Agents can only fetch their own assigned cases
-  if (role === "Agent") {
+  // Role Gate: Employees can only fetch their own assigned cases
+  if (role === "Employee") {
     query = query.eq("allocated_to", user.id);
   }
 
@@ -154,7 +154,7 @@ export interface PtpItem {
   ptp_amount: number;
   total_outstanding: number;
   primary_mobile: string;
-  agent_name: string;
+  employee_name: string;
 }
 
 /**
@@ -179,7 +179,7 @@ export async function getPtpSchedules(): Promise<PtpItem[]> {
         contract_contacts(primary_mobile),
         contract_financials(total_outstanding)
       ),
-      agent_profile:profiles(full_name)
+      employee_profile:profiles(full_name)
     `)
     .not("ptp_date", "is", null)
     .order("ptp_date", { ascending: true });
@@ -201,7 +201,7 @@ export async function getPtpSchedules(): Promise<PtpItem[]> {
       ptp_amount: Number(row.ptp_amount || 0),
       total_outstanding,
       primary_mobile,
-      agent_name: row.agent_profile?.full_name || "System"
+      employee_name: row.employee_profile?.full_name || "System"
     };
   });
 }

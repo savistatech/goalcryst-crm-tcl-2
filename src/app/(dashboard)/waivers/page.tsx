@@ -2,13 +2,13 @@ import React from "react";
 import { cookies } from "next/headers";
 import { getPendingWaiverRequests, getMyWaiverRequests } from "@/app/actions/waiverActions";
 import WaiverReviewClientView from "./WaiverReviewClientView";
-import AgentWaiverTrackerView from "./AgentWaiverTrackerView";
+import EmployeeWaiverTrackerView from "./EmployeeWaiverTrackerView";
 import PermissionGuard from "@/components/PermissionGuard";
 
 /**
  * Smart Waivers page:
  *  - can_approve_waiver  → Full manager approval queue (WaiverReviewClientView)
- *  - can_raise_waiver    → Agent's own submissions tracker (AgentWaiverTrackerView)
+ *  - can_raise_waiver    → Employee's own submissions tracker (EmployeeWaiverTrackerView)
  *  - Neither             → PermissionGuard access-denied wall
  */
 export default async function WaiversPage() {
@@ -16,18 +16,18 @@ export default async function WaiversPage() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("goalcryst_session")?.value;
 
-  let role = "Agent";
+  let role = "Employee";
   if (sessionCookie) {
     try {
       const parsed = JSON.parse(decodeURIComponent(sessionCookie));
-      role = parsed.role || "Agent";
+      role = parsed.role || "Employee";
     } catch {
       const decoded = decodeURIComponent(sessionCookie).toLowerCase();
       if (decoded.includes("admin")) role = "Admin";
       else if (decoded.includes("bm@")) role = "Branch Manager";
       else if (decoded.includes("am@")) role = "Assistant Manager";
       else if (decoded.includes("tl@")) role = "Team Leader";
-      else role = "Agent";
+      else role = "Employee";
     }
   }
 
@@ -41,7 +41,7 @@ export default async function WaiversPage() {
 
   if (canRaise) {
     const myWaivers = await getMyWaiverRequests();
-    return <AgentWaiverTrackerView myWaivers={myWaivers} />;
+    return <EmployeeWaiverTrackerView myWaivers={myWaivers} />;
   }
 
   // Fallback: neither permission — show access denied

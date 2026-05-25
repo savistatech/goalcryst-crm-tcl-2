@@ -29,7 +29,7 @@ export default function PermissionGuard({ permission, children }: PermissionGuar
         }, {});
         
         const session = cookies["goalcryst_session"] || "";
-        let role = "Agent";
+        let role = "Employee";
         if (session.includes("admin@goalcryst.com")) {
           role = "Admin";
         } else if (session.includes("bm@goalcryst.com")) {

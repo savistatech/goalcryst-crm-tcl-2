@@ -1,5 +1,5 @@
 -- 1. Create Custom PostgreSQL Enums
-CREATE TYPE public.user_role AS ENUM ('Admin', 'Branch Manager', 'Assistant Manager', 'Team Leader', 'Agent');
+CREATE TYPE public.user_role AS ENUM ('Admin', 'Branch Manager', 'Assistant Manager', 'Team Leader', 'Employee');
 CREATE TYPE public.main_dispo_enum AS ENUM ('Contactable', 'Non-Contactable');
 CREATE TYPE public.waiver_status_enum AS ENUM ('Pending', 'Approved', 'Rejected');
 
@@ -7,7 +7,7 @@ CREATE TYPE public.waiver_status_enum AS ENUM ('Pending', 'Approved', 'Rejected'
 CREATE TABLE public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   full_name TEXT NOT NULL,
-  role public.user_role NOT NULL DEFAULT 'Agent',
+  role public.user_role NOT NULL DEFAULT 'Employee',
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
@@ -193,7 +193,7 @@ CREATE TABLE public.contract_legal (
 CREATE TABLE public.dispositions (
   id BIGSERIAL PRIMARY KEY,
   contract_no TEXT REFERENCES public.contracts(contract_no) ON DELETE CASCADE NOT NULL,
-  agent_id UUID REFERENCES public.profiles(id) NOT NULL,
+  employee_id UUID REFERENCES public.profiles(id) NOT NULL,
   main_disposition public.main_dispo_enum NOT NULL,
   sub_disposition TEXT NOT NULL,
   remarks TEXT,
@@ -210,12 +210,12 @@ CREATE TABLE public.dispositions (
 CREATE TABLE public.waiver_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   contract_no TEXT REFERENCES public.contracts(contract_no) ON DELETE CASCADE NOT NULL,
-  agent_id UUID REFERENCES public.profiles(id) NOT NULL,
+  employee_id UUID REFERENCES public.profiles(id) NOT NULL,
   total_outstanding NUMERIC(15, 2) NOT NULL,
   requested_waiver_amount NUMERIC(15, 2) NOT NULL,
   customer_payable_amount NUMERIC(15, 2) NOT NULL,
   reason TEXT NOT NULL,
-  agent_remarks TEXT,
+  employee_remarks TEXT,
   status public.waiver_status_enum NOT NULL DEFAULT 'Pending',
   reviewed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   routed_to UUID[] DEFAULT '{}'::uuid[],
@@ -251,7 +251,7 @@ BEGIN
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'System Operator'),
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'Agent'::public.user_role),
+    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'Employee'::public.user_role),
     TRUE
   );
   RETURN NEW;

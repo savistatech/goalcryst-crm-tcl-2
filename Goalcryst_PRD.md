@@ -30,8 +30,8 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 ### Out of Scope
 
 * Multi-tenant SaaS setup
-* Agent-wise contract assignment
-* Visible contract list for agents
+* Employee-wise contract assignment
+* Visible contract list for employees
 * In-CRM calling/dialer
 * Call recording
 * Payment gateway integration
@@ -44,7 +44,7 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 ## 3. Business Goals
 
 * Centralize recovery customer and contract data
-* Make it easy for agents to search customers and update dispositions
+* Make it easy for employees to search customers and update dispositions
 * Improve waiver request handling and approval visibility
 * Give managers visibility into recovery activity and team performance
 * Support monthly or one-time Excel allocation imports
@@ -77,7 +77,7 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 * Search and view customer records
 * View operational reports and dashboards
 * Review and approve waiver requests
-* View agent activity
+* View employee activity
 * Export reports (if permitted)
 
 ### Team Leader (Team Management)
@@ -85,9 +85,9 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 * Search and view customer records
 * View team reports and dashboards
 * Review and approve waiver requests
-* Monitor direct report agent activity
+* Monitor direct report employee activity
 
-### Agent (Dedicated Recovery)
+### Employee (Dedicated Recovery)
 
 * Search customer by phone number or contract number
 * View permitted Customer 360 fields
@@ -125,9 +125,9 @@ The system should allow Admin/authorized users to upload XLSX files containing c
 
 ## 5.2 Customer Search Module
 
-Agents should not see a full contract/customer list.
+Employees should not see a full contract/customer list.
 
-Agents should only search using:
+Employees should only search using:
 
 * Customer phone number
 * Contract number
@@ -138,7 +138,7 @@ After search, the system should open the Customer 360 view if the user has permi
 
 ## 5.3 Customer 360 View
 
-Customer 360 is the main working screen for agents and managers.
+Customer 360 is the main working screen for employees and managers.
 
 It should show all relevant information about the customer/contract in one place.
 
@@ -161,7 +161,7 @@ Field visibility should depend on user permissions.
 
 ## 5.4 Disposition Module
 
-Since calls are made outside the CRM, agents only need to manually update the customer disposition after speaking or attempting to speak with the customer.
+Since calls are made outside the CRM, employees only need to manually update the customer disposition after speaking or attempting to speak with the customer.
 
 The disposition module should use two dropdowns:
 
@@ -202,7 +202,7 @@ The disposition module should use two dropdowns:
 * Promise to Pay date, if applicable
 * Promise amount, if applicable
 * Part paid amount, if applicable
-* Created by agent
+* Created by employee
 
 ### Suggested Disposition Logic
 
@@ -220,7 +220,7 @@ Some sub dispositions should trigger additional fields:
 
 ### Important Business Rules
 
-* Agent must select both Main Disposition and Sub Disposition.
+* Employee must select both Main Disposition and Sub Disposition.
 * Every disposition entry should be stored as history.
 * Latest disposition should be visible in Customer 360.
 * Previous disposition history should not be deleted.
@@ -230,7 +230,7 @@ Some sub dispositions should trigger additional fields:
 
 ## 5.5 Waiver Request Module
 
-Agents should be able to raise waiver requests when customers ask for discount/settlement relief.
+Employees should be able to raise waiver requests when customers ask for discount/settlement relief.
 
 ### Waiver Request Fields
 
@@ -240,7 +240,7 @@ Agents should be able to raise waiver requests when customers ask for discount/s
 * Requested waiver amount
 * Customer payable amount
 * Reason for waiver
-* Agent remarks
+* Employee remarks
 * Status: Pending / Approved / Rejected
 * Requested by
 * Approved/rejected by
@@ -250,7 +250,7 @@ Agents should be able to raise waiver requests when customers ask for discount/s
 
 ### Waiver Workflow
 
-Agent raises waiver request → Supervisor (Team Leader, AM, BM, or Admin) reviews → Approve or Reject → Status updated in CRM
+Employee raises waiver request → Supervisor (Team Leader, AM, BM, or Admin) reviews → Approve or Reject → Status updated in CRM
 
 ---
 
@@ -290,7 +290,7 @@ The system should provide simple operational reports.
 * Total contracts imported
 * Duplicate/failed import report
 * Daily disposition report
-* Agent-wise disposition count
+* Employee-wise disposition count
 * Follow-up due report
 * Waiver request report
 * Approved/rejected waiver report
@@ -335,9 +335,9 @@ The system should maintain audit logs for important actions.
 * Contract number is the primary unique identifier
 * Existing contract data should not be overwritten during import
 * Duplicate contracts should be skipped or sent to review
-* Agents should not see the full contract list
-* Agents can only access records through search
-* Agents can only see fields allowed by permissions
+* Employees should not see the full contract list
+* Employees can only access records through search
+* Employees can only see fields allowed by permissions
 * Calls happen outside CRM
 * CRM only stores call outcome/disposition
 * Payments are tracked manually, not collected through CRM
@@ -384,8 +384,8 @@ The system should maintain audit logs for important actions.
 
 * Is there one-level approval or multi-level approval for waivers?
 * What exact Excel columns are mandatory?
-* Should agents see full phone numbers or masked numbers?
+* Should employees see full phone numbers or masked numbers?
 * Should reports be exportable to Excel/PDF?
-* Should Customer 360 show legal details to agents or only managers?
+* Should Customer 360 show legal details to employees or only managers?
 * What are the final call disposition values?
 * Should follow-up reminders be shown inside dashboard?
