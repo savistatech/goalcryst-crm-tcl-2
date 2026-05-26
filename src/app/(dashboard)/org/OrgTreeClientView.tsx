@@ -29,36 +29,36 @@ interface OrgTreeClientViewProps {
 /* ── Role Config ─────────────────────────────────────────────────────────── */
 const ROLE_CONFIG: Record<OrgRole, { color: string; bg: string; border: string; dot: string; abbr: string }> = {
   "Admin": {
-    color: "text-purple-700 dark:text-purple-300",
-    bg: "bg-purple-100 dark:bg-purple-900/30",
-    border: "border-purple-300 dark:border-purple-700",
-    dot: "bg-purple-500",
+    color: "text-indigo-700 dark:text-indigo-400",
+    bg: "bg-indigo-50/70 dark:bg-indigo-500/10",
+    border: "border-indigo-200 dark:border-indigo-500/20",
+    dot: "bg-indigo-500 dark:bg-indigo-400",
     abbr: "ADM",
   },
   "Branch Manager": {
-    color: "text-blue-700 dark:text-blue-300",
-    bg: "bg-blue-100 dark:bg-blue-900/30",
-    border: "border-blue-300 dark:border-blue-700",
-    dot: "bg-blue-500",
+    color: "text-blue-700 dark:text-blue-400",
+    bg: "bg-blue-50/70 dark:bg-blue-500/10",
+    border: "border-blue-200 dark:border-blue-500/20",
+    dot: "bg-blue-500 dark:bg-blue-400",
     abbr: "BM",
   },
   "Assistant Manager": {
-    color: "text-teal-700 dark:text-teal-300",
-    bg: "bg-teal-100 dark:bg-teal-900/30",
-    border: "border-teal-300 dark:border-teal-700",
-    dot: "bg-teal-500",
+    color: "text-emerald-700 dark:text-emerald-400",
+    bg: "bg-emerald-50/70 dark:bg-emerald-500/10",
+    border: "border-emerald-200 dark:border-emerald-500/20",
+    dot: "bg-emerald-500 dark:bg-emerald-400",
     abbr: "AM",
   },
   "Team Leader": {
-    color: "text-amber-700 dark:text-amber-300",
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    border: "border-amber-300 dark:border-amber-700",
-    dot: "bg-amber-500",
+    color: "text-orange-700 dark:text-orange-400",
+    bg: "bg-orange-50/70 dark:bg-orange-500/10",
+    border: "border-orange-200 dark:border-orange-500/20",
+    dot: "bg-orange-500 dark:bg-orange-400",
     abbr: "TL",
   },
   "Employee": {
-    color: "text-ink-2 dark:text-ink-2",
-    bg: "bg-bg-warm dark:bg-bg-warm",
+    color: "text-ink-2",
+    bg: "bg-bg-warm/80",
     border: "border-border-custom",
     dot: "bg-ink-3",
     abbr: "EMP",
@@ -229,7 +229,7 @@ function OrgNodeCard({
     <div className="flex flex-col items-center">
       {/* Card */}
       <div
-        className={`relative bg-surface border-2 ${cfg.border} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all w-52 group`}
+        className={`relative ${cfg.bg} border-2 ${cfg.border} rounded-2xl p-4 shadow-sm hover:shadow-md transition-all w-52 group`}
         style={{ minWidth: "13rem" }}
       >
         {/* Active status dot */}
@@ -291,14 +291,14 @@ function OrgNodeCard({
       {hasChildren && expanded && (
         <div className="flex flex-col items-center">
           {/* vertical line down */}
-          <div className="w-px h-6 bg-border-custom" />
+          <div className="w-px h-6 bg-border-custom/80" />
           {/* horizontal bar */}
           <div className="flex items-start gap-6 relative">
             {node.children.length > 1 && (
               <div
-                className="absolute top-0 bg-border-custom"
+                className="absolute top-0 bg-border-custom/80 rounded-full"
                 style={{
-                  height: "1px",
+                  height: "2px",
                   left: "calc(50% - " + ((node.children.length - 1) * (208 + 24) / 2) + "px)",
                   width: ((node.children.length - 1) * (208 + 24)) + "px",
                 }}
@@ -307,7 +307,7 @@ function OrgNodeCard({
             {node.children.map((child) => (
               <div key={child.id} className="flex flex-col items-center">
                 {/* short vertical line up to the horizontal bar */}
-                <div className="w-px h-6 bg-border-custom" />
+                <div className="w-px h-6 bg-border-custom/80" />
                 <OrgNodeCard
                   node={child}
                   allProfiles={allProfiles}
