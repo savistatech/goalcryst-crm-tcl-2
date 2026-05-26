@@ -50,7 +50,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   // 2. Fetch Disposition Analytics & Payments
   const { data: allDispos } = await supabase
     .from("dispositions")
-    .select("main_disposition, sub_disposition");
+    .select("main_disposition:main_dispositions(name), sub_disposition:sub_dispositions(name)");
 
   const dispoList = allDispos || [];
   const totalDispositions = dispoList.length;
@@ -62,14 +62,17 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   let brokenPtpDispositions = 0;
   let callbackDispositions = 0;
 
-  dispoList.forEach(d => {
-    if (d.main_disposition === "Contactable") contactableDispositions++;
-    if (d.main_disposition === "Non-Contactable") nonContactableDispositions++;
-    if (d.sub_disposition === "Promise to Pay") ptpDispositions++;
-    if (d.sub_disposition === "Agree to Pay") agreeToPayDispositions++;
-    if (d.sub_disposition === "Part Paid") partPaidDispositions++;
-    if (d.sub_disposition === "Broken PTP") brokenPtpDispositions++;
-    if (d.sub_disposition === "Call Back" || d.sub_disposition === "Callback Scheduled") callbackDispositions++;
+  dispoList.forEach((d: any) => {
+    const mainName = d.main_disposition?.name;
+    const subName = d.sub_disposition?.name;
+    
+    if (mainName === "Contactable") contactableDispositions++;
+    if (mainName === "Non-Contactable") nonContactableDispositions++;
+    if (subName === "Promise to Pay") ptpDispositions++;
+    if (subName === "Agree to Pay") agreeToPayDispositions++;
+    if (subName === "Part Paid") partPaidDispositions++;
+    if (subName === "Broken PTP") brokenPtpDispositions++;
+    if (subName === "Call Back" || subName === "Callback Scheduled") callbackDispositions++;
   });
 
   // Doughnut Chart Data
@@ -88,7 +91,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
   const { data: ptpRaw } = await supabase
     .from("dispositions")
-    .select("sub_disposition, main_disposition, ptp_amount, created_at")
+    .select("sub_disposition:sub_dispositions(name), main_disposition:main_dispositions(name), dynamic_data, created_at")
     .gte("created_at", fourWeeksAgo.toISOString());
 
   // Group by ISO week (week number within the last 4 weeks)
@@ -96,16 +99,21 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const weekLabels = ["Week 1", "Week 2", "Week 3", "Week 4"];
   weekLabels.forEach(w => weekMap.set(w, { ptpCount: 0, ptpValue: 0, contactable: 0 }));
 
-  (ptpRaw || []).forEach(row => {
+  (ptpRaw || []).forEach((row: any) => {
     const daysAgo = Math.floor((Date.now() - new Date(row.created_at).getTime()) / 86400000);
     const weekIdx = Math.min(3, Math.floor(daysAgo / 7));
     const weekKey = weekLabels[3 - weekIdx]; // Week 4 = most recent
     const entry = weekMap.get(weekKey)!;
-    if (row.sub_disposition === "Promise to Pay") {
+    
+    const subName = row.sub_disposition?.name;
+    const mainName = row.main_disposition?.name;
+    const ptpAmt = row.dynamic_data?.ptp_amount;
+
+    if (subName === "Promise to Pay") {
       entry.ptpCount++;
-      entry.ptpValue += Number(row.ptp_amount || 0);
+      entry.ptpValue += Number(ptpAmt || 0);
     }
-    if (row.main_disposition === "Contactable") {
+    if (mainName === "Contactable") {
       entry.contactable++;
     }
   });
@@ -119,14 +127,14 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const { data: todayDispos } = await supabase
     .from("dispositions")
     .select(`
-      ptp_amount,
+      dynamic_data,
       employee_profile:profiles(id, full_name, role)
     `)
     .gte("created_at", startOfToday.toISOString());
 
   const employeePerformanceMap = new Map<string, { name: string; role: string; calls: number; ptpValue: number }>();
 
-  (todayDispos || []).forEach(row => {
+  (todayDispos || []).forEach((row: any) => {
     const employeeRaw = row.employee_profile;
     const employee: any = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
     if (!employee || !employee.id) return;
@@ -142,8 +150,10 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
 
     const stats = employeePerformanceMap.get(employee.id)!;
     stats.calls++;
-    if (row.ptp_amount) {
-      stats.ptpValue += Number(row.ptp_amount);
+    
+    const ptpAmt = row.dynamic_data?.ptp_amount;
+    if (ptpAmt) {
+      stats.ptpValue += Number(ptpAmt);
     }
   });
 
@@ -179,9 +189,9 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const { data: recCallsList } = await supabase
     .from("dispositions")
     .select(`
-      sub_disposition,
-      main_disposition,
-      ptp_amount,
+      sub_disposition:sub_dispositions(name),
+      main_disposition:main_dispositions(name),
+      dynamic_data,
       created_at,
       contracts(customer_name),
       employee_profile:profiles(full_name)
@@ -204,18 +214,22 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     const employeeRaw = row.employee_profile;
     const employeeObj = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
     const employee = employeeObj.full_name || "System Employee";
-    const amt = row.ptp_amount 
-      ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(row.ptp_amount) 
+    const ptpAmt = row.dynamic_data?.ptp_amount;
+    const amt = ptpAmt 
+      ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(ptpAmt) 
       : null;
+
+    const subName = row.sub_disposition?.name || "Logged";
+    const mainName = row.main_disposition?.name;
 
     return {
       employee,
       customer,
-      dispo: row.sub_disposition,
+      dispo: subName,
       amt,
       date: new Date(row.created_at).toLocaleDateString(),
       time: formatRelativeTime(row.created_at),
-      type: row.main_disposition === "Contactable" ? "good" : "neutral"
+      type: mainName === "Contactable" ? "good" : "neutral"
     };
   });
 
@@ -302,20 +316,23 @@ export async function getEmployeeDashboardMetrics(): Promise<EmployeeDashboardMe
 
   const { data: allMyDispos } = await supabase
     .from("dispositions")
-    .select("main_disposition, sub_disposition, ptp_amount, ptp_date, created_at, contracts(customer_name, contract_no)")
+    .select("main_disposition:main_dispositions(name), sub_disposition:sub_dispositions(name), dynamic_data, created_at, contracts(customer_name, contract_no)")
     .eq("employee_id", user.id)
     .order("created_at", { ascending: false });
 
   const myDispos = allMyDispos || [];
   const myCallsTotal = myDispos.length;
   const myCallsToday = myDispos.filter(d => new Date(d.created_at) >= startOfToday).length;
-  const myContactable = myDispos.filter(d => d.main_disposition === "Contactable").length;
+  const myContactable = myDispos.filter((d: any) => d.main_disposition?.name === "Contactable").length;
   const myContactableRate = myCallsTotal > 0 ? Math.round((myContactable / myCallsTotal) * 100) : 0;
 
   // 4. PTPs raised
   const now = new Date();
-  const myPtps = myDispos.filter(d => d.sub_disposition === "Promise to Pay" && d.ptp_date && new Date(d.ptp_date) >= now);
-  const myPtpValue = myPtps.reduce((acc, d) => acc + Number(d.ptp_amount || 0), 0);
+  const myPtps = myDispos.filter((d: any) => {
+    const ptpDate = d.dynamic_data?.ptp_date;
+    return d.sub_disposition?.name === "Promise to Pay" && ptpDate && new Date(ptpDate) >= now;
+  });
+  const myPtpValue = myPtps.reduce((acc, d: any) => acc + Number(d.dynamic_data?.ptp_amount || 0), 0);
 
   // 5. My waiver submissions
   const { data: myWaivers } = await supabase
@@ -334,8 +351,8 @@ export async function getEmployeeDashboardMetrics(): Promise<EmployeeDashboardMe
     return {
       customer: contract.customer_name || "Unknown",
       contract_no: contract.contract_no || "",
-      dispo: d.sub_disposition || d.main_disposition || "",
-      ptp_amount: d.ptp_amount ? Number(d.ptp_amount) : null,
+      dispo: d.sub_disposition?.name || d.main_disposition?.name || "",
+      ptp_amount: d.dynamic_data?.ptp_amount ? Number(d.dynamic_data.ptp_amount) : null,
       created_at: d.created_at,
     };
   });

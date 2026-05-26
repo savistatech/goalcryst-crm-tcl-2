@@ -28,24 +28,26 @@ import {
 interface ClientViewProps {
   initialData: Customer360Data;
   permissions: Record<PermissionKey, boolean>;
+  mainDispositions: any[];
+  subDispositions: any[];
+  waiverReasons: any[];
 }
 
-export default function Customer360ClientView({ initialData, permissions }: ClientViewProps) {
+export default function Customer360ClientView({ initialData, permissions, mainDispositions, subDispositions, waiverReasons }: ClientViewProps) {
   const [data, setData] = useState<Customer360Data>(initialData);
   const [activeTab, setActiveTab] = useState<"overview" | "contacts" | "financials" | "assets" | "legal" | "timeline">("overview");
 
   // Call outcome modal states
   const [isDispoOpen, setIsDispoOpen] = useState(false);
-  const [mainDispo, setMainDispo] = useState<"Contactable" | "Non-Contactable">("Contactable");
-  const [subDispo, setSubDispo] = useState("");
+  const [mainDispoId, setMainDispoId] = useState("");
+  const [subDispoId, setSubDispoId] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [ptpDate, setPtpDate] = useState("");
-  const [ptpAmount, setPtpAmount] = useState("");
-  const [followUpDate, setFollowUpDate] = useState("");
-  const [paidAmount, setPaidAmount] = useState("");
-  const [paymentDate, setPaymentDate] = useState("");
-  const [proofRef, setProofRef] = useState("");
+  const [dynamicData, setDynamicData] = useState<Record<string, any>>({});
   const [dispoSubmitting, setDispoSubmitting] = useState(false);
+
+  const currentSubDispositions = subDispositions.filter((sd: any) => sd.main_disposition_id === mainDispoId && sd.is_active);
+  const currentFormSchema = currentSubDispositions.find((sd: any) => sd.id === subDispoId)?.form_schema || [];
+
 
   // Call timer stopwatch states
   const [callDuration, setCallDuration] = useState(0);
@@ -55,9 +57,10 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
   const [isWaiverOpen, setIsWaiverOpen] = useState(false);
   const [waiverAmount, setWaiverAmount] = useState("");
   const [payableAmount, setPayableAmount] = useState("");
-  const [waiverReason, setWaiverReason] = useState("");
+  const [waiverReasonId, setWaiverReasonId] = useState("");
   const [waiverRemarks, setWaiverRemarks] = useState("");
   const [routedTo, setRoutedTo] = useState<string[]>([]);
+  const activeWaiverReasons = waiverReasons.filter((w: any) => w.is_active);
   const [supervisors, setSupervisors] = useState<{ id: string; full_name: string; role: string }[]>([]);
   const [waiverSubmitting, setWaiverSubmitting] = useState(false);
 
@@ -116,67 +119,55 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
     return "Access Gated · Permissions Restricted";
   };
 
-  // 21 detailed dispositions mapping
-  const contactableSubs = [
-    "Promise to Pay",
-    "Agree to Pay",
-    "Part Paid",
-    "Callback Scheduled",
-    "Already Paid",
-    "Refused to Pay",
-    "Disputed Settlement",
-    "Third Party Gated"
-  ];
-
-  const nonContactableSubs = [
-    "Switched Off",
-    "Ringing No Answer",
-    "Busy Signal",
-    "Not Reachable",
-    "Invalid Number",
-    "Wrong Number",
-    "Out of Service",
-    "Call Disconnected"
-  ];
-
+  // 21 detailed dispositions mapping handled dynamically now
   // Auto calculate payable in waiver request
   useEffect(() => {
-    const totalOut = Number(data.financials.total_outstanding || 0);
+    const posAmount = Number(data.financials.pos || 0);
     const waiver = Number(waiverAmount || 0);
-    if (waiver > 0 && waiver <= totalOut) {
-      setPayableAmount((totalOut - waiver).toString());
+    if (waiver > 0 && waiver <= posAmount) {
+      setPayableAmount((posAmount - waiver).toString());
     } else {
       setPayableAmount("");
     }
-  }, [waiverAmount, data.financials.total_outstanding]);
+  }, [waiverAmount, data.financials.pos]);
 
   // Submit Call Dispo
   const handleDispoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!mainDispoId || !subDispoId) {
+       alert("Please select a valid disposition.");
+       return;
+    }
+    
+    // Validate required dynamic fields
+    for (const field of currentFormSchema) {
+      if (field.required && !dynamicData[field.id]) {
+        alert(`Please fill out required field: ${field.label}`);
+        return;
+      }
+    }
+
     setDispoSubmitting(true);
     try {
       const res = await logCallDisposition(
         data.contract.contract_no,
-        mainDispo,
-        subDispo || (mainDispo === "Contactable" ? "Promise to Pay" : "Ringing No Answer"),
+        mainDispoId,
+        subDispoId,
         remarks,
-        mainDispo === "Contactable" && subDispo === "Promise to Pay" ? ptpDate : null,
-        mainDispo === "Contactable" && subDispo === "Promise to Pay" ? Number(ptpAmount) : null,
-        mainDispo === "Contactable" && subDispo === "Callback Scheduled" ? followUpDate : null,
-        mainDispo === "Contactable" && subDispo === "Part Paid" ? Number(paidAmount) : null,
-        mainDispo === "Contactable" && subDispo === "Part Paid" ? paymentDate : null,
-        mainDispo === "Contactable" && subDispo === "Part Paid" ? proofRef : null
+        dynamicData
       );
 
       if (res.success) {
+        const selectedMain = mainDispositions.find(m => m.id === mainDispoId)?.name || "Logged";
+        const selectedSub = subDispositions.find(s => s.id === subDispoId)?.name || "Outcome";
+
         // Mock fresh timeline addition locally for visual speed
         const newDispo = {
           created_at: new Date().toISOString(),
-          main_disposition: mainDispo,
-          sub_disposition: subDispo || "Call logged",
+          main_disposition: { name: selectedMain },
+          sub_disposition: { name: selectedSub },
           remarks,
-          ptp_amount: ptpAmount ? Number(ptpAmount) : null,
-          ptp_date: ptpDate || null,
+          dynamic_data: dynamicData,
           employee_profile: { full_name: "You (Active)", role: "Employee" }
         };
         setData(prev => ({
@@ -186,12 +177,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
         setIsDispoOpen(false);
         // Reset inputs
         setRemarks("");
-        setPtpDate("");
-        setPtpAmount("");
-        setFollowUpDate("");
-        setPaidAmount("");
-        setPaymentDate("");
-        setProofRef("");
+        setDynamicData({});
       } else {
         alert(res.error);
       }
@@ -224,17 +210,18 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
         data.contract.contract_no,
         waiverVal,
         Number(payableAmount),
-        waiverReason,
+        waiverReasonId,
         routedTo,
         waiverRemarks
       );
 
       if (res.success) {
+        const reasonName = activeWaiverReasons.find((r: any) => r.id === waiverReasonId)?.reason || "Unknown";
         const newWaiver = {
           created_at: new Date().toISOString(),
           requested_waiver_amount: waiverVal,
           customer_payable_amount: Number(payableAmount),
-          reason: waiverReason,
+          waiver_reason: { reason: reasonName },
           employee_remarks: waiverRemarks,
           status: "Pending",
           employee_profile: { full_name: "You (Active)" }
@@ -245,7 +232,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
         }));
         setIsWaiverOpen(false);
         setWaiverAmount("");
-        setWaiverReason("");
+        setWaiverReasonId("");
         setWaiverRemarks("");
         setRoutedTo([]);
       } else {
@@ -296,8 +283,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
           {permissions.can_add_disposition && (
             <button
               onClick={() => {
-                setMainDispo("Contactable");
-                setSubDispo("Promise to Pay");
+                if (mainDispositions.length > 0) setMainDispoId(mainDispositions[0].id);
                 setIsDispoOpen(true);
               }}
               className="flex items-center gap-2 h-9 px-4 rounded-lg bg-accent-custom hover:bg-accent-ink text-surface text-[13px] font-semibold transition-all shadow-sm cursor-pointer"
@@ -353,9 +339,9 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-bg-warm/40 border border-border-custom">
                   <div>
-                    <span className="text-[10.5px] text-ink-3 font-semibold uppercase">Total Outstanding</span>
+                    <span className="text-[10.5px] text-ink-3 font-semibold uppercase">Principal POS</span>
                     <div className="text-xl font-bold font-mono text-ink mt-1">
-                      {formatMoney(data.financials.total_outstanding)}
+                      {formatMoney(data.financials.pos)}
                     </div>
                   </div>
                   <div>
@@ -371,9 +357,9 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10.5px] text-ink-3 font-semibold uppercase">Principal POS</span>
-                    <div className="text-xl font-bold font-mono text-ink mt-1">
-                      {formatMoney(data.financials.pos)}
+                    <span className="text-[10.5px] text-ink-3 font-semibold uppercase">Total Outstanding</span>
+                    <div className="text-xl font-bold font-mono text-ink-2 mt-1">
+                      {formatMoney(data.financials.total_outstanding)}
                     </div>
                   </div>
                 </div>
@@ -439,13 +425,13 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                       <div key={i} className="text-[12px] relative group">
                         <span className="absolute -left-[17.5px] top-1.5 w-2 h-2 rounded-full border border-surface bg-accent-custom shadow-sm" />
                         <div className="flex justify-between items-baseline">
-                          <span className="font-semibold text-ink">{dispo.sub_disposition}</span>
+                          <span className="font-semibold text-ink">{dispo.sub_disposition?.name || "Unknown"}</span>
                           <span className="text-[10px] font-mono text-ink-3">{new Date(dispo.created_at).toLocaleDateString()}</span>
                         </div>
                         <p className="text-ink-2 mt-0.5 line-clamp-2 italic">&quot;{dispo.remarks}&quot;</p>
-                        {dispo.ptp_amount && (
+                        {dispo.dynamic_data?.ptp_amount && (
                           <div className="text-[11.5px] font-semibold text-good mt-1 font-mono">
-                            Commitment: {formatMoney(dispo.ptp_amount)} on {new Date(dispo.ptp_date).toLocaleDateString()}
+                            Commitment: {formatMoney(dispo.dynamic_data.ptp_amount)} on {new Date(dispo.dynamic_data.ptp_date).toLocaleDateString()}
                           </div>
                         )}
                         <span className="text-[10.5px] text-ink-3 block mt-1">Logged by: {dispo.employee_profile?.full_name}</span>
@@ -561,9 +547,9 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                   </strong>
                 </div>
                 <div className="border border-border-strong rounded-xl p-4 bg-bg-warm/20 text-center">
-                  <span className="text-xs text-ink-3 block uppercase tracking-wider font-semibold">Active Outstanding (POS)</span>
+                  <span className="text-xs text-ink-3 block uppercase tracking-wider font-semibold">Principal POS</span>
                   <strong className="text-2xl font-bold font-mono text-accent-custom block mt-1.5">
-                    {formatMoney(data.financials.total_pos_outstanding)}
+                    {formatMoney(data.financials.pos)}
                   </strong>
                 </div>
                 <div className="border border-border-strong rounded-xl p-4 bg-bg-warm/20 text-center">
@@ -820,9 +806,9 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-0.5 rounded text-[10.5px] font-semibold bg-bg-warm text-ink-2 border border-border-custom`}>
-                            {dispo.main_disposition}
+                            {dispo.main_disposition?.name || "Unknown"}
                           </span>
-                          <span className="text-ink font-semibold">{dispo.sub_disposition}</span>
+                          <span className="text-ink font-semibold">{dispo.sub_disposition?.name || "Unknown"}</span>
                         </div>
                         <span className="text-xs text-ink-3 font-mono">
                           {new Date(dispo.created_at).toLocaleString()}
@@ -831,15 +817,15 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
 
                       <p className="text-ink-2 italic leading-relaxed font-sans">&quot;{dispo.remarks}&quot;</p>
 
-                      {dispo.ptp_amount && (
+                      {dispo.dynamic_data?.ptp_amount && (
                         <div className="bg-good-bg/30 border border-good/10 p-2 rounded-lg text-good font-semibold text-[12.5px] font-mono inline-block">
-                          Promise amount: {formatMoney(dispo.ptp_amount)} | Commitment Date: {new Date(dispo.ptp_date).toLocaleDateString()}
+                          Promise amount: {formatMoney(dispo.dynamic_data.ptp_amount)} | Commitment Date: {new Date(dispo.dynamic_data.ptp_date).toLocaleDateString()}
                         </div>
                       )}
 
-                      {dispo.paid_amount && (
+                      {dispo.dynamic_data?.paid_amount && (
                         <div className="bg-good-bg/30 border border-good/10 p-2 rounded-lg text-good font-semibold text-[12.5px] font-mono inline-block">
-                          Collected Paid: {formatMoney(dispo.paid_amount)} | Date: {new Date(dispo.payment_date).toLocaleDateString()} | UTR: {dispo.proof_reference || "-"}
+                          Collected Paid: {formatMoney(dispo.dynamic_data.paid_amount)} | Date: {new Date(dispo.dynamic_data.payment_date).toLocaleDateString()} | UTR: {dispo.dynamic_data.proof_reference || "-"}
                         </div>
                       )}
 
@@ -878,130 +864,64 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
               <div className="space-y-1.5">
                 <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Calling Status Outcome</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMainDispo("Contactable");
-                      setSubDispo("Promise to Pay");
-                    }}
-                    className={`h-9 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-all ${mainDispo === "Contactable"
-                      ? "bg-ink border-ink text-surface shadow-sm"
-                      : "bg-surface border-border-custom text-ink hover:bg-bg-warm"
-                      }`}
-                  >
-                    Contacted (Connected)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMainDispo("Non-Contactable");
-                      setSubDispo("Ringing No Answer");
-                    }}
-                    className={`h-9 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-all ${mainDispo === "Non-Contactable"
-                      ? "bg-ink border-ink text-surface shadow-sm"
-                      : "bg-surface border-border-custom text-ink hover:bg-bg-warm"
-                      }`}
-                  >
-                    Non-Contacted
-                  </button>
+                  {mainDispositions.map((md: any) => (
+                    <button
+                      key={md.id}
+                      type="button"
+                      onClick={() => {
+                        setMainDispoId(md.id);
+                        setSubDispoId("");
+                        setDynamicData({});
+                      }}
+                      className={`h-9 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-all ${mainDispoId === md.id
+                        ? "bg-ink border-ink text-surface shadow-sm"
+                        : "bg-surface border-border-custom text-ink hover:bg-bg-warm"
+                        }`}
+                    >
+                      {md.name}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Sub-dispositions 21 options selector grid */}
+              {/* Sub-dispositions options selector grid */}
               <div className="space-y-1.5">
                 <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Outcome sub-category</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-1 border border-border-custom rounded-lg bg-bg-warm/25">
-                  {(mainDispo === "Contactable" ? contactableSubs : nonContactableSubs).map((sub) => (
+                  {currentSubDispositions.map((sd: any) => (
                     <button
-                      key={sub}
+                      key={sd.id}
                       type="button"
-                      onClick={() => setSubDispo(sub)}
-                      className={`h-7 px-2 rounded text-[11px] truncate font-medium text-left transition-all ${subDispo === sub
+                      onClick={() => {
+                         setSubDispoId(sd.id);
+                         setDynamicData({});
+                      }}
+                      className={`h-7 px-2 rounded text-[11px] truncate font-medium text-left transition-all ${subDispoId === sd.id
                         ? "bg-accent-custom text-surface"
                         : "bg-surface text-ink-2 hover:bg-bg-warm border border-border-custom/50"
                         }`}
                     >
-                      {sub}
+                      {sd.name}
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Custom dynamic fields based on sub-disposition outcome */}
-              {mainDispo === "Contactable" && subDispo === "Promise to Pay" && (
-                <div className="grid grid-cols-2 gap-3 p-3 bg-good-bg/25 border border-good/10 rounded-xl animate-fade-in text-[12.5px]">
-                  <div className="space-y-1">
-                    <label className="text-good font-semibold">Commitment Promise Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={ptpDate}
-                      onChange={(e) => setPtpDate(e.target.value)}
-                      className="w-full bg-surface border border-border-custom rounded-lg px-2.5 py-1 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-good font-semibold">Commitment Amount (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      placeholder="e.g. 45000"
-                      value={ptpAmount}
-                      onChange={(e) => setPtpAmount(e.target.value)}
-                      className="w-full bg-surface border border-border-custom rounded-lg px-2.5 py-1 text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {mainDispo === "Contactable" && subDispo === "Callback Scheduled" && (
-                <div className="p-3 bg-bg-warm border border-border-strong rounded-xl animate-fade-in text-[12.5px] space-y-1">
-                  <label className="text-ink font-semibold">Schedule Callback Date & Time</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={followUpDate}
-                    onChange={(e) => setFollowUpDate(e.target.value)}
-                    className="w-full bg-surface border border-border-custom rounded-lg px-2.5 py-1 text-xs"
-                  />
-                </div>
-              )}
-
-              {mainDispo === "Contactable" && subDispo === "Part Paid" && (
-                <div className="p-3 bg-good-bg/25 border border-good/10 rounded-xl animate-fade-in text-[12.5px] space-y-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-good font-semibold">Collected Amount (₹)</label>
+              {currentFormSchema.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 p-3 bg-bg-warm/50 border border-border-custom rounded-xl animate-fade-in text-[12.5px]">
+                  {currentFormSchema.map((field: any) => (
+                    <div key={field.id} className="space-y-1">
+                      <label className="text-ink font-semibold">{field.label}</label>
                       <input
-                        type="number"
-                        required
-                        placeholder="e.g. 15000"
-                        value={paidAmount}
-                        onChange={(e) => setPaidAmount(e.target.value)}
+                        type={field.type}
+                        required={field.required}
+                        value={dynamicData[field.id] || ""}
+                        onChange={(e) => setDynamicData(prev => ({ ...prev, [field.id]: e.target.value }))}
                         className="w-full bg-surface border border-border-custom rounded-lg px-2.5 py-1 text-xs"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-good font-semibold">Payment Date</label>
-                      <input
-                        type="date"
-                        required
-                        value={paymentDate}
-                        onChange={(e) => setPaymentDate(e.target.value)}
-                        className="w-full bg-surface border border-border-custom rounded-lg px-2.5 py-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-good font-semibold">UTR Receipt Reference Number</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. UTR128492049"
-                      value={proofRef}
-                      onChange={(e) => setProofRef(e.target.value)}
-                      className="w-full bg-surface border border-border-custom rounded-lg px-2.5 py-1 text-xs"
-                    />
-                  </div>
+                  ))}
                 </div>
               )}
 
@@ -1048,7 +968,7 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
 
             <div className="pb-2 border-b border-border-custom">
               <h3 className="text-base font-semibold text-ink font-serif">Request Settlement Discount Waiver</h3>
-              <span className="text-xs text-ink-3">Total Active Outstanding: {formatMoney(data.financials.total_outstanding)}</span>
+              <span className="text-xs text-ink-3">Principal POS: {formatMoney(data.financials.pos)}</span>
             </div>
 
             <form onSubmit={handleWaiverSubmit} className="space-y-4">
@@ -1080,17 +1000,14 @@ export default function Customer360ClientView({ initialData, permissions }: Clie
                 <label className="text-[11px] uppercase tracking-wider text-ink-3 font-semibold block">Waiver Category Reason</label>
                 <select
                   required
-                  value={waiverReason}
-                  onChange={(e) => setWaiverReason(e.target.value)}
+                  value={waiverReasonId}
+                  onChange={(e) => setWaiverReasonId(e.target.value)}
                   className="w-full bg-bg border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-ink"
                 >
                   <option value="">-- Select reason --</option>
-                  <option value="Customer Demise">Customer Demise</option>
-                  <option value="Severe Medical Emergency">Severe Medical Emergency</option>
-                  <option value="Crop Failure / Agricultural Loss">Crop Failure / Agricultural Loss</option>
-                  <option value="Business Liquidation">Business Liquidation</option>
-                  <option value="One-Time Settlement (OTS) Scheme">One-Time Settlement (OTS) Scheme</option>
-                  <option value="Other Compassionate Grounds">Other Compassionate Grounds</option>
+                  {activeWaiverReasons.map((r: any) => (
+                    <option key={r.id} value={r.id}>{r.reason}</option>
+                  ))}
                 </select>
               </div>
 

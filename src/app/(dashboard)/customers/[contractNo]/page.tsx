@@ -1,6 +1,7 @@
 import React from "react";
 import { notFound, redirect } from "next/navigation";
 import { getCustomer360Details } from "@/app/actions/customerActions";
+import { getMainDispositions, getSubDispositions, getWaiverReasons } from "@/app/actions/adminSettingsActions";
 import { getUserPermissions } from "@/utils/permissions";
 import { getActiveUser } from "@/utils/supabase/server";
 import Customer360ClientView from "./Customer360ClientView";
@@ -27,6 +28,11 @@ export default async function CustomerPage({ params }: PageProps) {
   // 3. Fetch comprehensive customer 360 records from database
   const customerData = await getCustomer360Details(contractNo);
 
+  // 4. Fetch dynamic configurations for modals
+  const mainDispositions = await getMainDispositions();
+  const subDispositions = await getSubDispositions();
+  const waiverReasons = await getWaiverReasons();
+
   if (!customerData) {
     notFound();
   }
@@ -35,6 +41,9 @@ export default async function CustomerPage({ params }: PageProps) {
     <Customer360ClientView 
       initialData={customerData} 
       permissions={permissions} 
+      mainDispositions={mainDispositions}
+      subDispositions={subDispositions}
+      waiverReasons={waiverReasons}
     />
   );
 }

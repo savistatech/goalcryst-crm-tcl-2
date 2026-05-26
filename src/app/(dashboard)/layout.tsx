@@ -18,7 +18,8 @@ import {
   Sun,
   Moon,
   Monitor,
-  Database
+  Database,
+  GitBranch
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -174,7 +175,10 @@ export default function DashboardLayout({
     { label: "Contracts", path: "/contracts", icon: Database, section: "Admin", badge: undefined, requiredPermission: "can_manage_users" },
     { label: "Reports", path: "/reports", icon: BarChart3, section: "Admin", badge: undefined, requiredPermission: "can_view_reports" },
     { label: "Users", path: "/users", icon: UsersIcon, section: "Admin", badge: undefined, requiredPermission: "can_manage_users" },
+    { label: "Org Chart", path: "/org", icon: GitBranch, section: "Admin", badge: undefined, requiredPermission: null },
     { label: "Audits", path: "/audit", icon: ListChecks, section: "Admin", badge: undefined, requiredPermission: "can_view_audit_logs" },
+    { label: "Dispositions Setup", path: "/settings/dispositions", icon: Settings, section: "Admin", badge: undefined, requiredPermission: "_superAdmin" },
+    { label: "Waiver Setup", path: "/settings/waivers", icon: ShieldCheck, section: "Admin", badge: undefined, requiredPermission: "_superAdmin" },
   ];
 
   const isSuperAdmin = perms["_superAdmin"] === true;

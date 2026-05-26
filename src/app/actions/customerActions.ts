@@ -67,7 +67,9 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .from("dispositions")
     .select(`
       *,
-      employee_profile:profiles(id, full_name, role)
+      employee_profile:profiles(id, full_name, role),
+      main_disposition:main_dispositions(id, name),
+      sub_disposition:sub_dispositions(id, name, form_schema)
     `)
     .eq("contract_no", contractNo)
     .order("created_at", { ascending: false });
@@ -78,7 +80,8 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .select(`
       *,
       employee_profile:profiles!waiver_requests_employee_id_fkey(id, full_name),
-      reviewed_by_profile:profiles!waiver_requests_reviewed_by_fkey(id, full_name)
+      reviewed_by_profile:profiles!waiver_requests_reviewed_by_fkey(id, full_name),
+      waiver_reason:waiver_reasons(id, reason)
     `)
     .eq("contract_no", contractNo)
     .order("created_at", { ascending: false });
@@ -113,15 +116,10 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
  */
 export async function logCallDisposition(
   contractNo: string,
-  mainDisposition: "Contactable" | "Non-Contactable",
-  subDisposition: string,
+  mainDispositionId: string,
+  subDispositionId: string,
   remarks: string,
-  ptpDate?: string | null,
-  ptpAmount?: number | null,
-  followUpDate?: string | null,
-  paidAmount?: number | null,
-  paymentDate?: string | null,
-  proofReference?: string | null
+  dynamicData: any
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
@@ -137,15 +135,10 @@ export async function logCallDisposition(
     .insert({
       contract_no: contractNo,
       employee_id: user.id,
-      main_disposition: mainDisposition,
-      sub_disposition: subDisposition,
+      main_disposition_id: mainDispositionId,
+      sub_disposition_id: subDispositionId,
       remarks,
-      follow_up_date: followUpDate || null,
-      ptp_date: ptpDate || null,
-      ptp_amount: ptpAmount || null,
-      paid_amount: paidAmount || null,
-      payment_date: paymentDate || null,
-      proof_reference: proofReference || null
+      dynamic_data: dynamicData
     });
 
   if (dispoError) {
@@ -159,7 +152,7 @@ export async function logCallDisposition(
     action: "ADD_DISPOSITION",
     entity_type: "dispositions",
     entity_id: contractNo,
-    metadata: { mainDisposition, subDisposition, ptpAmount }
+    metadata: { mainDispositionId, subDispositionId, dynamicData }
   });
 
   revalidatePath(`/customers/${contractNo}`);
@@ -174,7 +167,7 @@ export async function raiseWaiverRequest(
   contractNo: string,
   requestedWaiverAmount: number,
   customerPayableAmount: number,
-  reason: string,
+  reasonId: string,
   routedTo: string[],
   employeeRemarks?: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -189,7 +182,7 @@ export async function raiseWaiverRequest(
   // Fetch current financial exposure to compute totals
   const { data: financials, error: finError } = await supabase
     .from("contract_financials")
-    .select("total_outstanding")
+    .select("total_outstanding, pos")
     .eq("contract_no", contractNo)
     .single();
 
@@ -197,7 +190,8 @@ export async function raiseWaiverRequest(
     return { success: false, error: "Could not retrieve contract outstanding balance details." };
   }
 
-  const totalOutstanding = Number(financials.total_outstanding);
+  const totalOutstanding = Number(financials.total_outstanding || 0);
+  const posAmount = Number(financials.pos || 0);
 
   // Insert waiver request
   const { error: waiverError } = await supabase
@@ -206,9 +200,10 @@ export async function raiseWaiverRequest(
       contract_no: contractNo,
       employee_id: user.id,
       total_outstanding: totalOutstanding,
+      pos: posAmount,
       requested_waiver_amount: requestedWaiverAmount,
       customer_payable_amount: customerPayableAmount,
-      reason,
+      reason_id: reasonId,
       routed_to: routedTo,
       employee_remarks: employeeRemarks || null,
       status: "Pending"

@@ -1,6 +1,5 @@
 -- 1. Create Custom PostgreSQL Enums
 CREATE TYPE public.user_role AS ENUM ('Admin', 'Branch Manager', 'Assistant Manager', 'Team Leader', 'Employee');
-CREATE TYPE public.main_dispo_enum AS ENUM ('Contactable', 'Non-Contactable');
 CREATE TYPE public.waiver_status_enum AS ENUM ('Pending', 'Approved', 'Rejected');
 
 -- 2. Profiles Table (extends auth.users)
@@ -8,6 +7,10 @@ CREATE TABLE public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   full_name TEXT NOT NULL,
   role public.user_role NOT NULL DEFAULT 'Employee',
+  reporting_to UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  branch TEXT,
+  department TEXT,
+  phone TEXT,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
@@ -20,6 +23,33 @@ CREATE TABLE public.user_permissions (
   permission_key TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
   UNIQUE(user_id, permission_key)
+);
+
+-- 3a. Main Dispositions Table
+CREATE TABLE public.main_dispositions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT UNIQUE NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
+);
+
+-- 3b. Sub Dispositions Table
+CREATE TABLE public.sub_dispositions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  main_disposition_id UUID REFERENCES public.main_dispositions(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  form_schema JSONB DEFAULT '[]'::jsonb NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
+  UNIQUE(main_disposition_id, name)
+);
+
+-- 3c. Waiver Reasons Table
+CREATE TABLE public.waiver_reasons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reason TEXT UNIQUE NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
 );
 
 -- 4. Import Batches Table (allocation sheets metadata)
@@ -194,8 +224,8 @@ CREATE TABLE public.dispositions (
   id BIGSERIAL PRIMARY KEY,
   contract_no TEXT REFERENCES public.contracts(contract_no) ON DELETE CASCADE NOT NULL,
   employee_id UUID REFERENCES public.profiles(id) NOT NULL,
-  main_disposition public.main_dispo_enum NOT NULL,
-  sub_disposition TEXT NOT NULL,
+  main_disposition_id UUID REFERENCES public.main_dispositions(id) NOT NULL,
+  sub_disposition_id UUID REFERENCES public.sub_dispositions(id) NOT NULL,
   remarks TEXT,
   follow_up_date TIMESTAMP WITH TIME ZONE,
   ptp_date DATE,
@@ -203,6 +233,7 @@ CREATE TABLE public.dispositions (
   paid_amount NUMERIC(15, 2),
   payment_date DATE,
   proof_reference TEXT,
+  dynamic_data JSONB DEFAULT '{}'::jsonb NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL
 );
 
@@ -212,9 +243,10 @@ CREATE TABLE public.waiver_requests (
   contract_no TEXT REFERENCES public.contracts(contract_no) ON DELETE CASCADE NOT NULL,
   employee_id UUID REFERENCES public.profiles(id) NOT NULL,
   total_outstanding NUMERIC(15, 2) NOT NULL,
+  pos NUMERIC(15, 2) NOT NULL DEFAULT 0,
   requested_waiver_amount NUMERIC(15, 2) NOT NULL,
   customer_payable_amount NUMERIC(15, 2) NOT NULL,
-  reason TEXT NOT NULL,
+  reason_id UUID REFERENCES public.waiver_reasons(id) NOT NULL,
   employee_remarks TEXT,
   status public.waiver_status_enum NOT NULL DEFAULT 'Pending',
   reviewed_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -265,6 +297,9 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 -- 15. Enable Row-Level Security (RLS) on all Tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_permissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.main_dispositions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sub_dispositions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.waiver_reasons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.import_batches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.import_errors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contracts ENABLE ROW LEVEL SECURITY;
@@ -317,3 +352,12 @@ CREATE POLICY "Authenticated operators full access on import_errors"
 
 CREATE POLICY "Authenticated operators full access on user_permissions"
   ON public.user_permissions FOR ALL TO authenticated USING (TRUE) WITH CHECK (TRUE);
+
+CREATE POLICY "Authenticated operators full access on main_dispositions"
+  ON public.main_dispositions FOR ALL TO authenticated USING (TRUE) WITH CHECK (TRUE);
+
+CREATE POLICY "Authenticated operators full access on sub_dispositions"
+  ON public.sub_dispositions FOR ALL TO authenticated USING (TRUE) WITH CHECK (TRUE);
+
+CREATE POLICY "Authenticated operators full access on waiver_reasons"
+  ON public.waiver_reasons FOR ALL TO authenticated USING (TRUE) WITH CHECK (TRUE);

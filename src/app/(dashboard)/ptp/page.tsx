@@ -9,6 +9,7 @@ import {
   Coins,
   ClipboardList
 } from "lucide-react";
+import PtpClientView from "./PtpClientView";
 
 export default async function PtpPage() {
   const ptpSchedules = await getPtpSchedules();
@@ -97,60 +98,8 @@ export default async function PtpPage() {
         </div>
       </div>
 
-      {/* ===== PTP DATATABLE ===== */}
-      <div className="bg-surface border border-border-custom rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-5 py-3.5 bg-bg-warm/30 border-b border-border-custom flex items-center justify-between">
-          <span className="text-[11.5px] uppercase tracking-wider text-ink-3 font-semibold">Commitments Schedules ({ptpSchedules.length})</span>
-          <span className="text-xs text-ink-3">Ordered by earliest promise date</span>
-        </div>
-
-        {ptpSchedules.length === 0 ? (
-          <div className="py-16 text-center space-y-2">
-            <CalendarRange className="w-8 h-8 text-ink-3 mx-auto" />
-            <h3 className="text-sm font-semibold text-ink">No active PTP follow-ups</h3>
-            <p className="text-xs text-ink-2 max-w-sm mx-auto">
-              There are no payment schedules pending. Any calls logged as &quot;Promise to Pay&quot; will automatically populate this dashboard timeline.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border-custom text-[10px] uppercase tracking-wider font-semibold text-ink-3 bg-bg-warm/10">
-                  <th className="py-2.5 px-5">Contract Number</th>
-                  <th className="py-2.5 px-4">Customer Name</th>
-                  <th className="py-2.5 px-4">Promise Date</th>
-                  <th className="py-2.5 px-4">Promise Amount</th>
-                  <th className="py-2.5 px-4">Outstanding Balance</th>
-                  <th className="py-2.5 px-4">Employee Name</th>
-                  <th className="py-2.5 px-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-custom/50 text-[13px]">
-                {ptpSchedules.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-bg-warm/10 transition-colors">
-                    <td className="py-3.5 px-5 font-mono font-semibold text-ink">{row.contract_no}</td>
-                    <td className="py-3.5 px-4 font-medium text-ink">{row.customer_name}</td>
-                    <td className="py-3.5 px-4 font-semibold text-good font-mono">{new Date(row.ptp_date).toLocaleDateString()}</td>
-                    <td className="py-3.5 px-4 font-semibold text-ink font-mono">{formatMoney(row.ptp_amount)}</td>
-                    <td className="py-3.5 px-4 font-mono text-ink-2">{formatMoney(row.total_outstanding)}</td>
-                    <td className="py-3.5 px-4 text-ink-2">{row.employee_name}</td>
-                    <td className="py-3.5 px-5 text-right">
-                      <Link
-                        href={`/customers/${row.contract_no}`}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-bg-warm border border-border-custom hover:bg-ink hover:text-surface text-[12.5px] font-semibold text-ink transition-all"
-                      >
-                        <span>Contract Details</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* ===== CLIENT VIEW CONTROLS (BOARD & LIST) ===== */}
+      <PtpClientView ptpSchedules={ptpSchedules} />
     </div>
   );
 }

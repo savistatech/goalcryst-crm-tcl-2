@@ -13,10 +13,9 @@ export async function getReportData(reportType: string): Promise<any[]> {
     .from("dispositions")
     .select(`
       contract_no,
-      main_disposition,
-      sub_disposition,
-      ptp_amount,
-      paid_amount,
+      main_disposition:main_dispositions!inner(name),
+      sub_disposition:sub_dispositions!inner(name),
+      dynamic_data,
       remarks,
       created_at,
       contracts(customer_name),
@@ -29,27 +28,27 @@ export async function getReportData(reportType: string): Promise<any[]> {
       break;
     
     case "ptp":
-      query = query.eq("sub_disposition", "Promise to Pay");
+      query = query.eq("sub_dispositions.name", "Promise to Pay");
       break;
 
     case "agree_to_pay":
-      query = query.eq("sub_disposition", "Agree to Pay");
+      query = query.eq("sub_dispositions.name", "Agree to Pay");
       break;
 
     case "broken_ptp":
-      query = query.eq("sub_disposition", "Broken PTP");
+      query = query.eq("sub_dispositions.name", "Broken PTP");
       break;
 
     case "part_paid":
-      query = query.eq("sub_disposition", "Part Paid");
+      query = query.eq("sub_dispositions.name", "Part Paid");
       break;
 
     case "contactable":
-      query = query.eq("main_disposition", "Contactable");
+      query = query.eq("main_dispositions.name", "Contactable");
       break;
 
     case "non_contactable":
-      query = query.eq("main_disposition", "Non-Contactable");
+      query = query.eq("main_dispositions.name", "Non-Contactable");
       break;
 
     default:
@@ -73,16 +72,18 @@ export async function getReportData(reportType: string): Promise<any[]> {
     
     // Some reports use ptp_amount, some use paid_amount
     let amount = "-";
-    if (row.ptp_amount) amount = row.ptp_amount.toString();
-    else if (row.paid_amount) amount = row.paid_amount.toString();
+    const ptpAmt = row.dynamic_data?.ptp_amount;
+    const paidAmt = row.dynamic_data?.paid_amount;
+    if (ptpAmt) amount = ptpAmt.toString();
+    else if (paidAmt) amount = paidAmt.toString();
 
     return {
       "Contract No": row.contract_no,
       "Customer Name": contracts.customer_name || "-",
       "Employee Name": employee.full_name || "System",
       "Date Logged": new Date(row.created_at).toLocaleString(),
-      "Main Disposition": row.main_disposition || "-",
-      "Sub Disposition": row.sub_disposition || "-",
+      "Main Disposition": row.main_disposition?.name || "-",
+      "Sub Disposition": row.sub_disposition?.name || "-",
       "PTP/Paid Amount": amount,
       "Remarks": row.remarks || "-"
     };

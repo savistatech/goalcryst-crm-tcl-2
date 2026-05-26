@@ -10,6 +10,7 @@ export interface PendingWaiver {
   customer_name: string;
   employee_name: string;
   total_outstanding: number;
+  pos: number;
   requested_waiver_amount: number;
   customer_payable_amount: number;
   reason: string;
@@ -23,6 +24,7 @@ export interface MyWaiverRequest {
   contract_no: string;
   customer_name: string;
   total_outstanding: number;
+  pos: number;
   requested_waiver_amount: number;
   customer_payable_amount: number;
   reason: string;
@@ -51,16 +53,17 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       id,
       contract_no,
       total_outstanding,
+      pos,
       requested_waiver_amount,
       customer_payable_amount,
-      reason,
       employee_remarks,
       status,
       manager_remarks,
       routed_to,
       created_at,
       updated_at,
-      contracts(customer_name)
+      contracts(customer_name),
+      waiver_reason:waiver_reasons(reason)
     `)
     .eq("employee_id", user.id)
     .order("created_at", { ascending: false });
@@ -84,9 +87,10 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       contract_no: row.contract_no,
       customer_name: contracts.customer_name || "Unknown Customer",
       total_outstanding: Number(row.total_outstanding || 0),
+      pos: Number(row.pos || 0),
       requested_waiver_amount: Number(row.requested_waiver_amount || 0),
       customer_payable_amount: Number(row.customer_payable_amount || 0),
-      reason: row.reason || "",
+      reason: row.waiver_reason?.reason || "Unknown",
       employee_remarks: row.employee_remarks || "",
       status: row.status as "Pending" | "Approved" | "Rejected",
       manager_remarks: row.manager_remarks || null,
@@ -110,13 +114,14 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       id,
       contract_no,
       total_outstanding,
+      pos,
       requested_waiver_amount,
       customer_payable_amount,
-      reason,
       employee_remarks,
       routed_to,
       created_at,
       contracts(customer_name),
+      waiver_reason:waiver_reasons(reason),
       employee_profile:profiles!waiver_requests_employee_id_fkey(full_name)
     `)
     .eq("status", "Pending");
@@ -145,9 +150,10 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       customer_name: contracts.customer_name || "Unknown Customer",
       employee_name: employee.full_name || "System Operator",
       total_outstanding: Number(row.total_outstanding || 0),
+      pos: Number(row.pos || 0),
       requested_waiver_amount: Number(row.requested_waiver_amount || 0),
       customer_payable_amount: Number(row.customer_payable_amount || 0),
-      reason: row.reason,
+      reason: row.waiver_reason?.reason || "Unknown",
       employee_remarks: row.employee_remarks || "",
       routed_to: row.routed_to || [],
       created_at: row.created_at

@@ -137,6 +137,8 @@ export interface ImportSummary {
   errors: any[];
 }
 
+const parseDate = (val?: string) => (val === "-" || !val ? null : val);
+
 /**
  * Commits parsed Excel records into the database in atomic chunks.
  * Checks for duplicates in the database to prevent overwriting existing allocations.
@@ -327,32 +329,32 @@ export async function commitImportBatch(
         notice_sent_sec138: row.notice_sent_sec138 || null,
         type_of_case: row.type_of_case || null,
         cheque_amount: row.cheque_amount || null,
-        cheque_date: row.cheque_date || null,
+        cheque_date: parseDate(row.cheque_date),
         cheque_no: row.cheque_no || null,
         sec138_current_status: row.sec138_current_status || null,
         group_stage: row.group_stage || null,
         case_no: row.case_no || null,
         court_location: row.court_location || null,
         court_name: row.court_name || null,
-        ldoh: row.ldoh || null,
-        ndoh: row.ndoh || null,
+        ldoh: parseDate(row.ldoh),
+        ndoh: parseDate(row.ndoh),
         advocate: row.advocate || null,
         hand_summons: row.hand_summons || null,
         hand_warrant_1: row.hand_warrant_1 || null,
         proclamation_orders: row.proclamation_orders || null,
         lrn_status: row.lrn_status || null,
-        lrn_date: row.lrn_date || null,
+        lrn_date: parseDate(row.lrn_date),
         arb: row.arb || null,
-        sec17_orders_date: row.sec17_orders_date || null,
-        award_date: row.award_date || null,
+        sec17_orders_date: parseDate(row.sec17_orders_date),
+        award_date: parseDate(row.award_date),
         ep_stage: row.ep_stage || null,
-        ep_ldoh: row.ep_ldoh || null,
-        ep_ndoh: row.ep_ndoh || null,
+        ep_ldoh: parseDate(row.ep_ldoh),
+        ep_ndoh: parseDate(row.ep_ndoh),
         ep_case_no: row.ep_case_no || null,
         ep_advocate: row.ep_advocate || null,
         termination_status_sa: row.termination_status_sa || null,
         lrn_prn_status: row.lrn_prn_status || null,
-        lrn_prn_issue_date: row.lrn_prn_issue_date || null,
+        lrn_prn_issue_date: parseDate(row.lrn_prn_issue_date),
         lrn_prn_link: row.lrn_prn_link || null,
         cnr_number_cc: row.cnr_number_cc || null,
         cnr_number_pcr: row.cnr_number_pcr || null,
@@ -364,9 +366,9 @@ export async function commitImportBatch(
         claim_amount: row.claim_amount || null,
         arbitration_group_stage: row.arbitration_group_stage || null,
         sec17_orders: row.sec17_orders || null,
-        sec17_date: row.sec17_date || null,
+        sec17_date: parseDate(row.sec17_date),
         court_bench: row.court_bench || null,
-        ep_pdoh: row.ep_pdoh || null,
+        ep_pdoh: parseDate(row.ep_pdoh),
         legal_status: row.legal_status || null
       });
 

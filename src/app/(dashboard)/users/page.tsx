@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
+import Link from "next/link";
 import {
   ShieldCheck,
   UserCheck,
@@ -10,7 +11,8 @@ import {
   Plus,
   Key,
   X,
-  Loader2
+  Loader2,
+  GitBranch
 } from "lucide-react";
 import {
   getOperatorsWithPermissions,
@@ -208,6 +210,13 @@ export default function UsersPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/org"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 border border-border-custom hover:bg-bg-warm text-ink-2 hover:text-ink rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer"
+            >
+              <GitBranch className="w-3.5 h-3.5" />
+              <span>Org Chart</span>
+            </Link>
             <button
               onClick={() => setIsAddModalOpen(true)}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent-custom hover:bg-accent-custom/90 text-white rounded-xl text-xs font-semibold shadow-sm transition-all duration-200 cursor-pointer active:scale-95"

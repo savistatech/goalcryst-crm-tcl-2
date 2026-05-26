@@ -212,8 +212,8 @@ export default function EmployeeWaiverTrackerView({ myWaivers }: EmployeeWaiverT
                     <div className="flex items-start gap-2">
                       <DollarSign className="w-3.5 h-3.5 text-ink-3 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Total Outstanding at Request</p>
-                        <p className="text-[12.5px] text-ink font-mono">{formatMoney(waiver.total_outstanding)}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-ink-3 font-semibold">Principal POS at Request</p>
+                        <p className="text-[12.5px] text-ink font-mono">{formatMoney(waiver.pos)}</p>
                       </div>
                     </div>
                     {waiver.employee_remarks && (
