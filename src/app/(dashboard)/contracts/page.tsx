@@ -1,8 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getAllContracts, toggleArchiveContract, AdminContractRow } from "@/app/actions/contractActions";
-import { Search, Archive, ArchiveRestore, RefreshCw } from "lucide-react";
+import { 
+  getAllContracts, 
+  toggleArchiveContract, 
+  bulkArchiveContracts,
+  bulkDeleteContracts,
+  deleteAllContracts,
+  AdminContractRow 
+} from "@/app/actions/contractActions";
+import { Search, Archive, ArchiveRestore, RefreshCw, Trash2, AlertTriangle, X } from "lucide-react";
 
 export default function ContractsMasterPage() {
   const [contracts, setContracts] = useState<AdminContractRow[]>([]);
@@ -12,6 +19,13 @@ export default function ContractsMasterPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
+  // Bulk operation state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<"selected" | "all" | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
   const limit = 20;
 
   const fetchContracts = async () => {
@@ -20,6 +34,8 @@ export default function ContractsMasterPage() {
       const result = await getAllContracts(page, limit, search);
       setContracts(result.contracts);
       setTotalCount(result.totalCount);
+      // Clear selections when page changes
+      setSelectedIds(new Set());
     } catch (err: any) {
       alert("Error loading contracts: " + err.message);
     } finally {
@@ -29,11 +45,11 @@ export default function ContractsMasterPage() {
 
   useEffect(() => {
     fetchContracts();
-  }, [page]); // Re-fetch when page changes
+  }, [page]); 
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1); // Reset to first page
+    setPage(1);
     fetchContracts();
   };
 
@@ -41,7 +57,6 @@ export default function ContractsMasterPage() {
     setUpdating(contractNo);
     try {
       await toggleArchiveContract(contractNo, !currentStatus);
-      // Optimistically update the UI
       setContracts((prev) =>
         prev.map((c) => c.contract_no === contractNo ? { ...c, is_archived: !currentStatus } : c)
       );
@@ -52,10 +67,73 @@ export default function ContractsMasterPage() {
     }
   };
 
+  // --- Bulk Operations Logic ---
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const allIds = contracts.map(c => c.contract_no);
+      setSelectedIds(new Set(allIds));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelect = (contractNo: string, checked: boolean) => {
+    const newSet = new Set(selectedIds);
+    if (checked) newSet.add(contractNo);
+    else newSet.delete(contractNo);
+    setSelectedIds(newSet);
+  };
+
+  const handleBulkArchive = async (archiveStatus: boolean) => {
+    if (selectedIds.size === 0) return;
+    setIsBulkLoading(true);
+    try {
+      await bulkArchiveContracts(Array.from(selectedIds), archiveStatus);
+      setContracts(prev => prev.map(c => 
+        selectedIds.has(c.contract_no) ? { ...c, is_archived: archiveStatus } : c
+      ));
+      setSelectedIds(new Set());
+    } catch (err: any) {
+      alert("Bulk archive failed: " + err.message);
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirmText !== "DELETE") return;
+    setIsBulkLoading(true);
+    setDeleteModalOpen(false);
+
+    try {
+      if (deleteType === "selected") {
+        await bulkDeleteContracts(Array.from(selectedIds));
+        setSelectedIds(new Set());
+        fetchContracts(); // Reload page
+      } else if (deleteType === "all") {
+        await deleteAllContracts();
+        setSelectedIds(new Set());
+        setPage(1);
+        fetchContracts();
+      }
+    } catch (err: any) {
+      alert("Deletion failed: " + err.message);
+    } finally {
+      setIsBulkLoading(false);
+      setDeleteType(null);
+      setDeleteConfirmText("");
+    }
+  };
+
   const totalPages = Math.ceil(totalCount / limit) || 1;
+  const isAllSelected = contracts.length > 0 && selectedIds.size === contracts.length;
+  const isSomeSelected = selectedIds.size > 0;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in relative">
+      
+      {/* Header and Search */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 select-none">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink font-serif">
@@ -66,38 +144,89 @@ export default function ContractsMasterPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSearchSubmit} className="w-full md:w-80">
-          <div className="relative flex items-center bg-surface border border-border-custom rounded-lg px-3 py-2 shadow-sm focus-within:border-ink-2 transition-colors">
-            <Search className="w-4 h-4 text-ink-3 mr-2" />
-            <input
-              type="text"
-              placeholder="Search by ID, Name, or Branch..."
-              className="w-full bg-transparent border-0 outline-none text-[13px] text-ink placeholder-ink-3"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="absolute right-2 px-2 py-0.5 bg-bg-warm border border-border-custom rounded text-[10px] font-semibold text-ink-2 hover:text-ink cursor-pointer"
-            >
-              Search
-            </button>
-          </div>
-        </form>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setDeleteType("all"); setDeleteModalOpen(true); }}
+            className="flex items-center gap-1.5 h-9 px-3 bg-bad-bg border border-bad/30 text-bad hover:bg-bad hover:text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete All Contracts
+          </button>
+          
+          <form onSubmit={handleSearchSubmit} className="w-full md:w-72">
+            <div className="relative flex items-center bg-surface border border-border-custom rounded-lg px-3 py-2 shadow-sm focus-within:border-ink-2 transition-colors">
+              <Search className="w-4 h-4 text-ink-3 mr-2" />
+              <input
+                type="text"
+                placeholder="Search by ID, Name..."
+                className="w-full bg-transparent border-0 outline-none text-[13px] text-ink placeholder-ink-3"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-2 px-2 py-0.5 bg-bg-warm border border-border-custom rounded text-[10px] font-semibold text-ink-2 hover:text-ink cursor-pointer"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
+      {/* Bulk Action Toolbar */}
+      {isSomeSelected && (
+        <div className="flex items-center justify-between bg-accent-soft border border-accent-custom/30 rounded-xl p-3 px-4 shadow-sm animate-fade-in">
+          <div className="text-xs font-semibold text-accent-ink flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-accent-custom text-white flex items-center justify-center">{selectedIds.size}</span>
+            contracts selected
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleBulkArchive(true)}
+              disabled={isBulkLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border-custom rounded-lg text-xs font-semibold text-ink-2 hover:text-ink disabled:opacity-50 cursor-pointer"
+            >
+              <Archive className="w-3.5 h-3.5" /> Archive
+            </button>
+            <button
+              onClick={() => handleBulkArchive(false)}
+              disabled={isBulkLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border-custom rounded-lg text-xs font-semibold text-ink-2 hover:text-ink disabled:opacity-50 cursor-pointer"
+            >
+              <ArchiveRestore className="w-3.5 h-3.5" /> Unarchive
+            </button>
+            <button
+              onClick={() => { setDeleteType("selected"); setDeleteModalOpen(true); }}
+              disabled={isBulkLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-bad-bg border border-bad/30 rounded-lg text-xs font-semibold text-bad hover:bg-bad hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Contracts Table */}
       <div className="bg-surface border border-border-custom rounded-2xl shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border-custom bg-bg-warm/30 text-[10px] uppercase font-semibold text-ink-3 tracking-wider select-none">
+                <th className="py-3 px-4 w-10">
+                  <input 
+                    type="checkbox" 
+                    checked={isAllSelected}
+                    onChange={handleSelectAll}
+                    className="w-3.5 h-3.5 rounded border-border-custom text-accent-custom focus:ring-accent-custom cursor-pointer"
+                  />
+                </th>
                 <th className="py-3 px-4">Contract No</th>
                 <th className="py-3 px-4">Customer Name</th>
                 <th className="py-3 px-4">Branch</th>
-                <th className="py-3 px-4 text-center">BOM DPD</th>
-                <th className="py-3 px-4">Allocated Employee</th>
+                <th className="py-3 px-4 text-center">DPD</th>
+                <th className="py-3 px-4">Employee</th>
                 <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-custom/50 text-[13px]">
@@ -118,8 +247,18 @@ export default function ContractsMasterPage() {
                 contracts.map((contract) => (
                   <tr
                     key={contract.contract_no}
-                    className={`hover:bg-bg-warm/10 transition-colors ${contract.is_archived ? "opacity-60 bg-bg-warm/50" : ""}`}
+                    className={`transition-colors ${
+                      selectedIds.has(contract.contract_no) ? "bg-accent-soft/30" : "hover:bg-bg-warm/10"
+                    } ${contract.is_archived ? "opacity-60 bg-bg-warm/50" : ""}`}
                   >
+                    <td className="py-3 px-4">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.has(contract.contract_no)}
+                        onChange={(e) => handleSelect(contract.contract_no, e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-border-custom text-accent-custom focus:ring-accent-custom cursor-pointer"
+                      />
+                    </td>
                     <td className="py-3 px-4 font-mono font-medium text-ink">
                       {contract.contract_no}
                     </td>
@@ -155,30 +294,6 @@ export default function ContractsMasterPage() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleToggleArchive(contract.contract_no, contract.is_archived)}
-                        disabled={updating === contract.contract_no}
-                        className={`inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer border ${contract.is_archived
-                            ? "bg-surface border-border-custom text-ink hover:border-ink"
-                            : "bg-surface border-border-custom text-bad hover:bg-bad-bg hover:border-bad/30"
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {updating === contract.contract_no ? (
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        ) : contract.is_archived ? (
-                          <>
-                            <ArchiveRestore className="w-3.5 h-3.5" />
-                            <span>Unarchive</span>
-                          </>
-                        ) : (
-                          <>
-                            <Archive className="w-3.5 h-3.5" />
-                            <span>Archive</span>
-                          </>
-                        )}
-                      </button>
-                    </td>
                   </tr>
                 ))
               )}
@@ -211,6 +326,63 @@ export default function ContractsMasterPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 backdrop-blur-sm p-4">
+          <div className="bg-surface border border-border-strong rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-scale-up space-y-5">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2 text-bad">
+                <AlertTriangle className="w-5 h-5" />
+                <h3 className="text-lg font-semibold tracking-tight">Confirm Deletion</h3>
+              </div>
+              <button 
+                onClick={() => { setDeleteModalOpen(false); setDeleteConfirmText(""); }}
+                className="text-ink-3 hover:text-ink transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="text-[13px] text-ink-2 space-y-3 leading-relaxed">
+              <p>
+                You are about to <strong className="text-bad">permanently delete</strong> {deleteType === "all" ? "ALL contracts in the system" : `${selectedIds.size} selected contracts`}.
+              </p>
+              <p>
+                This action is irreversible and will also destroy all associated records including financials, legal status, dispositions, and waiver history for these contracts.
+              </p>
+              <p className="font-semibold text-ink mt-2">
+                Type <span className="bg-bg-warm border border-border-custom px-1.5 py-0.5 rounded font-mono text-bad">DELETE</span> to confirm.
+              </p>
+            </div>
+
+            <input
+              type="text"
+              placeholder="DELETE"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              className="w-full bg-surface border-2 border-border-custom rounded-xl px-4 py-3 text-sm text-ink font-mono focus:outline-none focus:border-bad transition-colors"
+            />
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => { setDeleteModalOpen(false); setDeleteConfirmText(""); }}
+                className="h-10 px-4 rounded-xl border border-border-custom hover:bg-bg-warm text-[13px] font-semibold text-ink-2 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleteConfirmText !== "DELETE" || isBulkLoading}
+                className="h-10 px-6 rounded-xl bg-bad text-white text-[13px] font-semibold shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isBulkLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                <span>Confirm Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

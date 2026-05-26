@@ -135,3 +135,119 @@ export async function toggleArchiveContract(contract_no: string, newStatus: bool
   
   return true;
 }
+
+/**
+ * Bulk toggle the `is_archived` status of multiple contracts.
+ */
+export async function bulkArchiveContracts(contract_nos: string[], newStatus: boolean): Promise<boolean> {
+  const supabase = await createClient();
+
+  const user = await getActiveUser();
+  if (!user) throw new Error("Unauthorized");
+
+  // Admin/BM only
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || (profile.role !== "Admin" && profile.role !== "Branch Manager")) {
+    throw new Error("Unauthorized: Insufficient permissions to archive contracts.");
+  }
+
+  if (contract_nos.length === 0) return true;
+
+  const { error } = await supabase
+    .from("contracts")
+    .update({ is_archived: newStatus, updated_at: new Date().toISOString() })
+    .in("contract_no", contract_nos);
+
+  if (error) {
+    console.error("Error bulk toggling archive status:", error);
+    throw new Error("Failed to update archive status in bulk.");
+  }
+
+  revalidatePath("/contracts");
+  revalidatePath("/");
+  
+  return true;
+}
+
+/**
+ * Bulk delete specific contracts permanently.
+ * Only Admins can perform destructive deletions.
+ */
+export async function bulkDeleteContracts(contract_nos: string[]): Promise<boolean> {
+  const supabase = await createClient();
+
+  const user = await getActiveUser();
+  if (!user) throw new Error("Unauthorized");
+
+  // Strict Admin only
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "Admin") {
+    throw new Error("Unauthorized: Only Admins can delete records.");
+  }
+
+  if (contract_nos.length === 0) return true;
+
+  // ON DELETE CASCADE will handle all related tables (financials, legal, etc.)
+  const { error } = await supabase
+    .from("contracts")
+    .delete()
+    .in("contract_no", contract_nos);
+
+  if (error) {
+    console.error("Error bulk deleting contracts:", error);
+    throw new Error("Failed to delete contracts.");
+  }
+
+  revalidatePath("/contracts");
+  revalidatePath("/");
+  
+  return true;
+}
+
+/**
+ * Delete ALL contracts in the system permanently.
+ * Extremely destructive operation. Admin only.
+ */
+export async function deleteAllContracts(): Promise<boolean> {
+  const supabase = await createClient();
+
+  const user = await getActiveUser();
+  if (!user) throw new Error("Unauthorized");
+
+  // Strict Admin only
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "Admin") {
+    throw new Error("Unauthorized: Only Admins can perform master deletion.");
+  }
+
+  // Supabase delete() requires a filter, using neq to match all
+  const { error } = await supabase
+    .from("contracts")
+    .delete()
+    .neq("contract_no", "NULL_DUMMY_NEVER_MATCHES");
+
+  if (error) {
+    console.error("Error deleting all contracts:", error);
+    throw new Error("Failed to delete all contracts.");
+  }
+
+  revalidatePath("/contracts");
+  revalidatePath("/");
+  
+  return true;
+}
