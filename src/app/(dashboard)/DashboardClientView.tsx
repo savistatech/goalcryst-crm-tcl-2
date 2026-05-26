@@ -223,8 +223,9 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ backgroundColor: "var(--surface)", borderColor: "var(--border-custom)", borderRadius: "8px" }}
+                    contentStyle={{ backgroundColor: "var(--surface)", borderColor: "var(--border-custom)", borderRadius: "8px", color: "var(--ink)" }}
                     itemStyle={{ fontSize: "12px", color: "var(--ink)", fontWeight: 600 }}
+                    labelStyle={{ color: "var(--ink)", fontWeight: "bold" }}
                   />
                   <Legend
                     verticalAlign="bottom"
@@ -252,8 +253,10 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
                 <XAxis dataKey="week" stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "var(--surface)", borderColor: "var(--border-custom)", borderRadius: "8px" }}
-                  itemStyle={{ fontSize: "12px" }}
+                  contentStyle={{ backgroundColor: "var(--surface)", borderColor: "var(--border-custom)", borderRadius: "8px", color: "var(--ink)" }}
+                  itemStyle={{ fontSize: "12px", color: "var(--ink)", fontWeight: 600 }}
+                  labelStyle={{ color: "var(--ink)", fontWeight: "bold", marginBottom: "4px" }}
+                  cursor={{ fill: "var(--border-custom)", opacity: 0.4 }}
                 />
                 <Bar dataKey="ptpCount" name="PTP Commitments" fill="#1C5732" radius={[4, 4, 0, 0]} maxBarSize={20} opacity={0.85} />
                 <Bar dataKey="contactable" name="Connected Calls" fill="#9A9285" radius={[4, 4, 0, 0]} maxBarSize={20} opacity={0.6} />
