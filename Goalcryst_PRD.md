@@ -17,14 +17,14 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 * Bulk import customer/contract data from Excel/XLSX
 * Duplicate contract detection during import
 * Customer search by phone number or contract number
-* Customer 360 view
-* disposition entry
-* Follow-up / Promise to Pay tracking
-* Waiver request workflow
-* User management
+* Customer 360 view (pivoted on Principal POS)
+* Dynamic Disposition entry and configuration
+* Follow-up / Promise to Pay tracking (Kanban Board)
+* Waiver request workflow (Routed by agent)
+* User & Organization Hierarchy management (Org Chart)
 * Role-based and granular permission management
 * Field-level access control
-* Basic dashboards and reports
+* Role-scoped dashboards and reports (CSV & XLSX exports)
 * Audit logs for important actions
 
 ### Out of Scope
@@ -45,8 +45,8 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 
 * Centralize recovery customer and contract data
 * Make it easy for employees to search customers and update dispositions
-* Improve waiver request handling and approval visibility
-* Give managers visibility into recovery activity and team performance
+* Improve waiver request handling by prioritizing Principal POS recovery
+* Give managers visibility into recovery activity strictly scoped by their organizational hierarchy
 * Support monthly or one-time Excel allocation imports
 * Prevent accidental overwriting of existing contract records
 * Enforce role-based and field-level access control
@@ -58,44 +58,43 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 
 ### Admin (Global Access)
 
-* Manage users
+* Manage users and organizational hierarchy (Reporting lines)
 * Manage roles and permissions
 * Upload Excel files
-* View all reports
-* Configure statuses and dispositions
+* Export all reports (CSV/XLSX)
+* Configure dynamic dispositions and waiver reasons
 * View audit logs
 
 ### Branch Manager (Branch Operations)
 
 * Full operations control at the branch level
-* View regional reports and dashboards
-* Review and approve waiver requests
-* View all team activity
+* View and export regional role-scoped reports (CSV/XLSX)
+* Review and approve routed waiver requests
+* View all subordinate team activity
 
 ### Assistant Manager (Operations)
 
 * Search and view customer records
-* View operational reports and dashboards
-* Review and approve waiver requests
-* View employee activity
-* Export reports (if permitted)
+* View and export operational role-scoped reports (CSV/XLSX)
+* Review and approve routed waiver requests
+* View subordinate employee activity
 
 ### Team Leader (Team Management)
 
 * Search and view customer records
-* View team reports and dashboards
-* Review and approve waiver requests
+* View and export team role-scoped reports (CSV/XLSX)
+* Review and approve routed waiver requests
 * Monitor direct report employee activity
 
 ### Employee (Dedicated Recovery)
 
 * Search customer by phone number or contract number
 * View permitted Customer 360 fields
-* Add disposition
+* Add dynamic disposition
 * Add notes
-* Add follow-up date
-* Raise waiver request
-* Export reports (if permitted)
+* Track follow-ups on PTP Kanban Board
+* Raise and route waiver request
+* Export personal role-scoped reports (CSV/XLSX)
 
 ---
 
@@ -163,34 +162,16 @@ Field visibility should depend on user permissions.
 
 Since calls are made outside the CRM, employees only need to manually update the customer disposition after speaking or attempting to speak with the customer.
 
-The disposition module should use two dropdowns:
+The disposition module uses a dynamic, admin-configured schema consisting of:
 
 1. Main Disposition
-2. Sub Disposition
+2. Sub Disposition (with dynamic form fields)
 
-### Main Disposition Values
+### Admin Configuration
 
-* Contactable
-* Non Contactable
+Admins can configure new dispositions and attach specific form schemas (e.g., requiring a Date and Amount field when "Promise to Pay" is selected). 
 
-### Sub Disposition Values
-
-* Call Back
-* Promise to Pay
-* Refuse to Pay
-* Wrong Number
-* Out of Station
-* Intentional Issue
-* Financial Issue
-* Legal Issue
-* Dispute
-* Call Disconnect
-* Customer Expired
-* Broken PTP
-* Customer Claims Paid
-* Part Paid
-
-### Disposition Fields
+### Disposition Fields (Dynamic)
 
 * Contract number
 * Customer name
@@ -198,29 +179,13 @@ The disposition module should use two dropdowns:
 * Main disposition
 * Sub disposition
 * Remarks/notes
-* Follow-up date, if applicable
-* Promise to Pay date, if applicable
-* Promise amount, if applicable
-* Part paid amount, if applicable
+* *Dynamic Fields* (e.g., PTP Date, PTP Amount, Paid Amount) based on Admin setup
 * Created by employee
-
-### Suggested Disposition Logic
-
-Some sub dispositions should trigger additional fields:
-
-| Sub Disposition      | Extra Fields Needed                |
-| -------------------- | ---------------------------------- |
-| Call Back            | Follow-up date/time                |
-| Promise to Pay       | PTP date, PTP amount               |
-| Broken PTP           | Previous PTP reference, remarks    |
-| Part Paid            | Paid amount, payment date, remarks |
-| Customer Claims Paid | Claimed paid amount/date, remarks  |
-| Dispute              | Dispute reason, remarks            |
-| Legal Issue          | Legal remarks                      |
 
 ### Important Business Rules
 
 * Employee must select both Main Disposition and Sub Disposition.
+* Required dynamic fields must be filled before submission.
 * Every disposition entry should be stored as history.
 * Latest disposition should be visible in Customer 360.
 * Previous disposition history should not be deleted.
@@ -230,31 +195,45 @@ Some sub dispositions should trigger additional fields:
 
 ## 5.5 Waiver Request Module
 
-Employees should be able to raise waiver requests when customers ask for discount/settlement relief.
+Employees should be able to raise waiver requests when customers ask for discount/settlement relief. **Waiver percentages and tracking pivot primarily around the Principal POS, rather than Total Outstanding.**
 
 ### Waiver Request Fields
 
 * Contract number
 * Customer name
+* Principal POS (Primary Metric)
 * Total outstanding amount
-* Requested waiver amount
+* Requested waiver amount (Calculated against POS)
 * Customer payable amount
-* Reason for waiver
+* Reason for waiver (Admin configured)
 * Employee remarks
 * Status: Pending / Approved / Rejected
-* Requested by
-* Approved/rejected by
+* Routed To (Specific Managers)
+* Reviewed by
 * Supervisor remarks
-* Created date
-* Updated date
+* Created/Updated dates
 
 ### Waiver Workflow
 
-Employee raises waiver request → Supervisor (Team Leader, AM, BM, or Admin) reviews → Approve or Reject → Status updated in CRM
+Employee raises waiver request and selects specific supervisor(s) to route it to → Supervisor reviews → Approve or Reject → Status updated in CRM.
 
 ---
 
-## 5.6 User & Permission Management
+## 5.6 Organization Hierarchy & PTP Kanban
+
+### Organization Tree
+* Visual hierarchy mapping (Admin → Branch Manager → Asst Manager → Team Leader → Employee).
+* Self-referencing structure (`reporting_to`).
+* Used to strictly scope data visibility for reporting and management views.
+
+### PTP Kanban Board
+* Visual board for tracking Promise to Pay (PTP) statuses.
+* Columns: Due Today, Upcoming, Broken, Kept/Part Paid.
+* Helps agents prioritize daily collection tasks based on Principal POS values.
+
+---
+
+## 5.7 User & Permission Management
 
 The CRM should support role-based and granular permissions.
 
@@ -268,13 +247,13 @@ The CRM should support role-based and granular permissions.
 * Can raise waiver request
 * Can approve waiver request
 * Can view reports
-* Can export reports
+* Can export reports (CSV/XLSX)
 * Can manage users
 * Can view audit logs
 
 ---
 
-## 5.7 Reports & Analytics
+## 5.8 Reports & Analytics
 
 The system should provide simple operational reports.
 
@@ -312,7 +291,7 @@ The system should provide simple operational reports.
 
 ---
 
-## 5.8 Audit Logs
+## 5.9 Audit Logs
 
 The system should maintain audit logs for important actions.
 
@@ -324,7 +303,7 @@ The system should maintain audit logs for important actions.
 * Disposition added
 * Waiver request created
 * Waiver approved/rejected
-* User created/updated
+* User created/updated (including hierarchy changes)
 * Permission changed
 * Report exported
 
@@ -382,10 +361,7 @@ The system should maintain audit logs for important actions.
 
 ## 9. Open Questions
 
-* Is there one-level approval or multi-level approval for waivers?
 * What exact Excel columns are mandatory?
 * Should employees see full phone numbers or masked numbers?
-* Should reports be exportable to Excel/PDF?
 * Should Customer 360 show legal details to employees or only managers?
-* What are the final call disposition values?
 * Should follow-up reminders be shown inside dashboard?
