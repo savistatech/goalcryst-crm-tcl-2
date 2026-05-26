@@ -173,7 +173,7 @@ export default function DashboardLayout({
     },
     { label: "Bulk Import", path: "/imports", icon: UploadCloud, section: "Admin", badge: undefined, requiredPermission: "can_upload_excel" },
     { label: "Contracts", path: "/contracts", icon: Database, section: "Admin", badge: undefined, requiredPermission: "can_manage_users" },
-    { label: "Reports", path: "/reports", icon: BarChart3, section: "Admin", badge: undefined, requiredPermission: "can_view_reports" },
+    { label: "Reports", path: "/reports", icon: BarChart3, section: "Admin", badge: undefined, requiredPermission: "can_export_reports" },
     { label: "Users", path: "/users", icon: UsersIcon, section: "Admin", badge: undefined, requiredPermission: "can_manage_users" },
     { label: "Org Chart", path: "/org", icon: GitBranch, section: "Admin", badge: undefined, requiredPermission: null },
     { label: "Audits", path: "/audit", icon: ListChecks, section: "Admin", badge: undefined, requiredPermission: "can_view_audit_logs" },

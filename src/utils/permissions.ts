@@ -60,7 +60,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     "can_raise_waiver",
     "can_approve_waiver",
     "can_view_reports",
-    "can_view_all_dispositions"
+    "can_view_all_dispositions",
+    "can_export_reports"
   ],
   "Employee": [
     "can_search_customer",
