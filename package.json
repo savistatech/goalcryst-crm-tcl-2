@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "docker:build": "docker build --network host -t goalcryst-crm:latest ."
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
