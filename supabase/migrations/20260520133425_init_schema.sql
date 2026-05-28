@@ -223,7 +223,7 @@ CREATE TABLE public.contract_legal (
 CREATE TABLE public.dispositions (
   id BIGSERIAL PRIMARY KEY,
   contract_no TEXT REFERENCES public.contracts(contract_no) ON DELETE CASCADE NOT NULL,
-  employee_id UUID REFERENCES public.profiles(id) NOT NULL,
+  employee_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   main_disposition_id UUID REFERENCES public.main_dispositions(id) NOT NULL,
   sub_disposition_id UUID REFERENCES public.sub_dispositions(id) NOT NULL,
   remarks TEXT,
@@ -241,7 +241,7 @@ CREATE TABLE public.dispositions (
 CREATE TABLE public.waiver_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   contract_no TEXT REFERENCES public.contracts(contract_no) ON DELETE CASCADE NOT NULL,
-  employee_id UUID REFERENCES public.profiles(id) NOT NULL,
+  employee_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   total_outstanding NUMERIC(15, 2) NOT NULL,
   pos NUMERIC(15, 2) NOT NULL DEFAULT 0,
   requested_waiver_amount NUMERIC(15, 2) NOT NULL,

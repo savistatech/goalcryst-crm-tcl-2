@@ -12,12 +12,17 @@ import {
   Key,
   X,
   Loader2,
-  GitBranch
+  GitBranch,
+  PowerOff,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 import {
   getOperatorsWithPermissions,
   createOperator,
   updateOperatorPermissions,
+  toggleOperatorStatus,
+  deleteOperator,
   type OperatorRecord
 } from "@/app/actions/userActions";
 import PermissionGuard from "@/components/PermissionGuard";
@@ -47,6 +52,14 @@ export default function UsersPage() {
   const [manageCanViewAudit, setManageCanViewAudit] = useState(false);
   const [manageError, setManageError] = useState("");
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
+
+  // Status/Delete State
+  const [isTogglingStatus, setIsTogglingStatus] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [operatorToDelete, setOperatorToDelete] = useState<OperatorRecord | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // Load operators on mount
   const loadOperators = async () => {
@@ -99,16 +112,14 @@ export default function UsersPage() {
       if (!res.success) {
         setAddError(res.error || "Failed to register operator.");
       } else {
-        // Reset form and close modal
+        setIsAddModalOpen(false);
         setNewName("");
         setNewEmail("");
         setNewRole("Employee");
         setNewCanApprove(false);
         setNewCanImport(false);
         setNewCanViewAudit(false);
-        setIsAddModalOpen(false);
-
-        // Refresh operator list
+        
         startTransition(() => {
           loadOperators();
         });
@@ -121,17 +132,15 @@ export default function UsersPage() {
     }
   };
 
-  // Open Manage Permissions Modal
-  const openManageModal = (operator: OperatorRecord) => {
-    setSelectedOperator(operator);
-    setManageCanApprove(operator.permissions.can_approve_waivers);
-    setManageCanImport(operator.permissions.can_import_data);
-    setManageCanViewAudit(operator.permissions.can_view_audit_logs);
+  const openManageModal = (op: OperatorRecord) => {
+    setSelectedOperator(op);
+    setManageCanApprove(op.permissions.can_approve_waivers);
+    setManageCanImport(op.permissions.can_import_data);
+    setManageCanViewAudit(op.permissions.can_view_audit_logs);
     setManageError("");
     setIsManageModalOpen(true);
   };
 
-  // Save modified permission overrides
   const handleSavePermissions = async () => {
     if (!selectedOperator) return;
     setManageError("");
@@ -145,12 +154,11 @@ export default function UsersPage() {
       });
 
       if (!res.success) {
-        setManageError(res.error || "Failed to commit permissions updates.");
+        setManageError(res.error || "Failed to update permissions.");
       } else {
         setIsManageModalOpen(false);
         setSelectedOperator(null);
 
-        // Refresh list
         startTransition(() => {
           loadOperators();
         });
@@ -160,6 +168,44 @@ export default function UsersPage() {
       setManageError("An unexpected exception occurred: " + error.message);
     } finally {
       setIsSavingPermissions(false);
+    }
+  };
+
+  const handleToggleStatus = async (op: OperatorRecord) => {
+    setIsTogglingStatus(op.id);
+    try {
+      const res = await toggleOperatorStatus(op.id, !op.is_active);
+      if (!res.success) {
+        alert(res.error || "Failed to update status.");
+      } else {
+        setOperators(prev => prev.map(o => o.id === op.id ? { ...o, is_active: !op.is_active } : o));
+      }
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    } finally {
+      setIsTogglingStatus(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!operatorToDelete || deleteConfirmText !== "DELETE") return;
+    setIsDeleting(true);
+    setDeleteError("");
+
+    try {
+      const res = await deleteOperator(operatorToDelete.id);
+      if (!res.success) {
+        setDeleteError(res.error || "Failed to delete the user.");
+      } else {
+        setOperators(prev => prev.filter(o => o.id !== operatorToDelete.id));
+        setIsDeleteModalOpen(false);
+        setOperatorToDelete(null);
+        setDeleteConfirmText("");
+      }
+    } catch (err: any) {
+      setDeleteError("Unexpected error occurred: " + err.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -231,8 +277,6 @@ export default function UsersPage() {
           </div>
         </div>
 
-
-
         {/* Main Datatable */}
         <div className="bg-surface border border-border-custom rounded-2xl shadow-sm overflow-hidden">
           <div className="px-5 py-4 bg-bg-warm/30 border-b border-border-custom flex items-center justify-between">
@@ -261,7 +305,7 @@ export default function UsersPage() {
                     <th className="py-3 px-4">Assigned Role</th>
                     <th className="py-3 px-4">Active Custom Overrides</th>
                     <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-5 text-right">Clearance Gates</th>
+                    <th className="py-3 px-5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-custom/50 text-[13px]">
@@ -271,10 +315,12 @@ export default function UsersPage() {
                     const initials = getAvatarInitials(row.full_name);
 
                     return (
-                      <tr key={row.id} className="hover:bg-bg-warm/10 transition-colors">
+                      <tr key={row.id} className={`hover:bg-bg-warm/10 transition-colors ${!row.is_active ? 'opacity-60 bg-bg-warm/30' : ''}`}>
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-accent-soft text-accent-ink text-xs font-semibold flex items-center justify-center select-none font-mono">
+                            <div className={`w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center select-none font-mono ${
+                              row.is_active ? 'bg-accent-soft text-accent-ink' : 'bg-border-custom text-ink-3'
+                            }`}>
                               {initials}
                             </div>
                             <div>
@@ -307,19 +353,53 @@ export default function UsersPage() {
                           {scope}
                         </td>
                         <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-good">
-                            <span className="w-1.5 h-1.5 rounded-full bg-good animate-pulse" />
-                            <span>Active</span>
-                          </span>
+                          {row.is_active ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-good">
+                              <span className="w-1.5 h-1.5 rounded-full bg-good animate-pulse" />
+                              <span>Active</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-warn">
+                              <span className="w-1.5 h-1.5 rounded-full bg-warn" />
+                              <span>Suspended</span>
+                            </span>
+                          )}
                         </td>
                         <td className="py-3.5 px-5 text-right">
-                          <button
-                            onClick={() => openManageModal(row)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs border border-border-custom hover:border-accent-custom/40 bg-surface text-ink-2 hover:text-accent-ink rounded-lg transition-colors cursor-pointer"
-                          >
-                            <Key className="w-3 h-3 text-ink-3" />
-                            <span>Manage Overrides</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => openManageModal(row)}
+                              title="Manage Permissions"
+                              className="inline-flex items-center justify-center w-8 h-8 text-xs border border-border-custom hover:border-accent-custom/40 bg-surface text-ink-2 hover:text-accent-ink rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Key className="w-3.5 h-3.5" />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleToggleStatus(row)}
+                              disabled={isTogglingStatus === row.id}
+                              title={row.is_active ? "Suspend Operator" : "Activate Operator"}
+                              className={`inline-flex items-center justify-center w-8 h-8 text-xs border rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                                row.is_active 
+                                ? "border-border-custom hover:border-warn/40 bg-surface text-ink-2 hover:text-warn"
+                                : "border-warn/40 bg-warn-bg text-warn hover:bg-warn hover:text-white"
+                              }`}
+                            >
+                              {isTogglingStatus === row.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <PowerOff className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                            
+                            <button
+                              onClick={() => { setOperatorToDelete(row); setIsDeleteModalOpen(true); }}
+                              title="Delete Operator"
+                              className="inline-flex items-center justify-center w-8 h-8 text-xs border border-border-custom hover:border-bad/40 bg-surface text-ink-2 hover:text-bad hover:bg-bad-bg rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -358,6 +438,8 @@ export default function UsersPage() {
                     placeholder="e.g. Ramesh Kumar"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
+                    autoComplete="off"
+                    data-lpignore="true"
                     className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
                     required
                   />
@@ -370,6 +452,8 @@ export default function UsersPage() {
                     placeholder="e.g. ramesh@goalcryst.com"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
+                    autoComplete="off"
+                    data-lpignore="true"
                     className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
                     required
                   />
@@ -550,6 +634,71 @@ export default function UsersPage() {
                     <span>Save Clearances</span>
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 3: DELETE CONFIRMATION */}
+        {isDeleteModalOpen && operatorToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-surface border border-border-strong rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-scale-up space-y-5">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2 text-bad">
+                  <AlertTriangle className="w-5 h-5" />
+                  <h3 className="text-lg font-semibold tracking-tight">Delete Operator</h3>
+                </div>
+                <button 
+                  onClick={() => { setIsDeleteModalOpen(false); setOperatorToDelete(null); setDeleteConfirmText(""); setDeleteError(""); }}
+                  className="text-ink-3 hover:text-ink transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {deleteError && (
+                <div className="p-3 bg-bad-bg/40 border border-bad/20 text-bad rounded-xl text-xs font-semibold leading-relaxed">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="text-[13px] text-ink-2 space-y-3 leading-relaxed">
+                <p>
+                  You are about to <strong className="text-bad">permanently delete</strong> the account for <strong className="text-ink">{operatorToDelete.full_name}</strong>.
+                </p>
+                <p>
+                  Because data integrity rules are set to `SET NULL`, any historical call logs or waivers authored by this user will be kept in the CRM, but their author will be permanently marked as <strong className="text-warn">Unknown</strong>.
+                </p>
+                <p className="font-semibold text-ink mt-2">
+                  Type <span className="bg-bg-warm border border-border-custom px-1.5 py-0.5 rounded font-mono text-bad">DELETE</span> to confirm.
+                </p>
+              </div>
+
+              <input
+                type="text"
+                placeholder="DELETE"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                autoComplete="off"
+                data-lpignore="true"
+                className="w-full bg-surface border-2 border-border-custom rounded-xl px-4 py-3 text-sm text-ink font-mono focus:outline-none focus:border-bad transition-colors"
+              />
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => { setIsDeleteModalOpen(false); setOperatorToDelete(null); setDeleteConfirmText(""); setDeleteError(""); }}
+                  className="h-10 px-4 rounded-xl border border-border-custom hover:bg-bg-warm text-[13px] font-semibold text-ink-2 cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                  className="h-10 px-6 rounded-xl bg-bad text-white text-[13px] font-semibold shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+                >
+                  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  <span>Confirm Delete</span>
+                </button>
               </div>
             </div>
           </div>

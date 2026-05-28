@@ -1,7 +1,15 @@
 "use server";
 
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient, getActiveUser } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+
+function getAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export interface OperatorRecord {
   id: string;
@@ -103,8 +111,9 @@ export async function createOperator(data: {
   let userId = "";
 
   try {
-    // 2. Attempt registration via Supabase Auth Admin API (automatically confirms email)
-    const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+    // 2. Attempt registration via pure Admin API to bypass cookie permission downgrades
+    const adminSupabase = getAdminClient();
+    const { data: authData, error: authErr } = await adminSupabase.auth.admin.createUser({
       email: data.email,
       password: "password123", // Default seeded password
       email_confirm: true,
@@ -277,4 +286,85 @@ export async function getSupervisorsForRouting(): Promise<{ id: string; full_nam
     return [];
   }
   return data;
+}
+
+/**
+ * Toggles the 'is_active' status of a user (Suspension / Activation).
+ */
+export async function toggleOperatorStatus(targetUserId: string, newStatus: boolean): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const activeUser = await getActiveUser();
+
+  if (!activeUser) {
+    return { success: false, error: "Access Denied: Unauthenticated." };
+  }
+
+  // Ensure current user is Admin
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", activeUser.id).single();
+  if (profile?.role !== "Admin") {
+    return { success: false, error: "Access Denied: Only Admins can suspend or activate users." };
+  }
+
+  if (targetUserId === activeUser.id) {
+    return { success: false, error: "You cannot suspend your own account." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_active: newStatus })
+    .eq("id", targetUserId);
+
+  if (error) {
+    console.error("Failed to toggle operator status:", error);
+    return { success: false, error: "Failed to update operator status." };
+  }
+
+  revalidatePath("/users");
+  return { success: true };
+}
+
+/**
+ * Permanently deletes a user from auth.users (cascades to profiles).
+ * Will catch foreign key constraint errors (e.g. user has call logs) and return a friendly error.
+ */
+export async function deleteOperator(targetUserId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const activeUser = await getActiveUser();
+
+  if (!activeUser) {
+    return { success: false, error: "Access Denied: Unauthenticated." };
+  }
+
+  // Ensure current user is Admin
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", activeUser.id).single();
+  if (profile?.role !== "Admin") {
+    return { success: false, error: "Access Denied: Only Admins can delete users." };
+  }
+
+  if (targetUserId === activeUser.id) {
+    return { success: false, error: "You cannot delete your own account." };
+  }
+
+  // Use a pure Admin Client (without cookies) to prevent the user session from downgrading privileges
+  const adminSupabase = getAdminClient();
+  const { error } = await adminSupabase.auth.admin.deleteUser(targetUserId);
+
+  if (error) {
+    console.error("Failed to delete operator via Auth Admin API:", error);
+    
+    // Fallback: If the user was a dummy profile (inserted during the fallback or seed without auth.identities)
+    // deleteUser throws a 500. Try directly deleting from public.profiles.
+    const { error: profileErr } = await adminSupabase.from("profiles").delete().eq("id", targetUserId);
+    
+    if (!profileErr) {
+      revalidatePath("/users");
+      return { success: true }; // Success via fallback
+    }
+
+    console.error("Fallback profile deletion failed:", profileErr);
+    return { success: false, error: `Auth API Error: ${error.message} | Profile Deletion Error: ${profileErr.message}` };
+  }
+
+  revalidatePath("/users");
+  return { success: true };
 }
