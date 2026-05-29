@@ -48,7 +48,7 @@ export default function SearchPage() {
         {/* Header title */}
         <div>
           <div className="flex items-center gap-1.5 text-xs text-ink-3">
-            <span>GoalCryst CRM</span>
+            <span className="font-brand">GoalCryst CRM</span>
             <span>·</span>
             <span>Employee Workspace</span>
           </div>
@@ -66,7 +66,7 @@ export default function SearchPage() {
           <div>
             <strong className="text-ink font-semibold">Strict Privacy Compliance Notice:</strong>
             <span className="block mt-0.5">
-              To prevent customer data leakages, operator accounts are prohibited from browsing the entire portfolio in bulk. You must lookup customer accounts dynamically by querying either a <strong className="text-ink">Contract Number</strong>, <strong className="text-ink">Customer Name</strong>, or <strong className="text-ink">Phone/Mobile Number</strong> below.
+              To prevent customer data leakages, user accounts are prohibited from browsing the entire portfolio in bulk. You must lookup customer accounts dynamically by querying either a <strong className="text-ink">Contract Number</strong>, <strong className="text-ink">Customer Name</strong>, or <strong className="text-ink">Phone/Mobile Number</strong> below.
             </span>
           </div>
         </div>

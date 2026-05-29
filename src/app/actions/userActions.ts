@@ -15,6 +15,10 @@ export interface OperatorRecord {
   id: string;
   full_name: string;
   role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
+  reporting_to: string | null;
+  branch: string | null;
+  department: string | null;
+  phone: string | null;
   is_active: boolean;
   created_at: string;
   permissions: {
@@ -28,6 +32,10 @@ interface DbProfileRow {
   id: string;
   full_name: string;
   role: string;
+  reporting_to: string | null;
+  branch: string | null;
+  department: string | null;
+  phone: string | null;
   is_active: boolean;
   created_at: string;
   user_permissions: Array<{
@@ -49,6 +57,10 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
       id,
       full_name,
       role,
+      reporting_to,
+      branch,
+      department,
+      phone,
       is_active,
       created_at,
       user_permissions(
@@ -76,6 +88,10 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
       id: row.id,
       full_name: row.full_name,
       role: row.role as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee",
+      reporting_to: row.reporting_to,
+      branch: row.branch,
+      department: row.department,
+      phone: row.phone,
       is_active: row.is_active,
       created_at: row.created_at,
       permissions: {
@@ -94,8 +110,10 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
  */
 export async function createOperator(data: {
   name: string;
-  email: string;
+  username: string;
   role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
+  password?: string;
+  reporting_to?: string | null;
   canApprove: boolean;
   canImport: boolean;
   canViewAudit: boolean;
@@ -105,7 +123,7 @@ export async function createOperator(data: {
   // 1. Resolve current active operator session
   const activeUser = await getActiveUser();
   if (!activeUser) {
-    return { success: false, error: "Access Denied: Unauthenticated operator session." };
+    return { success: false, error: "Access Denied: Unauthenticated user session." };
   }
 
   let userId = "";
@@ -113,9 +131,11 @@ export async function createOperator(data: {
   try {
     // 2. Attempt registration via pure Admin API to bypass cookie permission downgrades
     const adminSupabase = getAdminClient();
+    const fakeEmail = `${data.username.trim().toLowerCase()}@goalcryst.com`;
+
     const { data: authData, error: authErr } = await adminSupabase.auth.admin.createUser({
-      email: data.email,
-      password: "password123", // Default seeded password
+      email: fakeEmail,
+      password: data.password || "password123", // Use provided or fallback
       email_confirm: true,
       user_metadata: {
         full_name: data.name,
@@ -133,18 +153,19 @@ export async function createOperator(data: {
         id: userId,
         full_name: data.name,
         role: data.role,
-        is_active: true
+        is_active: true,
+        reporting_to: data.reporting_to || null
       });
 
       if (profileErr) {
-        return { success: false, error: "Operator profile registry failed: " + profileErr.message };
+        return { success: false, error: "User profile registry failed: " + profileErr.message };
       }
     } else {
       userId = authData.user.id;
       // Sync or update role on profile just in case trigger latency occurred
       await supabase
         .from("profiles")
-        .update({ role: data.role })
+        .update({ role: data.role, reporting_to: data.reporting_to || null })
         .eq("id", userId);
     }
   } catch {
@@ -155,11 +176,12 @@ export async function createOperator(data: {
       id: userId,
       full_name: data.name,
       role: data.role,
-      is_active: true
+      is_active: true,
+      reporting_to: data.reporting_to || null
     });
 
     if (profileErr) {
-      return { success: false, error: "Operator profile registry failed: " + profileErr.message };
+      return { success: false, error: "User profile registry failed: " + profileErr.message };
     }
   }
 
@@ -184,7 +206,7 @@ export async function createOperator(data: {
     entity_id: userId,
     metadata: {
       operator_name: data.name,
-      operator_email: data.email,
+      operator_username: data.username,
       operator_role: data.role,
       permissions: {
         can_approve_waivers: data.canApprove,
@@ -214,7 +236,7 @@ export async function updateOperatorPermissions(
   // 1. Resolve current active operator session
   const activeUser = await getActiveUser();
   if (!activeUser) {
-    return { success: false, error: "Access Denied: Unauthenticated operator session." };
+    return { success: false, error: "Access Denied: Unauthenticated user session." };
   }
 
   // 2. Clear out existing permission override keys
@@ -253,6 +275,85 @@ export async function updateOperatorPermissions(
   });
 
   revalidatePath("/users");
+  return { success: true };
+}
+
+/**
+ * Updates editable profile details for a CRM user.
+ */
+export async function updateUserProfile(
+  userId: string,
+  data: {
+    full_name: string;
+    role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
+    reporting_to?: string | null;
+    branch?: string | null;
+    department?: string | null;
+    phone?: string | null;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const activeUser = await getActiveUser();
+
+  if (!activeUser) {
+    return { success: false, error: "Access Denied: Unauthenticated user session." };
+  }
+
+  const { data: activeProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", activeUser.id)
+    .single();
+
+  if (activeProfile?.role !== "Admin") {
+    return { success: false, error: "Access Denied: Only Admins can edit users." };
+  }
+
+  const trimmedName = data.full_name.trim();
+  if (!trimmedName) {
+    return { success: false, error: "Full name is required." };
+  }
+
+  const managerId = data.reporting_to || null;
+  if (managerId === userId) {
+    return { success: false, error: "A user cannot report to themselves." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: trimmedName,
+      role: data.role,
+      reporting_to: managerId,
+      branch: data.branch?.trim() || null,
+      department: data.department?.trim() || null,
+      phone: data.phone?.trim() || null,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", userId);
+
+  if (error) {
+    return { success: false, error: "Failed to update user profile: " + error.message };
+  }
+
+  await supabase.from("audit_logs").insert({
+    user_id: activeUser.id,
+    action: "USER_PROFILE_UPDATE",
+    entity_type: "profiles",
+    entity_id: userId,
+    metadata: {
+      target_user_id: userId,
+      full_name: trimmedName,
+      role: data.role,
+      reporting_to: managerId,
+      branch: data.branch?.trim() || null,
+      department: data.department?.trim() || null,
+      phone: data.phone?.trim() || null
+    }
+  });
+
+  revalidatePath("/users");
+  revalidatePath("/org");
   return { success: true };
 }
 
@@ -316,7 +417,7 @@ export async function toggleOperatorStatus(targetUserId: string, newStatus: bool
 
   if (error) {
     console.error("Failed to toggle operator status:", error);
-    return { success: false, error: "Failed to update operator status." };
+    return { success: false, error: "Failed to update user status." };
   }
 
   revalidatePath("/users");
@@ -366,5 +467,51 @@ export async function deleteOperator(targetUserId: string): Promise<{ success: b
   }
 
   revalidatePath("/users");
+  return { success: true };
+}
+
+/**
+ * Updates the authenticated user's password.
+ */
+export async function updateUserPassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const activeUser = await getActiveUser();
+
+  if (!activeUser) {
+    return { success: false, error: "Access Denied: Unauthenticated." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Resets a specific user's password using the Admin API.
+ */
+export async function adminResetUserPassword(userId: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const activeUser = await getActiveUser();
+
+  if (!activeUser) {
+    return { success: false, error: "Access Denied: Unauthenticated." };
+  }
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", activeUser.id).single();
+  if (profile?.role !== "Admin") {
+    return { success: false, error: "Access Denied: Only Admins can reset passwords." };
+  }
+
+  const adminSupabase = getAdminClient();
+  const { error } = await adminSupabase.auth.admin.updateUserById(userId, { password: newPassword });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
   return { success: true };
 }

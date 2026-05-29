@@ -148,7 +148,7 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       id: row.id,
       contract_no: row.contract_no,
       customer_name: contracts.customer_name || "Unknown Customer",
-      employee_name: employee.full_name || "System Operator",
+      employee_name: employee.full_name || "System User",
       total_outstanding: Number(row.total_outstanding || 0),
       pos: Number(row.pos || 0),
       requested_waiver_amount: Number(row.requested_waiver_amount || 0),
@@ -175,7 +175,7 @@ export async function reviewWaiverRequest(
   // 1. Resolve current active manager profile session
   const user = await getActiveUser();
   if (!user) {
-    return { success: false, error: "Access Denied: Unauthenticated operator session." };
+    return { success: false, error: "Access Denied: Unauthenticated user session." };
   }
 
   // 2. Fetch target waiver to capture details for audit log before updating

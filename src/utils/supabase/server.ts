@@ -31,56 +31,14 @@ export async function createClient() {
   );
 }
 
-/**
- * Robust session helper resolving dynamic fallback cookies when the native container's active session is unauthenticated.
- */
 export async function getActiveUser() {
   const supabase = await createClient();
   
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) return user;
+    return user || null;
   } catch (err) {
     console.error("DEBUG: supabase.auth.getUser() failed with error:", err);
-    // Suppress auth exceptions in local container environment and continue to fallback cookie checks
+    return null;
   }
-
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("goalcryst_session")?.value;
-  
-  if (sessionCookie) {
-    const email = decodeURIComponent(sessionCookie).trim();
-    if (email.includes("admin@goalcryst.com")) {
-      return {
-        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-        email: "admin@goalcryst.com"
-      };
-    }
-    if (email.includes("bm@goalcryst.com")) {
-      return {
-        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
-        email: "bm@goalcryst.com"
-      };
-    }
-    if (email.includes("am@goalcryst.com")) {
-      return {
-        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15",
-        email: "am@goalcryst.com"
-      };
-    }
-    if (email.includes("tl@goalcryst.com")) {
-      return {
-        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16",
-        email: "tl@goalcryst.com"
-      };
-    }
-    if (email.includes("employee@goalcryst.com")) {
-      return {
-        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13",
-        email: "employee@goalcryst.com"
-      };
-    }
-  }
-  
-  return null;
 }

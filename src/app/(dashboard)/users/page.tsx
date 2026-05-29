@@ -3,8 +3,6 @@
 import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import {
-  ShieldCheck,
-  UserCheck,
   Lock,
   Mail,
   Activity,
@@ -15,17 +13,22 @@ import {
   GitBranch,
   PowerOff,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Pencil
 } from "lucide-react";
 import {
   getOperatorsWithPermissions,
   createOperator,
+  updateUserProfile,
   updateOperatorPermissions,
   toggleOperatorStatus,
   deleteOperator,
+  adminResetUserPassword,
   type OperatorRecord
 } from "@/app/actions/userActions";
 import PermissionGuard from "@/components/PermissionGuard";
+
+type UserRole = "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
 
 export default function UsersPage() {
   const [operators, setOperators] = useState<OperatorRecord[]>([]);
@@ -33,16 +36,37 @@ export default function UsersPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [, startTransition] = useTransition();
 
-  // Add Operator Modal State
+  // Add User Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState<"Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee">("Employee");
+  const [newUsername, setNewUsername] = useState("");
+  const [newRole, setNewRole] = useState<UserRole>("Employee");
+  const [newPassword, setNewPassword] = useState("");
+  const [newReportingTo, setNewReportingTo] = useState("");
   const [newCanApprove, setNewCanApprove] = useState(false);
   const [newCanImport, setNewCanImport] = useState(false);
   const [newCanViewAudit, setNewCanViewAudit] = useState(false);
   const [addError, setAddError] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+
+  // Edit User Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTargetUser, setEditTargetUser] = useState<OperatorRecord | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState<UserRole>("Employee");
+  const [editReportingTo, setEditReportingTo] = useState("");
+  const [editBranch, setEditBranch] = useState("");
+  const [editDepartment, setEditDepartment] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editError, setEditError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Admin Reset Password State
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetTargetUser, setResetTargetUser] = useState<OperatorRecord | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   // Manage Permissions Modal State
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
@@ -61,7 +85,7 @@ export default function UsersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  // Load operators on mount
+  // Load users on mount
   const loadOperators = async () => {
     setIsLoading(true);
     try {
@@ -70,8 +94,8 @@ export default function UsersPage() {
       setErrorMsg("");
     } catch (err) {
       const error = err as Error;
-      console.error("Failed to query operators:", error);
-      setErrorMsg("Failed to query operators list. Please check database nodes status.");
+      console.error("Failed to query users:", error);
+      setErrorMsg("Failed to query users list. Please check database nodes status.");
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +108,7 @@ export default function UsersPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Form Validation and submission for Add Operator
+  // Form Validation and submission for Add User
   const handleAddOperator = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddError("");
@@ -93,8 +117,8 @@ export default function UsersPage() {
       setAddError("Full Name is required.");
       return;
     }
-    if (!newEmail.trim() || !newEmail.includes("@")) {
-      setAddError("Please provide a valid corporate email address.");
+    if (!newUsername.trim()) {
+      setAddError("Please provide a valid username.");
       return;
     }
 
@@ -102,19 +126,23 @@ export default function UsersPage() {
     try {
       const res = await createOperator({
         name: newName.trim(),
-        email: newEmail.trim().toLowerCase(),
+        username: newUsername.trim().toLowerCase(),
         role: newRole,
+        password: newPassword || undefined,
+        reporting_to: newReportingTo || null,
         canApprove: newCanApprove,
         canImport: newCanImport,
         canViewAudit: newCanViewAudit
       });
 
       if (!res.success) {
-        setAddError(res.error || "Failed to register operator.");
+        setAddError(res.error || "Failed to register user.");
       } else {
         setIsAddModalOpen(false);
         setNewName("");
-        setNewEmail("");
+        setNewUsername("");
+        setNewPassword("");
+        setNewReportingTo("");
         setNewRole("Employee");
         setNewCanApprove(false);
         setNewCanImport(false);
@@ -139,6 +167,72 @@ export default function UsersPage() {
     setManageCanViewAudit(op.permissions.can_view_audit_logs);
     setManageError("");
     setIsManageModalOpen(true);
+  };
+
+  const openEditModal = (op: OperatorRecord) => {
+    setEditTargetUser(op);
+    setEditName(op.full_name);
+    setEditRole(op.role);
+    setEditReportingTo(op.reporting_to || "");
+    setEditBranch(op.branch || "");
+    setEditDepartment(op.department || "");
+    setEditPhone(op.phone || "");
+    setEditError("");
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditTargetUser(null);
+    setEditName("");
+    setEditRole("Employee");
+    setEditReportingTo("");
+    setEditBranch("");
+    setEditDepartment("");
+    setEditPhone("");
+    setEditError("");
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTargetUser) return;
+    setEditError("");
+
+    if (!editName.trim()) {
+      setEditError("Full Name is required.");
+      return;
+    }
+
+    if (editReportingTo === editTargetUser.id) {
+      setEditError("A user cannot report to themselves.");
+      return;
+    }
+
+    setIsEditing(true);
+    try {
+      const res = await updateUserProfile(editTargetUser.id, {
+        full_name: editName.trim(),
+        role: editRole,
+        reporting_to: editReportingTo || null,
+        branch: editBranch,
+        department: editDepartment,
+        phone: editPhone
+      });
+
+      if (!res.success) {
+        setEditError(res.error || "Failed to update user.");
+      } else {
+        closeEditModal();
+        startTransition(() => {
+          loadOperators();
+        });
+      }
+    } catch (err) {
+      const error = err as Error;
+      setEditError("An unexpected exception occurred: " + error.message);
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   const handleSavePermissions = async () => {
@@ -180,8 +274,9 @@ export default function UsersPage() {
       } else {
         setOperators(prev => prev.map(o => o.id === op.id ? { ...o, is_active: !op.is_active } : o));
       }
-    } catch (err: any) {
-      alert("Error: " + err.message);
+    } catch (err) {
+      const error = err as Error;
+      alert("Error: " + error.message);
     } finally {
       setIsTogglingStatus(null);
     }
@@ -202,19 +297,51 @@ export default function UsersPage() {
         setOperatorToDelete(null);
         setDeleteConfirmText("");
       }
-    } catch (err: any) {
-      setDeleteError("Unexpected error occurred: " + err.message);
+    } catch (err) {
+      const error = err as Error;
+      setDeleteError("Unexpected error occurred: " + error.message);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const formatEmail = (id: string, name: string) => {
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11") return "admin@goalcryst.com";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12") return "manager@goalcryst.com";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13") return "employee@goalcryst.com";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14") return "auditor@goalcryst.com";
-    return `${name.toLowerCase().replace(/\s+/g, ".")}@goalcryst.com`;
+  const handleAdminResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetTargetUser) return;
+    
+    if (resetPassword.length < 6) {
+      setResetError("Password must be at least 6 characters.");
+      return;
+    }
+
+    setIsResetting(true);
+    setResetError("");
+
+    try {
+      const res = await adminResetUserPassword(resetTargetUser.id, resetPassword);
+      if (!res.success) {
+        setResetError(res.error || "Failed to reset password.");
+      } else {
+        alert(`Password for ${resetTargetUser.full_name} has been reset successfully.`);
+        setIsResetModalOpen(false);
+        setResetTargetUser(null);
+        setResetPassword("");
+      }
+    } catch (err) {
+      const error = err as Error;
+      setResetError("Unexpected error occurred: " + error.message);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const formatUsername = (id: string, name: string) => {
+    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11") return "admin";
+    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12") return "bm";
+    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15") return "am";
+    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16") return "tl";
+    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13") return "employee";
+    return name.toLowerCase().replace(/\s+/g, ".");
   };
 
   const getScope = (operator: OperatorRecord) => {
@@ -244,15 +371,15 @@ export default function UsersPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
             <div className="flex items-center gap-1.5 text-xs text-ink-3">
-              <span>GoalCryst CRM</span>
+              <span className="font-brand">GoalCryst CRM</span>
               <span>·</span>
               <span>Security Management Control</span>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
-              Operator Access Control
+              User Access Control
             </h1>
             <p className="text-[13px] text-ink-2 mt-1">
-              Audit system operators, register new profiles, and configure customizable security overrides.
+              Audit system users, register new profiles, and configure customizable security overrides.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -268,7 +395,7 @@ export default function UsersPage() {
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent-custom hover:bg-accent-custom/90 text-white rounded-xl text-xs font-semibold shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Operator</span>
+              <span>Add User</span>
             </button>
             <div className="flex items-center gap-2 px-3 py-1.5 border border-border-custom bg-surface rounded-xl text-xs font-semibold text-ink-2 select-none shadow-sm">
               <Activity className="w-3.5 h-3.5 text-good animate-pulse" />
@@ -280,7 +407,7 @@ export default function UsersPage() {
         {/* Main Datatable */}
         <div className="bg-surface border border-border-custom rounded-2xl shadow-sm overflow-hidden">
           <div className="px-5 py-4 bg-bg-warm/30 border-b border-border-custom flex items-center justify-between">
-            <span className="text-[11.5px] uppercase tracking-wider text-ink-3 font-semibold">Active Operators Roll</span>
+            <span className="text-[11.5px] uppercase tracking-wider text-ink-3 font-semibold">Active Users</span>
             <span className="text-[11px] text-ink-2 font-mono">
               {operators.length} accounts loaded
             </span>
@@ -289,7 +416,7 @@ export default function UsersPage() {
           {isLoading ? (
             <div className="py-16 text-center text-ink-2 font-medium text-xs flex flex-col items-center gap-2">
               <Loader2 className="w-6 h-6 animate-spin text-accent-custom" />
-              <span>Syncing operators access matrix...</span>
+              <span>Syncing users access matrix...</span>
             </div>
           ) : errorMsg ? (
             <div className="py-12 text-center text-bad font-medium text-xs">
@@ -300,8 +427,8 @@ export default function UsersPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border-custom text-[10px] uppercase tracking-wider font-semibold text-ink-3 bg-bg-warm/10 select-none">
-                    <th className="py-3 px-5">Operator profile</th>
-                    <th className="py-3 px-4">Contact email</th>
+                    <th className="py-3 px-5">User profile</th>
+                    <th className="py-3 px-4">System Username</th>
                     <th className="py-3 px-4">Assigned Role</th>
                     <th className="py-3 px-4">Active Custom Overrides</th>
                     <th className="py-3 px-4 text-center">Status</th>
@@ -310,7 +437,7 @@ export default function UsersPage() {
                 </thead>
                 <tbody className="divide-y divide-border-custom/50 text-[13px]">
                   {operators.map((row) => {
-                    const email = formatEmail(row.id, row.full_name);
+                    const username = formatUsername(row.id, row.full_name);
                     const scope = getScope(row);
                     const initials = getAvatarInitials(row.full_name);
 
@@ -332,7 +459,7 @@ export default function UsersPage() {
                         <td className="py-3.5 px-4 font-mono text-ink-2 text-xs">
                           <span className="flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5 text-ink-3" />
-                            <span>{email}</span>
+                            <span>{username}</span>
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
@@ -368,6 +495,22 @@ export default function UsersPage() {
                         <td className="py-3.5 px-5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
+                              onClick={() => openEditModal(row)}
+                              title="Edit User"
+                              className="inline-flex items-center justify-center w-8 h-8 text-xs border border-border-custom hover:border-accent-custom/40 bg-surface text-ink-2 hover:text-accent-ink rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              onClick={() => { setResetTargetUser(row); setIsResetModalOpen(true); }}
+                              title="Reset Password"
+                              className="inline-flex items-center justify-center w-8 h-8 text-xs border border-border-custom hover:border-accent-custom/40 bg-surface text-ink-2 hover:text-accent-ink rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                            </button>
+                            
+                            <button
                               onClick={() => openManageModal(row)}
                               title="Manage Permissions"
                               className="inline-flex items-center justify-center w-8 h-8 text-xs border border-border-custom hover:border-accent-custom/40 bg-surface text-ink-2 hover:text-accent-ink rounded-lg transition-colors cursor-pointer"
@@ -378,7 +521,7 @@ export default function UsersPage() {
                             <button
                               onClick={() => handleToggleStatus(row)}
                               disabled={isTogglingStatus === row.id}
-                              title={row.is_active ? "Suspend Operator" : "Activate Operator"}
+                              title={row.is_active ? "Suspend User" : "Activate User"}
                               className={`inline-flex items-center justify-center w-8 h-8 text-xs border rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
                                 row.is_active 
                                 ? "border-border-custom hover:border-warn/40 bg-surface text-ink-2 hover:text-warn"
@@ -394,7 +537,7 @@ export default function UsersPage() {
                             
                             <button
                               onClick={() => { setOperatorToDelete(row); setIsDeleteModalOpen(true); }}
-                              title="Delete Operator"
+                              title="Delete User"
                               className="inline-flex items-center justify-center w-8 h-8 text-xs border border-border-custom hover:border-bad/40 bg-surface text-ink-2 hover:text-bad hover:bg-bad-bg rounded-lg transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -410,12 +553,12 @@ export default function UsersPage() {
           )}
         </div>
 
-        {/* MODAL 1: ADD OPERATOR */}
+        {/* MODAL 1: ADD USER */}
         {isAddModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-md bg-surface border border-border-strong rounded-2xl shadow-xl overflow-hidden animate-scale-up">
               <div className="px-5 py-4 border-b border-border-custom flex justify-between items-center bg-bg-warm/25">
-                <h3 className="font-semibold text-ink font-serif">Register New Operator</h3>
+                <h3 className="font-semibold text-ink font-serif">Register New User</h3>
                 <button
                   onClick={() => setIsAddModalOpen(false)}
                   className="p-1 hover:bg-bg-warm/50 text-ink-3 hover:text-ink rounded-lg transition-colors cursor-pointer"
@@ -446,12 +589,12 @@ export default function UsersPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Corporate Email</label>
+                  <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">System Username</label>
                   <input
-                    type="email"
-                    placeholder="e.g. ramesh@goalcryst.com"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
+                    type="text"
+                    placeholder="e.g. admin"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
                     autoComplete="off"
                     data-lpignore="true"
                     className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
@@ -463,7 +606,7 @@ export default function UsersPage() {
                   <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">System Access Role</label>
                   <select
                     value={newRole}
-                    onChange={(e) => setNewRole(e.target.value as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee")}
+                    onChange={(e) => setNewRole(e.target.value as UserRole)}
                     className="w-full px-3 py-2 border border-border-custom bg-bg/50 focus:border-accent-custom rounded-xl text-sm text-ink outline-none cursor-pointer transition-colors"
                   >
                     <option value="Employee">Employee (Dedicated Recovery)</option>
@@ -471,6 +614,35 @@ export default function UsersPage() {
                     <option value="Assistant Manager">Assistant Manager (Operations)</option>
                     <option value="Branch Manager">Branch Manager (Branch Operations)</option>
                     <option value="Admin">Admin (Global Access)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Security Password (Optional)</label>
+                  <input
+                    type="password"
+                    placeholder="Leave blank to use 'password123'"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
+                    data-lpignore="true"
+                    className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Reports To (Lead)</label>
+                  <select
+                    value={newReportingTo}
+                    onChange={(e) => setNewReportingTo(e.target.value)}
+                    className="w-full px-3 py-2 border border-border-custom bg-bg/50 focus:border-accent-custom rounded-xl text-sm text-ink outline-none cursor-pointer transition-colors"
+                  >
+                    <option value="">— No Manager (Root) —</option>
+                    {operators
+                      .filter(o => ["Admin", "Branch Manager", "Assistant Manager", "Team Leader"].includes(o.role) && o.is_active)
+                      .map(o => (
+                        <option key={o.id} value={o.id}>{o.full_name} ({o.role})</option>
+                      ))}
                   </select>
                 </div>
 
@@ -534,7 +706,7 @@ export default function UsersPage() {
                     className="flex items-center gap-1.5 px-4 py-2 bg-accent-custom hover:bg-accent-custom/90 text-white rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     {isAdding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>Register Operator</span>
+                    <span>Register User</span>
                   </button>
                 </div>
               </form>
@@ -542,7 +714,135 @@ export default function UsersPage() {
           </div>
         )}
 
-        {/* MODAL 2: MANAGE PERMISSIONS OVERRIDES */}
+        {/* MODAL 2: EDIT USER */}
+        {isEditModalOpen && editTargetUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="w-full max-w-lg bg-surface border border-border-strong rounded-2xl shadow-xl overflow-hidden animate-scale-up">
+              <div className="px-5 py-4 border-b border-border-custom flex justify-between items-center bg-bg-warm/25">
+                <div>
+                  <h3 className="font-semibold text-ink font-serif leading-tight">Edit User</h3>
+                  <span className="text-[11px] text-ink-3">{editTargetUser.full_name}</span>
+                </div>
+                <button
+                  onClick={closeEditModal}
+                  className="p-1 hover:bg-bg-warm/50 text-ink-3 hover:text-ink rounded-lg transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleEditUser} className="p-5 space-y-4">
+                {editError && (
+                  <div className="p-3 bg-bad-bg/30 border border-bad/20 text-bad rounded-xl text-xs font-semibold">
+                    {editError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Full Name</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      autoComplete="off"
+                      data-lpignore="true"
+                      className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">System Access Role</label>
+                    <select
+                      value={editRole}
+                      onChange={(e) => setEditRole(e.target.value as UserRole)}
+                      className="w-full px-3 py-2 border border-border-custom bg-bg/50 focus:border-accent-custom rounded-xl text-sm text-ink outline-none cursor-pointer transition-colors"
+                    >
+                      <option value="Employee">Employee</option>
+                      <option value="Team Leader">Team Leader</option>
+                      <option value="Assistant Manager">Assistant Manager</option>
+                      <option value="Branch Manager">Branch Manager</option>
+                      <option value="Admin">Admin</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Reports To</label>
+                    <select
+                      value={editReportingTo}
+                      onChange={(e) => setEditReportingTo(e.target.value)}
+                      className="w-full px-3 py-2 border border-border-custom bg-bg/50 focus:border-accent-custom rounded-xl text-sm text-ink outline-none cursor-pointer transition-colors"
+                    >
+                      <option value="">No Manager</option>
+                      {operators
+                        .filter(o => o.id !== editTargetUser.id && ["Admin", "Branch Manager", "Assistant Manager", "Team Leader"].includes(o.role) && o.is_active)
+                        .map(o => (
+                          <option key={o.id} value={o.id}>{o.full_name} ({o.role})</option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Branch</label>
+                    <input
+                      type="text"
+                      value={editBranch}
+                      onChange={(e) => setEditBranch(e.target.value)}
+                      autoComplete="off"
+                      data-lpignore="true"
+                      className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Department</label>
+                    <input
+                      type="text"
+                      value={editDepartment}
+                      onChange={(e) => setEditDepartment(e.target.value)}
+                      autoComplete="off"
+                      data-lpignore="true"
+                      className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
+                    />
+                  </div>
+
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Phone</label>
+                    <input
+                      type="tel"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      autoComplete="off"
+                      data-lpignore="true"
+                      className="w-full px-3.5 py-2 border border-border-custom bg-bg/50 focus:bg-surface focus:border-accent-custom rounded-xl text-sm text-ink outline-none transition-all placeholder:text-ink-3"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={closeEditModal}
+                    className="px-4 py-2 border border-border-custom hover:bg-bg-warm/40 text-ink-2 hover:text-ink rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isEditing}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-accent-custom hover:bg-accent-custom/90 text-white rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {isEditing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Save User</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 3: MANAGE PERMISSIONS OVERRIDES */}
         {isManageModalOpen && selectedOperator && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-md bg-surface border border-border-strong rounded-2xl shadow-xl overflow-hidden animate-scale-up">
@@ -570,7 +870,7 @@ export default function UsersPage() {
                 )}
 
                 <div className="text-xs text-ink-2">
-                  Configure specific overrides that will bypass standard role permissions for this specific operator:
+                  Configure specific overrides that will bypass standard role permissions for this specific user:
                 </div>
 
                 <div className="border border-border-custom bg-bg-warm/15 rounded-xl p-4 space-y-4">
@@ -609,7 +909,7 @@ export default function UsersPage() {
                     />
                     <div>
                       <span className="font-semibold text-ink text-sm">View Audit Compliance Logs</span>
-                      <p className="text-[11px] text-ink-3 mt-0.5">Grants access to search through system operator action trails.</p>
+                      <p className="text-[11px] text-ink-3 mt-0.5">Grants access to search through system user action trails.</p>
                     </div>
                   </label>
                 </div>
@@ -639,14 +939,14 @@ export default function UsersPage() {
           </div>
         )}
 
-        {/* MODAL 3: DELETE CONFIRMATION */}
+        {/* MODAL 4: DELETE CONFIRMATION */}
         {isDeleteModalOpen && operatorToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4 animate-fade-in">
             <div className="bg-surface border border-border-strong rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-scale-up space-y-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2 text-bad">
                   <AlertTriangle className="w-5 h-5" />
-                  <h3 className="text-lg font-semibold tracking-tight">Delete Operator</h3>
+                  <h3 className="text-lg font-semibold tracking-tight">Delete User</h3>
                 </div>
                 <button 
                   onClick={() => { setIsDeleteModalOpen(false); setOperatorToDelete(null); setDeleteConfirmText(""); setDeleteError(""); }}
@@ -700,6 +1000,67 @@ export default function UsersPage() {
                   <span>Confirm Delete</span>
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL 5: ADMIN RESET PASSWORD */}
+        {isResetModalOpen && resetTargetUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-surface border border-border-strong rounded-2xl w-full max-w-sm p-6 shadow-2xl relative animate-scale-up space-y-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold tracking-tight text-ink font-serif flex items-center gap-2">
+                    <Lock className="w-5 h-5 text-accent-custom" /> Reset Password
+                  </h3>
+                  <p className="text-xs text-ink-3 mt-1">For {resetTargetUser.full_name}</p>
+                </div>
+                <button 
+                  onClick={() => { setIsResetModalOpen(false); setResetTargetUser(null); setResetPassword(""); setResetError(""); }}
+                  className="text-ink-3 hover:text-ink transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAdminResetPassword} className="space-y-4">
+                {resetError && (
+                  <div className="p-3 bg-bad-bg/40 border border-bad/20 text-bad rounded-xl text-xs font-semibold leading-relaxed">
+                    {resetError}
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">New Password</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. TempPass!23"
+                    value={resetPassword}
+                    onChange={(e) => setResetPassword(e.target.value)}
+                    autoComplete="off"
+                    data-lpignore="true"
+                    className="w-full bg-surface border-2 border-border-custom rounded-xl px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-accent-custom transition-colors"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setIsResetModalOpen(false); setResetTargetUser(null); setResetPassword(""); setResetError(""); }}
+                    className="h-10 px-4 rounded-xl border border-border-custom hover:bg-bg-warm text-[13px] font-semibold text-ink-2 cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isResetting}
+                    className="h-10 px-6 rounded-xl bg-ink text-white hover:bg-black text-[13px] font-semibold shadow-sm flex items-center gap-2 disabled:opacity-50 cursor-pointer transition-all"
+                  >
+                    {isResetting && <Loader2 className="w-4 h-4 animate-spin" />}
+                    <span>Reset Password</span>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

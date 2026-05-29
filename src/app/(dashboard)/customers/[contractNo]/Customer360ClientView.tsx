@@ -630,7 +630,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <Lock className="w-8 h-8 text-accent-custom" />
                 <h4 className="text-sm font-semibold text-ink">Asset Information Gated</h4>
                 <p className="text-xs text-ink-3 max-w-sm text-center">
-                  Your current operator profile does not hold authorization key `can_view_asset_data`. Contact the administrator to update permissions.
+                  Your current user profile does not hold authorization key `can_view_asset_data`. Contact the administrator to update permissions.
                 </p>
               </div>
             ) : (
@@ -702,7 +702,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <Lock className="w-8 h-8 text-accent-custom" />
                 <h4 className="text-sm font-semibold text-ink">Litigation Records Restricted</h4>
                 <p className="text-xs text-ink-3 max-w-sm text-center">
-                  Your current operator profile does not hold authorization key `can_view_legal_data`. Contact the administrator to check status.
+                  Your current user profile does not hold authorization key `can_view_legal_data`. Contact the administrator to check status.
                 </p>
               </div>
             ) : (

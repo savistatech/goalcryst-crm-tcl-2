@@ -63,7 +63,7 @@ export default function EmployeeOverviewClientView({ metrics }: EmployeeOverview
       <div className="flex items-start justify-between gap-6 flex-wrap">
         <div>
           <div className="flex items-center gap-1.5 text-xs text-ink-3 mb-1">
-            <span>GoalCryst CRM</span>
+            <span className="font-brand">GoalCryst CRM</span>
             <span>·</span>
             <span>Overview</span>
           </div>

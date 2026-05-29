@@ -1,3 +1,4 @@
+@import url('https://fonts.cdnfonts.com/css/ethnocentric');
 @import "tailwindcss";
 
 @theme {
@@ -32,6 +33,11 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+.font-brand {
+  font-family: "Ethnocentric Rg", "Ethnocentric", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  letter-spacing: 0;
 }
 
 body::before {

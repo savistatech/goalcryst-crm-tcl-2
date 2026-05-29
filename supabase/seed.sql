@@ -14,68 +14,77 @@ INSERT INTO auth.users (
   raw_user_meta_data,
   is_super_admin,
   role,
-  aud
+  aud,
+  confirmation_token,
+  recovery_token,
+  email_change_token_new,
+  email_change
 ) VALUES
 (
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 
   '00000000-0000-0000-0000-000000000000', 
   'admin@goalcryst.com', 
-  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
+  '$2a$10$2xxoU.RR4evKxv92TPSaaenJ91llOH0J4..yz8m39oaLUiGOEpw4e', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
   '{"full_name":"System Admin","role":"Admin"}', 
   FALSE, 
   'authenticated', 
-  'authenticated'
+  'authenticated',
+  '', '', '', ''
 ),
 (
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 
   '00000000-0000-0000-0000-000000000000', 
   'bm@goalcryst.com', 
-  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
+  '$2a$10$2xxoU.RR4evKxv92TPSaaenJ91llOH0J4..yz8m39oaLUiGOEpw4e', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
   '{"full_name":"Vikram Naidu","role":"Branch Manager"}', 
   FALSE, 
   'authenticated', 
-  'authenticated'
+  'authenticated',
+  '', '', '', ''
 ),
 (
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 
   '00000000-0000-0000-0000-000000000000', 
   'am@goalcryst.com', 
-  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
+  '$2a$10$2xxoU.RR4evKxv92TPSaaenJ91llOH0J4..yz8m39oaLUiGOEpw4e', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
   '{"full_name":"Syed Imran","role":"Assistant Manager"}', 
   FALSE, 
   'authenticated', 
-  'authenticated'
+  'authenticated',
+  '', '', '', ''
 ),
 (
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', 
   '00000000-0000-0000-0000-000000000000', 
   'tl@goalcryst.com', 
-  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
+  '$2a$10$2xxoU.RR4evKxv92TPSaaenJ91llOH0J4..yz8m39oaLUiGOEpw4e', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
   '{"full_name":"Karthik Reddy","role":"Team Leader"}', 
   FALSE, 
   'authenticated', 
-  'authenticated'
+  'authenticated',
+  '', '', '', ''
 ),
 (
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 
   '00000000-0000-0000-0000-000000000000', 
   'employee@goalcryst.com', 
-  '$2a$10$Yn1.HmsMvL/h52tE8KjTse1Lh6/528U6m/gEGB000gKj1e.bE.GKy', 
+  '$2a$10$2xxoU.RR4evKxv92TPSaaenJ91llOH0J4..yz8m39oaLUiGOEpw4e', 
   NOW(), NOW(), NOW(), 
   '{"provider":"email","providers":["email"]}', 
   '{"full_name":"Anjali Rao","role":"Employee"}', 
   FALSE, 
   'authenticated', 
-  'authenticated'
-);
+  'authenticated',
+  '', '', '', ''
+) ON CONFLICT (id) DO NOTHING;
 
 -- Note: The triggers will automatically create rows in public.profiles:
 -- 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' -> Admin

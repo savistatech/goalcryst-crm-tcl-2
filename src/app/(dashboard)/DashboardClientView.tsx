@@ -39,7 +39,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 select-none">
         <div>
           <div className="flex items-center gap-2 text-xs text-ink-3">
-            <span>GoalCryst CRM</span>
+            <span className="font-brand">GoalCryst CRM</span>
             <span>·</span>
             <span>Overview</span>
           </div>

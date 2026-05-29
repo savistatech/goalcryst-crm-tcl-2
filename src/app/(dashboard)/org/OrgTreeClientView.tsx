@@ -436,7 +436,7 @@ export default function OrgTreeClientView({ tree, allProfiles, isAdmin }: OrgTre
       {/* Header */}
       <div>
         <div className="flex items-center gap-1.5 text-xs text-ink-3">
-          <span>GoalCryst CRM</span>
+          <span className="font-brand">GoalCryst CRM</span>
           <span>·</span>
           <span>Organization</span>
         </div>
@@ -444,7 +444,7 @@ export default function OrgTreeClientView({ tree, allProfiles, isAdmin }: OrgTre
           Organization Chart
         </h1>
         <p className="text-[13px] text-ink-2 mt-1">
-          Visual hierarchy of all operators, their roles, and reporting lines.
+          Visual hierarchy of all users, their roles, and reporting lines.
         </p>
       </div>
 
@@ -477,7 +477,7 @@ export default function OrgTreeClientView({ tree, allProfiles, isAdmin }: OrgTre
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-ink-3">
           <Users className="w-3.5 h-3.5" />
-          <span><strong className="text-ink font-mono">{allProfiles.length}</strong> total operators across <strong className="text-ink font-mono">{tree.length}</strong> root node{tree.length !== 1 ? "s" : ""}</span>
+          <span><strong className="text-ink font-mono">{allProfiles.length}</strong> total users across <strong className="text-ink font-mono">{tree.length}</strong> root node{tree.length !== 1 ? "s" : ""}</span>
         </div>
         <div className="flex bg-bg-warm rounded-xl p-1 border border-border-custom">
           <button

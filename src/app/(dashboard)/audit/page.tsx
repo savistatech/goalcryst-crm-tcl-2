@@ -44,7 +44,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
       {/* Page Header */}
       <div>
         <div className="flex items-center gap-1.5 text-xs text-ink-3">
-          <span>GoalCryst CRM</span>
+          <span className="font-brand">GoalCryst CRM</span>
           <span>·</span>
           <span>Security & Audit Controls</span>
         </div>
@@ -52,7 +52,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
           Compliance Monitoring Logs
         </h1>
         <p className="text-[13px] text-ink-2 mt-1">
-          Historical timeline audit trail capturing operator operations, logins, import batches, and settlement approvals.
+          Historical timeline audit trail capturing user operations, logins, import batches, and settlement approvals.
         </p>
       </div>
 
@@ -124,7 +124,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
               <thead>
                 <tr className="border-b border-border-custom text-[10px] uppercase tracking-wider font-semibold text-ink-3 bg-bg-warm/10">
                   <th className="py-2.5 px-5">Timestamp</th>
-                  <th className="py-2.5 px-4">Operator</th>
+                  <th className="py-2.5 px-4">User</th>
                   <th className="py-2.5 px-4">Action</th>
                   <th className="py-2.5 px-4">Target Entity</th>
                   <th className="py-2.5 px-4">Audit Payload details</th>

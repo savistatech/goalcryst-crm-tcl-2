@@ -149,7 +149,7 @@ export default function ReportsPage() {
         {/* Page Header */}
         <div>
           <div className="flex items-center gap-1.5 text-xs text-ink-3">
-            <span>GoalCryst CRM</span>
+            <span className="font-brand">GoalCryst CRM</span>
             <span>·</span>
             <span>Data</span>
           </div>

@@ -2,39 +2,46 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const supabase = createClient();
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Simulate database lookup and auth session
-    setTimeout(() => {
-      const emailTrim = email.trim().toLowerCase();
-      const validEmails = ["admin@goalcryst.com", "bm@goalcryst.com", "am@goalcryst.com", "tl@goalcryst.com", "employee@goalcryst.com"];
+    const usernameTrim = username.trim().toLowerCase();
+    const fakeEmail = `${usernameTrim}@goalcryst.com`;
 
-      if (validEmails.includes(emailTrim) && password === "password123") {
-        // Write dynamic local session cookie
-        document.cookie = `goalcryst_session=${encodeURIComponent(emailTrim)}; path=/; max-age=86400; SameSite=Lax`;
-        
-        if (emailTrim === "employee@goalcryst.com") {
-          router.push("/search");
-        } else {
-          router.push("/");
-        }
-      } else {
-        setError("Invalid email address or security credentials. Please try again.");
-        setLoading(false);
-      }
-    }, 1200);
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: fakeEmail,
+      password: password,
+    });
+
+    if (authError) {
+      setError(authError.message || "Invalid credentials. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    // Get user role to determine routing
+    const { data: profile } = await supabase.from("profiles").select("role").single();
+    
+    if (profile?.role === "Employee") {
+      router.push("/search");
+    } else {
+      router.push("/");
+    }
   };
 
   return (
@@ -47,7 +54,7 @@ export default function LoginPage() {
         <div className="text-center select-none flex flex-col items-center">
           <img src="/logo.png" alt="GoalCryst Logo" className="h-12 w-auto object-contain mb-3" />
           <div className="inline-flex items-baseline gap-1.5 justify-center">
-            <span className="text-4xl font-semibold tracking-tight text-ink font-serif">GoalCryst</span>
+            <span className="text-4xl font-semibold text-ink font-brand">GoalCryst</span>
             <span className="w-2 h-2 rounded-full bg-accent-custom" />
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-ink-3 font-semibold mt-1">Recovery CRM</p>
@@ -68,15 +75,15 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-[11.5px] uppercase tracking-wider text-ink-3 font-semibold block">Email address</label>
+              <label className="text-[11.5px] uppercase tracking-wider text-ink-3 font-semibold block">Username</label>
               <div className="relative flex items-center bg-bg border border-border-custom rounded-lg px-3 py-2 shadow-inner focus-within:border-ink-2 transition-all">
-                <Mail className="w-4 h-4 text-ink-3 mr-2.5 flex-shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-ink-3 mr-2.5 flex-shrink-0" />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@goalcryst.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="e.g. admin"
                   className="w-full bg-transparent border-0 outline-none text-sm text-ink placeholder-ink-3"
                 />
               </div>
@@ -95,13 +102,21 @@ export default function LoginPage() {
               <div className="relative flex items-center bg-bg border border-border-custom rounded-lg px-3 py-2 shadow-inner focus-within:border-ink-2 transition-all">
                 <Lock className="w-4 h-4 text-ink-3 mr-2.5 flex-shrink-0" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-transparent border-0 outline-none text-sm text-ink placeholder-ink-3"
+                  className="w-full bg-transparent border-0 outline-none text-sm text-ink placeholder-ink-3 pr-8"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-ink-3 hover:text-ink transition-colors focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -127,7 +142,7 @@ export default function LoginPage() {
         {/* Footer legal note */}
         <div className="flex justify-center items-center gap-1.5 text-[10.5px] text-ink-3">
           <ShieldCheck className="w-3.5 h-3.5 text-accent-custom" />
-          <span>Internal recovery system · Authorized operators only</span>
+          <span>Internal recovery system · Authorized users only</span>
         </div>
       </div>
     </div>

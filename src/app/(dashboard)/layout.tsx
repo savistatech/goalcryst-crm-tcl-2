@@ -19,8 +19,11 @@ import {
   Moon,
   Monitor,
   Database,
-  GitBranch
+  GitBranch,
+  Lock
 } from "lucide-react";
+import PasswordChangeModal from "@/components/PasswordChangeModal";
+import { createClient } from "@/utils/supabase/client";
 
 export default function DashboardLayout({
   children,
@@ -34,11 +37,13 @@ export default function DashboardLayout({
 
   // Dynamic user details parsed from active cookie
   const [currentUser, setCurrentUser] = useState({
-    name: "Vikram Naidu",
-    role: "Super Admin",
-    scope: "All regions · All permissions",
-    avatar: "VN"
+    name: "Loading...",
+    role: "Employee",
+    scope: "Loading profile...",
+    avatar: "??"
   });
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   // Permission map resolved from server
   const [perms, setPerms] = useState<Record<string, boolean>>({});
@@ -84,37 +89,28 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
-    const parseCookies = (): Record<string, string> => {
-      return document.cookie.split(";").reduce((acc: Record<string, string>, cookie) => {
-        const [key, value] = cookie.trim().split("=");
-        if (key && value) acc[key] = decodeURIComponent(value);
-        return acc;
-      }, {});
-    };
-
-    const timer = setTimeout(async () => {
-      const cookies = parseCookies();
-      const session = cookies["goalcryst_session"];
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
       let role = "Employee";
-
-      if (session) {
-        const email = session.toLowerCase().trim();
-        if (email.includes("admin@goalcryst.com")) {
-          setCurrentUser({ name: "System Admin", role: "Admin", scope: "All regions · All permissions", avatar: "SA" });
-          role = "Admin";
-        } else if (email.includes("bm@goalcryst.com")) {
-          setCurrentUser({ name: "Vikram Naidu", role: "Branch Manager", scope: "South Region · Full operations", avatar: "VN" });
-          role = "Branch Manager";
-        } else if (email.includes("am@goalcryst.com")) {
-          setCurrentUser({ name: "Syed Imran", role: "Assistant Manager", scope: "South Region · Operations", avatar: "SI" });
-          role = "Assistant Manager";
-        } else if (email.includes("tl@goalcryst.com")) {
-          setCurrentUser({ name: "Karthik Reddy", role: "Team Leader", scope: "South Team · Collections", avatar: "KR" });
-          role = "Team Leader";
-        } else if (email.includes("employee@goalcryst.com")) {
-          setCurrentUser({ name: "Anjali Rao", role: "Employee", scope: "South Team · Cases allocated", avatar: "AR" });
-          role = "Employee";
+      
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+        if (profile) {
+          role = profile.role;
+          const initials = profile.full_name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+          
+          setCurrentUser({
+            name: profile.full_name,
+            role: profile.role,
+            scope: role === "Admin" ? "All regions · All permissions" : "Restricted",
+            avatar: initials
+          });
         }
+      } else {
+        router.push("/login");
+        return;
       }
 
       // Admins bypass all permission checks — grant full access instantly
@@ -135,10 +131,10 @@ export default function DashboardLayout({
       } finally {
         setPermsLoaded(true);
       }
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, []);
+    };
+    
+    fetchUser();
+  }, [router]);
 
   // Keyboard shortcut '/' to focus search
   useEffect(() => {
@@ -294,10 +290,11 @@ export default function DashboardLayout({
                 {theme === "system" && <Monitor className="w-3.5 h-3.5" />}
               </button>
               <button
-                onClick={() => alert(`Theme controls:\nClick the Left icon to toggle theme mode between Light ➔ Dark ➔ System.\nCurrent Active Theme Mode: ${theme.toUpperCase()}`)}
+                onClick={() => setIsPasswordModalOpen(true)}
+                title="Change Password"
                 className="p-1 border border-border-custom rounded hover:bg-bg-warm text-ink-3 hover:text-ink transition-colors cursor-pointer"
               >
-                <Settings className="w-3.5 h-3.5" />
+                <Lock className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -307,16 +304,17 @@ export default function DashboardLayout({
               <span className="w-1.5 h-1.5 rounded-full bg-good animate-pulse" />
               <span>Shift Active</span>
             </div>
-            <Link
-              href="/login"
-              onClick={() => {
-                document.cookie = "goalcryst_session=; path=/; max-age=0";
+            <button
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                router.push("/login");
               }}
-              className="flex items-center gap-1 text-[11px] text-ink-2 hover:text-bad font-medium transition-colors"
+              className="flex items-center gap-1 text-[11px] text-ink-2 hover:text-bad font-medium transition-colors cursor-pointer"
             >
               <LogOut className="w-3 h-3" />
               <span>Logout</span>
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
@@ -364,6 +362,10 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {isPasswordModalOpen && (
+        <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />
+      )}
     </div>
   );
 }
