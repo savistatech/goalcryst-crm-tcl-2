@@ -6,8 +6,8 @@ import { ShieldCheck, Mail, Lock, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@goalcryst.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -121,17 +121,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Mock Credentials Assist */}
-          <div className="bg-bg-warm/40 border border-border-custom rounded-lg p-3 text-[11px] text-ink-2 space-y-1.5 select-none">
-            <span className="font-semibold text-ink uppercase tracking-wide text-[9.5px] block">Quick Sign-In Credentials (Password: password123)</span>
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <div>Admin: <strong className="text-ink font-mono">admin@goalcryst.com</strong></div>
-              <div>Branch Mgr: <strong className="text-ink font-mono">bm@goalcryst.com</strong></div>
-              <div>Asst Mgr: <strong className="text-ink font-mono">am@goalcryst.com</strong></div>
-              <div>Team Leader: <strong className="text-ink font-mono">tl@goalcryst.com</strong></div>
-              <div>Employee: <strong className="text-ink font-mono">employee@goalcryst.com</strong></div>
-            </div>
-          </div>
+
         </div>
 
         {/* Footer legal note */}
