@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 export default function LoginPage() {
@@ -21,21 +21,30 @@ export default function LoginPage() {
     setError("");
 
     const usernameTrim = username.trim().toLowerCase();
-    const fakeEmail = `${usernameTrim}@goalcryst.com`;
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: fakeEmail,
+    const { data: email, error: lookupError } = await supabase.rpc("get_auth_email_by_username", {
+      input_username: usernameTrim,
+    });
+
+    if (lookupError || !email) {
+      setError("Invalid username or password.");
+      setLoading(false);
+      return;
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
       password: password,
     });
 
     if (authError) {
-      setError(authError.message || "Invalid credentials. Please try again.");
+      setError("Invalid username or password.");
       setLoading(false);
       return;
     }
 
     // Get user role to determine routing
-    const { data: profile } = await supabase.from("profiles").select("role").single();
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", authData.user?.id).single();
     
     if (profile?.role === "Employee") {
       router.push("/search");

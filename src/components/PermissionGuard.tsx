@@ -19,32 +19,11 @@ export default function PermissionGuard({ permission, children }: PermissionGuar
       try {
         const perms = await getCurrentUserPermissions();
         
-        // Safely parse client-side cookie
-        const cookies = document.cookie.split(";").reduce((acc: Record<string, string>, cookie) => {
-          const [key, value] = cookie.trim().split("=");
-          if (key && value) {
-            acc[key] = decodeURIComponent(value);
-          }
-          return acc;
-        }, {});
-        
-        const session = cookies["goalcryst_session"] || "";
-        let role = "Employee";
-        if (session.includes("admin@goalcryst.com")) {
-          role = "Admin";
-        } else if (session.includes("bm@goalcryst.com")) {
-          role = "Branch Manager";
-        } else if (session.includes("am@goalcryst.com")) {
-          role = "Assistant Manager";
-        } else if (session.includes("tl@goalcryst.com")) {
-          role = "Team Leader";
-        }
-
-        setUserRole(role);
-
-        if (role === "Admin") {
+        if (perms.can_manage_roles && perms.can_manage_users) {
+          setUserRole("Admin");
           setHasAccess(true);
         } else {
+          setUserRole("Current user");
           setHasAccess(!!perms[permission]);
         }
       } catch (err) {

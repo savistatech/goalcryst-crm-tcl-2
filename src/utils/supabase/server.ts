@@ -6,7 +6,7 @@ export async function createClient() {
 
   return createServerClient(
     process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
@@ -38,7 +38,7 @@ export async function getActiveUser() {
     const { data: { user } } = await supabase.auth.getUser();
     return user || null;
   } catch (err) {
-    console.error("DEBUG: supabase.auth.getUser() failed with error:", err);
+    console.error("[Auth] getUser failed:", err);
     return null;
   }
 }

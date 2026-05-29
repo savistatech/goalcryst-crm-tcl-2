@@ -19,7 +19,7 @@ You must configure your Next.js app to use the **Public IP** for browser interac
 Your `.env.production` file (which is baked into the Next.js build) should define the public URL for the browser:
 ```env
 # Used EXCLUSIVELY by the browser/client-side components
-NEXT_PUBLIC_SUPABASE_URL=http://49.249.53.189:8000
+NEXT_PUBLIC_SUPABASE_URL=https://api.your-domain.com
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_public_anon_key
 ```
 
@@ -29,6 +29,8 @@ Your runtime `.env.docker` file (which is passed via `--env-file` at runtime) sh
 SUPABASE_INTERNAL_URL=http://supabase-kong:8000
 SUPABASE_SERVICE_ROLE_KEY=your_secret_service_key
 ```
+
+Do not copy `.env*` files into the Docker image. The Dockerfile accepts the public Supabase values as build args, and runtime secrets are provided only via `--env-file .env.docker`.
 
 ### 2. Updating the Supabase Client Instances
 You need two different initializations of the Supabase client in your codebase depending on where it runs.
@@ -55,7 +57,7 @@ import { cookies } from 'next/headers'
 export function createClient(cookieStore: ReturnType<typeof cookies>) {
   return createServerClient(
     process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
@@ -69,6 +71,8 @@ export function createClient(cookieStore: ReturnType<typeof cookies>) {
 ```
 > [!TIP]
 > Using the `|| process.env.NEXT_PUBLIC_SUPABASE_URL` fallback allows your code to still work locally outside of Docker during development!
+
+The service-role key must only be used by tightly scoped Admin server actions. Normal SSR and Server Actions should use the anon key so Postgres RLS policies remain effective.
 
 ### 3. Docker Deployment Architecture
 When running in production, both containers must be on the same Docker network so they can resolve each other by name.
@@ -86,10 +90,10 @@ graph TD
     end
 
     %% Browser to API
-    User -- "Public IP (NEXT_PUBLIC_SUPABASE_URL)\nhttp://49.249.53.189:8000" --> SupabaseKong
+    User -- "HTTPS (NEXT_PUBLIC_SUPABASE_URL)\nhttps://api.your-domain.com" --> SupabaseKong
     
     %% Browser to Next
-    User -- "Public IP\nhttp://49.249.53.189:3000" --> NextApp
+    User -- "HTTPS\nhttps://crm.your-domain.com" --> NextApp
     
     %% Server to API (Internal)
     NextApp -- "Internal DNS (SUPABASE_INTERNAL_URL)\nhttp://supabase-kong:8000" --> SupabaseKong
@@ -101,7 +105,9 @@ graph TD
 When launching your application, ensure it is attached to the same network as your Supabase containers (usually `supabase_default` if using the standard Supabase docker-compose setup).
 
 ```bash
-# Build the image, baking in the public variables
+# Build the image, baking in public variables only
+export NEXT_PUBLIC_SUPABASE_URL=https://api.your-domain.com
+export NEXT_PUBLIC_SUPABASE_ANON_KEY=your_public_anon_key
 npm run docker:build
 
 # Run the container attached to the supabase network
@@ -116,3 +122,25 @@ docker run -d \
 
 > [!CAUTION]
 > If your Next.js container is not on the `--network supabase_default`, the internal DNS name `http://supabase-kong:8000` will fail to resolve.
+
+### 5. Supabase Production Notes
+
+Use the Caddy or Nginx compose overlay so Kong is not exposed directly:
+
+```env
+COMPOSE_FILE=docker-compose.yml:docker-compose.caddy.yml
+SUPABASE_PUBLIC_URL=https://api.your-domain.com
+API_EXTERNAL_URL=https://api.your-domain.com
+SITE_URL=https://crm.your-domain.com
+PROXY_DOMAIN=api.your-domain.com
+```
+
+The `supabase-prod` compose file mounts the GoalCryst CRM migrations and seed data for fresh database initialization. Existing databases must apply the SQL in `supabase/migrations` manually or through a controlled migration job.
+
+Production seed data intentionally does not create default users or default passwords. Create the first Admin user through Supabase Studio/Auth Admin API with metadata:
+
+```json
+{"full_name":"System Admin","role":"Admin","username":"admin"}
+```
+
+After that, use GoalCryst User Management to create real users with unique usernames and strong initial passwords.

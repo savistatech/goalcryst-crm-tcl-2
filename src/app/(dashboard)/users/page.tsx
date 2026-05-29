@@ -121,6 +121,10 @@ export default function UsersPage() {
       setAddError("Please provide a valid username.");
       return;
     }
+    if (newPassword.length < 8) {
+      setAddError("Initial password must be at least 8 characters.");
+      return;
+    }
 
     setIsAdding(true);
     try {
@@ -128,7 +132,7 @@ export default function UsersPage() {
         name: newName.trim(),
         username: newUsername.trim().toLowerCase(),
         role: newRole,
-        password: newPassword || undefined,
+        password: newPassword,
         reporting_to: newReportingTo || null,
         canApprove: newCanApprove,
         canImport: newCanImport,
@@ -335,15 +339,6 @@ export default function UsersPage() {
     }
   };
 
-  const formatUsername = (id: string, name: string) => {
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11") return "admin";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12") return "bm";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15") return "am";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16") return "tl";
-    if (id === "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13") return "employee";
-    return name.toLowerCase().replace(/\s+/g, ".");
-  };
-
   const getScope = (operator: OperatorRecord) => {
     const p = operator.permissions;
     const scopes: string[] = [];
@@ -437,7 +432,7 @@ export default function UsersPage() {
                 </thead>
                 <tbody className="divide-y divide-border-custom/50 text-[13px]">
                   {operators.map((row) => {
-                    const username = formatUsername(row.id, row.full_name);
+                    const username = row.username || "not-set";
                     const scope = getScope(row);
                     const initials = getAvatarInitials(row.full_name);
 
@@ -618,10 +613,10 @@ export default function UsersPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Security Password (Optional)</label>
+                  <label className="text-[11px] uppercase tracking-wider font-semibold text-ink-3">Initial Password</label>
                   <input
                     type="password"
-                    placeholder="Leave blank to use 'password123'"
+                    placeholder="Minimum 8 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     autoComplete="new-password"

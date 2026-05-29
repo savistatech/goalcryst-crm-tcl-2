@@ -11,8 +11,29 @@ function getAdminClient() {
   );
 }
 
+async function requireAdmin(): Promise<{ success: true; userId: string } | { success: false; error: string }> {
+  const activeUser = await getActiveUser();
+  if (!activeUser) {
+    return { success: false, error: "Access Denied: Unauthenticated user session." };
+  }
+
+  const adminSupabase = getAdminClient();
+  const { data: profile, error } = await adminSupabase
+    .from("profiles")
+    .select("role, is_active")
+    .eq("id", activeUser.id)
+    .single();
+
+  if (error || !profile?.is_active || profile.role !== "Admin") {
+    return { success: false, error: "Access Denied: Only active Admin users can perform this action." };
+  }
+
+  return { success: true, userId: activeUser.id };
+}
+
 export interface OperatorRecord {
   id: string;
+  username: string | null;
   full_name: string;
   role: "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee";
   reporting_to: string | null;
@@ -30,6 +51,7 @@ export interface OperatorRecord {
 
 interface DbProfileRow {
   id: string;
+  username: string | null;
   full_name: string;
   role: string;
   reporting_to: string | null;
@@ -49,12 +71,16 @@ interface DbProfileRow {
  * Fetches all operators joined with their specific permission overrides from user_permissions.
  */
 export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
-  const supabase = await createClient();
+  const adminCheck = await requireAdmin();
+  if (!adminCheck.success) return [];
+
+  const supabase = getAdminClient();
 
   const { data: list, error } = await supabase
     .from("profiles")
     .select(`
       id,
+      username,
       full_name,
       role,
       reporting_to,
@@ -86,6 +112,7 @@ export async function getOperatorsWithPermissions(): Promise<OperatorRecord[]> {
 
     return {
       id: row.id,
+      username: row.username,
       full_name: row.full_name,
       role: row.role as "Admin" | "Branch Manager" | "Assistant Manager" | "Team Leader" | "Employee",
       reporting_to: row.reporting_to,
@@ -118,71 +145,59 @@ export async function createOperator(data: {
   canImport: boolean;
   canViewAudit: boolean;
 }): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const adminCheck = await requireAdmin();
+  if (!adminCheck.success) return adminCheck;
 
-  // 1. Resolve current active operator session
-  const activeUser = await getActiveUser();
-  if (!activeUser) {
-    return { success: false, error: "Access Denied: Unauthenticated user session." };
+  const adminSupabase = getAdminClient();
+  const username = data.username.trim().toLowerCase();
+  if (!/^[a-z0-9._-]{3,40}$/.test(username)) {
+    return { success: false, error: "Username must be 3-40 characters and use only letters, numbers, dots, underscores, or hyphens." };
+  }
+  if (!data.password || data.password.length < 8) {
+    return { success: false, error: "Initial password must be at least 8 characters." };
   }
 
-  let userId = "";
+  const authEmail = `${username}@auth.goalcryst.local`;
 
-  try {
-    // 2. Attempt registration via pure Admin API to bypass cookie permission downgrades
-    const adminSupabase = getAdminClient();
-    const fakeEmail = `${data.username.trim().toLowerCase()}@goalcryst.com`;
+  const { data: existingUsername } = await adminSupabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
 
-    const { data: authData, error: authErr } = await adminSupabase.auth.admin.createUser({
-      email: fakeEmail,
-      password: data.password || "password123", // Use provided or fallback
-      email_confirm: true,
-      user_metadata: {
-        full_name: data.name,
-        role: data.role
-      }
-    });
+  if (existingUsername) {
+    return { success: false, error: "Username is already in use." };
+  }
 
-    if (authErr || !authData?.user) {
-      console.warn("Auth Admin API registration failed, falling back to direct profile insert:", authErr?.message);
-      
-      // Fallback: Generate UUID and directly write profile
-      userId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "c0eebc99-9c0b-4ef8-bb6d-" + Math.random().toString(16).substring(2, 14);
-      
-      const { error: profileErr } = await supabase.from("profiles").insert({
-        id: userId,
-        full_name: data.name,
-        role: data.role,
-        is_active: true,
-        reporting_to: data.reporting_to || null
-      });
-
-      if (profileErr) {
-        return { success: false, error: "User profile registry failed: " + profileErr.message };
-      }
-    } else {
-      userId = authData.user.id;
-      // Sync or update role on profile just in case trigger latency occurred
-      await supabase
-        .from("profiles")
-        .update({ role: data.role, reporting_to: data.reporting_to || null })
-        .eq("id", userId);
+  const { data: authData, error: authErr } = await adminSupabase.auth.admin.createUser({
+    email: authEmail,
+    password: data.password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: data.name,
+      role: data.role,
+      username
     }
-  } catch {
-    console.error("Exception during registration, triggering direct registry fallback");
-    userId = "c0eebc99-9c0b-4ef8-bb6d-" + Math.random().toString(16).substring(2, 14);
-    
-    const { error: profileErr } = await supabase.from("profiles").insert({
+  });
+
+  if (authErr || !authData?.user) {
+    return { success: false, error: "Auth user creation failed: " + (authErr?.message || "Unknown error") };
+  }
+
+  const userId = authData.user.id;
+  const { error: profileErr } = await adminSupabase
+    .from("profiles")
+    .upsert({
       id: userId,
+      username,
       full_name: data.name,
       role: data.role,
       is_active: true,
       reporting_to: data.reporting_to || null
     });
 
-    if (profileErr) {
-      return { success: false, error: "User profile registry failed: " + profileErr.message };
-    }
+  if (profileErr) {
+    return { success: false, error: "User profile registry failed: " + profileErr.message };
   }
 
   // 3. Insert custom overrides keys into user_permissions
@@ -192,21 +207,21 @@ export async function createOperator(data: {
   if (data.canViewAudit) inserts.push({ user_id: userId, permission_key: "can_view_audit_logs" });
 
   if (inserts.length > 0) {
-    const { error: permErr } = await supabase.from("user_permissions").insert(inserts);
+    const { error: permErr } = await adminSupabase.from("user_permissions").insert(inserts);
     if (permErr) {
       console.error("Permissions mapping error:", permErr.message);
     }
   }
 
   // 4. Log compliance transaction
-  await supabase.from("audit_logs").insert({
-    user_id: activeUser.id,
+  await adminSupabase.from("audit_logs").insert({
+    user_id: adminCheck.userId,
     action: "OPERATOR_CREATE",
     entity_type: "profiles",
     entity_id: userId,
     metadata: {
       operator_name: data.name,
-      operator_username: data.username,
+      username,
       operator_role: data.role,
       permissions: {
         can_approve_waivers: data.canApprove,
@@ -231,13 +246,10 @@ export async function updateOperatorPermissions(
     canViewAudit: boolean;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const adminCheck = await requireAdmin();
+  if (!adminCheck.success) return adminCheck;
 
-  // 1. Resolve current active operator session
-  const activeUser = await getActiveUser();
-  if (!activeUser) {
-    return { success: false, error: "Access Denied: Unauthenticated user session." };
-  }
+  const supabase = getAdminClient();
 
   // 2. Clear out existing permission override keys
   const { error: delErr } = await supabase
@@ -264,7 +276,7 @@ export async function updateOperatorPermissions(
 
   // 4. Log compliance audit log
   await supabase.from("audit_logs").insert({
-    user_id: activeUser.id,
+    user_id: adminCheck.userId,
     action: "OPERATOR_PERMISSIONS_UPDATE",
     entity_type: "profiles",
     entity_id: userId,
@@ -292,22 +304,10 @@ export async function updateUserProfile(
     phone?: string | null;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-  const activeUser = await getActiveUser();
+  const adminCheck = await requireAdmin();
+  if (!adminCheck.success) return adminCheck;
 
-  if (!activeUser) {
-    return { success: false, error: "Access Denied: Unauthenticated user session." };
-  }
-
-  const { data: activeProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", activeUser.id)
-    .single();
-
-  if (activeProfile?.role !== "Admin") {
-    return { success: false, error: "Access Denied: Only Admins can edit users." };
-  }
+  const supabase = getAdminClient();
 
   const trimmedName = data.full_name.trim();
   if (!trimmedName) {
@@ -337,7 +337,7 @@ export async function updateUserProfile(
   }
 
   await supabase.from("audit_logs").insert({
-    user_id: activeUser.id,
+    user_id: adminCheck.userId,
     action: "USER_PROFILE_UPDATE",
     entity_type: "profiles",
     entity_id: userId,

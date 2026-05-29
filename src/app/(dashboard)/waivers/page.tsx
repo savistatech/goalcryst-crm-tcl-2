@@ -1,9 +1,9 @@
 import React from "react";
-import { cookies } from "next/headers";
 import { getPendingWaiverRequests, getMyWaiverRequests } from "@/app/actions/waiverActions";
 import WaiverReviewClientView from "./WaiverReviewClientView";
 import EmployeeWaiverTrackerView from "./EmployeeWaiverTrackerView";
 import PermissionGuard from "@/components/PermissionGuard";
+import { getCurrentUserPermissions } from "@/app/actions/userActions";
 
 /**
  * Smart Waivers page:
@@ -12,27 +12,9 @@ import PermissionGuard from "@/components/PermissionGuard";
  *  - Neither             → PermissionGuard access-denied wall
  */
 export default async function WaiversPage() {
-  // Resolve session role from cookie (same pattern as layout.tsx)
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("goalcryst_session")?.value;
-
-  let role = "Employee";
-  if (sessionCookie) {
-    try {
-      const parsed = JSON.parse(decodeURIComponent(sessionCookie));
-      role = parsed.role || "Employee";
-    } catch {
-      const decoded = decodeURIComponent(sessionCookie).toLowerCase();
-      if (decoded.includes("admin")) role = "Admin";
-      else if (decoded.includes("bm@")) role = "Branch Manager";
-      else if (decoded.includes("am@")) role = "Assistant Manager";
-      else if (decoded.includes("tl@")) role = "Team Leader";
-      else role = "Employee";
-    }
-  }
-
-  const canApprove = ["Admin", "Branch Manager", "Assistant Manager", "Team Leader"].includes(role);
-  const canRaise = true; // All 5 roles can raise waivers
+  const permissions = await getCurrentUserPermissions();
+  const canApprove = !!permissions.can_approve_waiver;
+  const canRaise = !!permissions.can_raise_waiver;
 
   if (canApprove) {
     const pendingWaivers = await getPendingWaiverRequests();
