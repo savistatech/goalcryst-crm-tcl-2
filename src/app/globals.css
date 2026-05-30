@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: "Ethnocentric";
-  src: local("Ethnocentric"), url("/fonts/ethnocentric.woff2") format("woff2");
+  src: local("Ethnocentric"), url("/fonts/ethnocentric.otf") format("opentype");
   font-display: swap;
 }
 

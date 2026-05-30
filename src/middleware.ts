@@ -7,6 +7,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
+    pathname.startsWith("/fonts") ||
+    pathname.startsWith("/icon") ||
     pathname === "/favicon.ico" ||
     pathname === "/logo.png" ||
     pathname === "/login"
