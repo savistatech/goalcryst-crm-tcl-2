@@ -141,7 +141,7 @@ const parseDate = (val?: string) => (val === "-" || !val ? null : val);
 
 /**
  * Commits parsed Excel records into the database in atomic chunks.
- * Checks for duplicates in the database to prevent overwriting existing allocations.
+ * Uses bulk inserts for drastically improved performance and duplicate prevention.
  */
 export async function commitImportBatch(
   filename: string,
@@ -183,216 +183,251 @@ export async function commitImportBatch(
 
   summary.batchId = batch.id;
 
-  // 3. Process records
-  for (let idx = 0; idx < rows.length; idx++) {
-    const row = rows[idx];
-    const rowNumber = idx + 1;
+  // 3. Process records in chunks
+  const CHUNK_SIZE = 1000;
+  const processedContractNos = new Set<string>();
 
-    try {
-      // Basic validation
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + CHUNK_SIZE);
+    
+    const validRows: ImportRow[] = [];
+    const errorRows: any[] = [];
+    const skippedRows: any[] = [];
+    const rowNumMap = new Map<string, number>();
+
+    // Validate and check for duplicates within the uploaded file itself
+    chunk.forEach((row, chunkIdx) => {
+      const rowNumber = i + chunkIdx + 1;
+      
       if (!row.contract_no || !row.customer_name) {
-        throw new Error("Missing required primary columns: Contract No and Customer Name are mandatory.");
+        errorRows.push({
+          batch_id: batch.id,
+          row_number: rowNumber,
+          raw_data: row as any,
+          error_reason: "Missing required primary columns: Contract No and Customer Name are mandatory."
+        });
+      } else if (processedContractNos.has(row.contract_no)) {
+        skippedRows.push({
+          batch_id: batch.id,
+          row_number: rowNumber,
+          raw_data: row as any,
+          error_reason: `File Duplicate: Contract [${row.contract_no}] appears multiple times in the uploaded file. Skipped.`
+        });
+        summary.skippedDuplicates++;
+      } else {
+        processedContractNos.add(row.contract_no);
+        validRows.push(row);
+        rowNumMap.set(row.contract_no, rowNumber);
       }
+    });
 
-      // Check duplicate contract in database
-      const { data: existingContract, error: checkError } = await supabase
+    summary.failed += errorRows.length;
+
+    const validContractNos = validRows.map(r => r.contract_no);
+
+    if (validContractNos.length > 0) {
+      // Fetch existing contracts from the database to prevent overwrites
+      const { data: existingContracts, error: checkError } = await supabase
         .from("contracts")
         .select("contract_no")
-        .eq("contract_no", row.contract_no)
-        .maybeSingle();
+        .in("contract_no", validContractNos);
 
       if (checkError) {
         throw new Error("Database integrity check failed: " + checkError.message);
       }
 
-      // Rule: Duplicate allocations must never overwrite database. Skip them!
-      if (existingContract) {
-        summary.skippedDuplicates++;
-        
-        // Log skip error detail
-        await supabase.from("import_errors").insert({
-          batch_id: batch.id,
-          row_number: rowNumber,
-          raw_data: row as any,
-          error_reason: `Duplicate Contract: Contract [${row.contract_no}] already exists in active allocations database. Skipped.`
-        });
-        continue;
+      const existingSet = new Set((existingContracts || []).map(c => c.contract_no));
+
+      const finalRows: ImportRow[] = [];
+
+      validRows.forEach(row => {
+        if (existingSet.has(row.contract_no)) {
+          skippedRows.push({
+            batch_id: batch.id,
+            row_number: rowNumMap.get(row.contract_no),
+            raw_data: row as any,
+            error_reason: `Duplicate Contract: Contract [${row.contract_no}] already exists in active allocations database. Skipped.`
+          });
+          summary.skippedDuplicates++;
+        } else {
+          finalRows.push(row);
+        }
+      });
+
+      if (finalRows.length > 0) {
+        // Prepare arrays for insertion
+        const contracts = finalRows.map(row => ({
+          contract_no: row.contract_no,
+          customer_name: row.customer_name,
+          product: row.product || "LAP",
+          branch: row.branch || "Unknown",
+          state: row.state || "Unknown",
+          area: row.area || "Unknown",
+          region: row.region || "Unknown",
+          secured_category: row.secured_product_flag || "LOS",
+          allocation_category: row.allocation_category || "LOS",
+          bom_dpd: Number(row.bom_dpd || 0),
+          mob: Number(row.mob || 0),
+          bucket: row.bucket || null,
+          bom_bucket: row.bom_bucket || null,
+          secured_product_flag: row.secured_product_flag || "LOS",
+          product_detail: row.product_detail || row.product || "LAP",
+          allocation_dpd_category: row.allocation_dpd_category || "LOS",
+          batch_id: batch.id
+        }));
+
+        const contacts = finalRows.map(row => ({
+          contract_no: row.contract_no,
+          mobile_1: row.mobile_1 || null,
+          mobile_no: row.mobile_no || null,
+          primary_mobile: row.primary_mobile || row.mobile_1 || null,
+          primary_mobile_1: row.primary_mobile_1 || null,
+          primary_mobile_2: row.primary_mobile_2 || null,
+          mobile_no_2: row.mobile_no_2 || null,
+          latest_contact_no: row.latest_contact_no || null,
+          ref_name_1: row.ref_name_1 || null,
+          ref_mobile_1: row.ref_mobile_1 || null,
+          ref_relation_1: row.ref_relation_1 || null,
+          ref_name_2: row.ref_name_2 || null,
+          ref_mobile_2: row.ref_mobile_2 || null,
+          ref_relation_2: row.ref_relation_2 || null,
+          base_address: row.base_address || null,
+          landmark: row.landmark || null,
+          pincode: row.pincode || null,
+          permanent_address: row.permanent_address || null,
+          office_address: row.office_address || null,
+          finnone_address: row.finnone_address || null,
+          master_primary_address: row.master_primary_address || row.base_address || null,
+          permanent_address_2: row.permanent_address_2 || null,
+          secondary_address: row.secondary_address || null,
+          office_address_2: row.office_address_2 || null,
+          additional_address: row.additional_address || null,
+          residential_address: row.residential_address || null,
+          ref_full_address_1: row.ref_full_address_1 || null,
+          ref_full_address_2: row.ref_full_address_2 || null,
+          pdpr_address: row.pdpr_address || null
+        }));
+
+        const assets = finalRows.map(row => ({
+          contract_no: row.contract_no,
+          manufacturer: row.manufacturer || null,
+          asset_model: row.asset_model || null,
+          rc_number: row.rc_number || null,
+          manufacturer_2: row.manufacturer_2 || null,
+          asset_category: row.asset_category || null,
+          asset_variant: row.asset_variant || null,
+          engine_number: row.engine_number || null,
+          chassis_number: row.chassis_number || null,
+          year_of_manufacture: row.year_of_manufacture || null
+        }));
+
+        const financials = finalRows.map(row => ({
+          contract_no: row.contract_no,
+          finance_amount: row.finance_amount || 0,
+          total_pos_outstanding: row.total_pos_outstanding || row.pos || 0,
+          pos: row.pos || 0,
+          total_amount_collectable: row.total_amount_collectable || 0,
+          sale_price: row.sale_price || 0,
+          emi_amount: row.emi_amount || 0,
+          od_amount: row.od_amount || 0,
+          principal_overdue: row.principal_overdue || 0,
+          interest_overdue: row.interest_overdue || 0,
+          bounce_charges: row.bounce_charges || 0,
+          current_odc: row.current_odc || 0,
+          total_outstanding: row.total_outstanding || row.od_amount || 0,
+          ots_amount: row.ots_amount || 0,
+          pos_waiver_amount: row.pos_waiver_amount || 0,
+          pos_waiver_percent: row.pos_waiver_percent || 0
+        }));
+
+        const legal = finalRows.map(row => ({
+          contract_no: row.contract_no,
+          notice_sent_sec138: row.notice_sent_sec138 || null,
+          type_of_case: row.type_of_case || null,
+          cheque_amount: row.cheque_amount || null,
+          cheque_date: parseDate(row.cheque_date),
+          cheque_no: row.cheque_no || null,
+          sec138_current_status: row.sec138_current_status || null,
+          group_stage: row.group_stage || null,
+          case_no: row.case_no || null,
+          court_location: row.court_location || null,
+          court_name: row.court_name || null,
+          ldoh: parseDate(row.ldoh),
+          ndoh: parseDate(row.ndoh),
+          advocate: row.advocate || null,
+          hand_summons: row.hand_summons || null,
+          hand_warrant_1: row.hand_warrant_1 || null,
+          proclamation_orders: row.proclamation_orders || null,
+          lrn_status: row.lrn_status || null,
+          lrn_date: parseDate(row.lrn_date),
+          arb: row.arb || null,
+          sec17_orders_date: parseDate(row.sec17_orders_date),
+          award_date: parseDate(row.award_date),
+          ep_stage: row.ep_stage || null,
+          ep_ldoh: parseDate(row.ep_ldoh),
+          ep_ndoh: parseDate(row.ep_ndoh),
+          ep_case_no: row.ep_case_no || null,
+          ep_advocate: row.ep_advocate || null,
+          termination_status_sa: row.termination_status_sa || null,
+          lrn_prn_status: row.lrn_prn_status || null,
+          lrn_prn_issue_date: parseDate(row.lrn_prn_issue_date),
+          lrn_prn_link: row.lrn_prn_link || null,
+          cnr_number_cc: row.cnr_number_cc || null,
+          cnr_number_pcr: row.cnr_number_pcr || null,
+          current_stage: row.current_stage || null,
+          filed_location: row.filed_location || null,
+          court_hall: row.court_hall || null,
+          hand_s_nbw_bw_pc: row.hand_s_nbw_bw_pc || null,
+          hand_s_nbw_bw_pc_type: row.hand_s_nbw_bw_pc_type || null,
+          claim_amount: row.claim_amount || null,
+          arbitration_group_stage: row.arbitration_group_stage || null,
+          sec17_orders: row.sec17_orders || null,
+          sec17_date: parseDate(row.sec17_date),
+          court_bench: row.court_bench || null,
+          ep_pdoh: parseDate(row.ep_pdoh),
+          legal_status: row.legal_status || null
+        }));
+
+        try {
+          const { error: contractErr } = await supabase.from("contracts").insert(contracts);
+          if (contractErr) throw new Error("Contracts batch insert failed: " + contractErr.message);
+
+          const [contactRes, assetRes, finRes, legalRes] = await Promise.all([
+            supabase.from("contract_contacts").insert(contacts),
+            supabase.from("contract_assets").insert(assets),
+            supabase.from("contract_financials").insert(financials),
+            supabase.from("contract_legal").insert(legal)
+          ]);
+
+          if (contactRes.error) console.error("Contacts batch warning:", contactRes.error.message);
+          if (assetRes.error) console.error("Assets batch warning:", assetRes.error.message);
+          if (finRes.error) console.error("Financials batch warning:", finRes.error.message);
+          if (legalRes.error) console.error("Legal batch warning:", legalRes.error.message);
+
+          summary.imported += finalRows.length;
+        } catch (err: any) {
+          console.error("Batch insert failed:", err.message);
+          summary.failed += finalRows.length;
+          
+          const batchFailErrors = finalRows.map(row => ({
+            batch_id: batch.id,
+            row_number: rowNumMap.get(row.contract_no),
+            raw_data: row as any,
+            error_reason: "Batch insert error: " + err.message
+          }));
+          errorRows.push(...batchFailErrors);
+        }
       }
+    }
 
-      // 4. Perform atomic inserts across 5 related tables
-      
-      // Table 1: contracts
-      const { error: contractErr } = await supabase.from("contracts").insert({
-        contract_no: row.contract_no,
-        customer_name: row.customer_name,
-        product: row.product || "LAP",
-        branch: row.branch || "Unknown",
-        state: row.state || "Unknown",
-        area: row.area || "Unknown",
-        region: row.region || "Unknown",
-        secured_category: row.secured_product_flag || "LOS",
-        allocation_category: row.allocation_category || "LOS",
-        bom_dpd: Number(row.bom_dpd || 0),
-        mob: Number(row.mob || 0),
-        bucket: row.bucket || null,
-        bom_bucket: row.bom_bucket || null,
-        secured_product_flag: row.secured_product_flag || "LOS",
-        product_detail: row.product_detail || row.product || "LAP",
-        allocation_dpd_category: row.allocation_dpd_category || "LOS",
-        batch_id: batch.id
-      });
-
-      if (contractErr) throw new Error("Contracts insert failed: " + contractErr.message);
-
-      // Table 2: contract_contacts
-      const { error: contactErr } = await supabase.from("contract_contacts").insert({
-        contract_no: row.contract_no,
-        mobile_1: row.mobile_1 || null,
-        mobile_no: row.mobile_no || null,
-        primary_mobile: row.primary_mobile || row.mobile_1 || null,
-        primary_mobile_1: row.primary_mobile_1 || null,
-        primary_mobile_2: row.primary_mobile_2 || null,
-        mobile_no_2: row.mobile_no_2 || null,
-        latest_contact_no: row.latest_contact_no || null,
-        ref_name_1: row.ref_name_1 || null,
-        ref_mobile_1: row.ref_mobile_1 || null,
-        ref_relation_1: row.ref_relation_1 || null,
-        ref_name_2: row.ref_name_2 || null,
-        ref_mobile_2: row.ref_mobile_2 || null,
-        ref_relation_2: row.ref_relation_2 || null,
-        base_address: row.base_address || null,
-        landmark: row.landmark || null,
-        pincode: row.pincode || null,
-        permanent_address: row.permanent_address || null,
-        office_address: row.office_address || null,
-        finnone_address: row.finnone_address || null,
-        master_primary_address: row.master_primary_address || row.base_address || null,
-        permanent_address_2: row.permanent_address_2 || null,
-        secondary_address: row.secondary_address || null,
-        office_address_2: row.office_address_2 || null,
-        additional_address: row.additional_address || null,
-        residential_address: row.residential_address || null,
-        ref_full_address_1: row.ref_full_address_1 || null,
-        ref_full_address_2: row.ref_full_address_2 || null,
-        pdpr_address: row.pdpr_address || null
-      });
-
-      if (contactErr) {
-        console.error("Contacts warning:", contactErr.message);
-      }
-
-      // Table 3: contract_assets
-      const { error: assetErr } = await supabase.from("contract_assets").insert({
-        contract_no: row.contract_no,
-        manufacturer: row.manufacturer || null,
-        asset_model: row.asset_model || null,
-        rc_number: row.rc_number || null,
-        manufacturer_2: row.manufacturer_2 || null,
-        asset_category: row.asset_category || null,
-        asset_variant: row.asset_variant || null,
-        engine_number: row.engine_number || null,
-        chassis_number: row.chassis_number || null,
-        year_of_manufacture: row.year_of_manufacture || null
-      });
-
-      if (assetErr) {
-        console.error("Assets warning:", assetErr.message);
-      }
-
-      // Table 4: contract_financials
-      const { error: financialErr } = await supabase.from("contract_financials").insert({
-        contract_no: row.contract_no,
-        finance_amount: row.finance_amount || 0,
-        total_pos_outstanding: row.total_pos_outstanding || row.pos || 0,
-        pos: row.pos || 0,
-        total_amount_collectable: row.total_amount_collectable || 0,
-        sale_price: row.sale_price || 0,
-        emi_amount: row.emi_amount || 0,
-        od_amount: row.od_amount || 0,
-        principal_overdue: row.principal_overdue || 0,
-        interest_overdue: row.interest_overdue || 0,
-        bounce_charges: row.bounce_charges || 0,
-        current_odc: row.current_odc || 0,
-        total_outstanding: row.total_outstanding || row.od_amount || 0,
-        ots_amount: row.ots_amount || 0,
-        pos_waiver_amount: row.pos_waiver_amount || 0,
-        pos_waiver_percent: row.pos_waiver_percent || 0
-      });
-
-      if (financialErr) {
-        console.error("Financials warning:", financialErr.message);
-      }
-
-      // Table 5: contract_legal
-      const { error: legalErr } = await supabase.from("contract_legal").insert({
-        contract_no: row.contract_no,
-        notice_sent_sec138: row.notice_sent_sec138 || null,
-        type_of_case: row.type_of_case || null,
-        cheque_amount: row.cheque_amount || null,
-        cheque_date: parseDate(row.cheque_date),
-        cheque_no: row.cheque_no || null,
-        sec138_current_status: row.sec138_current_status || null,
-        group_stage: row.group_stage || null,
-        case_no: row.case_no || null,
-        court_location: row.court_location || null,
-        court_name: row.court_name || null,
-        ldoh: parseDate(row.ldoh),
-        ndoh: parseDate(row.ndoh),
-        advocate: row.advocate || null,
-        hand_summons: row.hand_summons || null,
-        hand_warrant_1: row.hand_warrant_1 || null,
-        proclamation_orders: row.proclamation_orders || null,
-        lrn_status: row.lrn_status || null,
-        lrn_date: parseDate(row.lrn_date),
-        arb: row.arb || null,
-        sec17_orders_date: parseDate(row.sec17_orders_date),
-        award_date: parseDate(row.award_date),
-        ep_stage: row.ep_stage || null,
-        ep_ldoh: parseDate(row.ep_ldoh),
-        ep_ndoh: parseDate(row.ep_ndoh),
-        ep_case_no: row.ep_case_no || null,
-        ep_advocate: row.ep_advocate || null,
-        termination_status_sa: row.termination_status_sa || null,
-        lrn_prn_status: row.lrn_prn_status || null,
-        lrn_prn_issue_date: parseDate(row.lrn_prn_issue_date),
-        lrn_prn_link: row.lrn_prn_link || null,
-        cnr_number_cc: row.cnr_number_cc || null,
-        cnr_number_pcr: row.cnr_number_pcr || null,
-        current_stage: row.current_stage || null,
-        filed_location: row.filed_location || null,
-        court_hall: row.court_hall || null,
-        hand_s_nbw_bw_pc: row.hand_s_nbw_bw_pc || null,
-        hand_s_nbw_bw_pc_type: row.hand_s_nbw_bw_pc_type || null,
-        claim_amount: row.claim_amount || null,
-        arbitration_group_stage: row.arbitration_group_stage || null,
-        sec17_orders: row.sec17_orders || null,
-        sec17_date: parseDate(row.sec17_date),
-        court_bench: row.court_bench || null,
-        ep_pdoh: parseDate(row.ep_pdoh),
-        legal_status: row.legal_status || null
-      });
-
-      if (legalErr) {
-        console.error("Legal warning:", legalErr.message);
-      }
-
-      summary.imported++;
-
-    } catch (err: any) {
-      console.error(`Row ${rowNumber} import failed:`, err.message);
-      summary.failed++;
-
-      // Log failure detail
-      await supabase.from("import_errors").insert({
-        batch_id: batch.id,
-        row_number: rowNumber,
-        raw_data: row as any,
-        error_reason: err.message || "Unknown schema constraint exception"
-      });
+    // Insert all errors/skipped for this chunk
+    const allChunkErrors = [...errorRows, ...skippedRows];
+    if (allChunkErrors.length > 0) {
+      await supabase.from("import_errors").insert(allChunkErrors);
     }
   }
 
-  // 5. Update batch totals
+  // 4. Update batch totals
   await supabase
     .from("import_batches")
     .update({
