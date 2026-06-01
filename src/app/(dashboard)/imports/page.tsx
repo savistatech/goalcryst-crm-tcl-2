@@ -291,8 +291,26 @@ export default function ImportsPage() {
         return item as ImportRow;
       });
 
-      const result = await commitImportBatch(filename, formattedRows);
-      setImportSummary(result);
+      let currentBatchId = "";
+      let aggregatedSummary: ImportSummary | null = null;
+      const CHUNK_SIZE = 500;
+
+      for (let i = 0; i < formattedRows.length; i += CHUNK_SIZE) {
+        const chunk = formattedRows.slice(i, i + CHUNK_SIZE);
+        const result = await commitImportBatch(filename, chunk, currentBatchId);
+        currentBatchId = result.batchId;
+        
+        if (!aggregatedSummary) {
+          aggregatedSummary = { ...result, totalRows: formattedRows.length };
+        } else {
+          aggregatedSummary.imported += result.imported;
+          aggregatedSummary.skippedDuplicates += result.skippedDuplicates;
+          aggregatedSummary.failed += result.failed;
+          aggregatedSummary.errors.push(...result.errors);
+        }
+      }
+
+      setImportSummary(aggregatedSummary);
       setStep(3);
     } catch (err: any) {
       alert("Error committing import batch: " + err.message);

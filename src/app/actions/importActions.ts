@@ -145,11 +145,12 @@ const parseDate = (val?: string) => (val === "-" || !val ? null : val);
  */
 export async function commitImportBatch(
   filename: string,
-  rows: ImportRow[]
+  rows: ImportRow[],
+  existingBatchId?: string
 ): Promise<ImportSummary> {
   const supabase = await createClient();
   const summary: ImportSummary = {
-    batchId: "",
+    batchId: existingBatchId || "",
     filename,
     totalRows: rows.length,
     imported: 0,
@@ -162,26 +163,34 @@ export async function commitImportBatch(
   const user = await getActiveUser();
   const userId = user ? user.id : null;
 
-  // 2. Create the Import Batch record
-  const { data: batch, error: batchError } = await supabase
-    .from("import_batches")
-    .insert({
-      filename,
-      uploaded_by: userId,
-      total_rows: rows.length,
-      imported_count: 0,
-      duplicates_skipped: 0,
-      failed_count: 0
-    })
-    .select()
-    .single();
+  let batch: any = null;
 
-  if (batchError || !batch) {
-    console.error("Error creating import batch:", batchError);
-    throw new Error("Failed to initialize import log: " + batchError?.message);
+  if (existingBatchId) {
+    const { data, error } = await supabase.from("import_batches").select("*").eq("id", existingBatchId).single();
+    if (error || !data) throw new Error("Batch not found: " + error?.message);
+    batch = data;
+  } else {
+    // 2. Create the Import Batch record
+    const { data, error } = await supabase
+      .from("import_batches")
+      .insert({
+        filename,
+        uploaded_by: userId,
+        total_rows: rows.length, // Client can pass totalRows if they want, but we'll update it later if needed
+        imported_count: 0,
+        duplicates_skipped: 0,
+        failed_count: 0
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error("Error creating import batch:", error);
+      throw new Error("Failed to initialize import log: " + error?.message);
+    }
+    batch = data;
+    summary.batchId = batch.id;
   }
-
-  summary.batchId = batch.id;
 
   // 3. Process records in chunks
   const CHUNK_SIZE = 1000;
@@ -225,18 +234,25 @@ export async function commitImportBatch(
 
     const validContractNos = validRows.map(r => r.contract_no);
 
-    if (validContractNos.length > 0) {
-      // Fetch existing contracts from the database to prevent overwrites
-      const { data: existingContracts, error: checkError } = await supabase
-        .from("contracts")
-        .select("contract_no")
-        .in("contract_no", validContractNos);
+      const existingSet = new Set<string>();
 
-      if (checkError) {
-        throw new Error("Database integrity check failed: " + checkError.message);
-      }
+      if (validContractNos.length > 0) {
+        // Fetch existing contracts in smaller chunks to prevent "URI too long" errors from Supabase/PostgREST
+        const IN_CHUNK_SIZE = 100;
+        for (let j = 0; j < validContractNos.length; j += IN_CHUNK_SIZE) {
+          const idChunk = validContractNos.slice(j, j + IN_CHUNK_SIZE);
+          const { data: chunkExisting, error: checkError } = await supabase
+            .from("contracts")
+            .select("contract_no")
+            .in("contract_no", idChunk);
 
-      const existingSet = new Set((existingContracts || []).map(c => c.contract_no));
+          if (checkError) {
+            throw new Error("Database integrity check failed: " + checkError.message);
+          }
+          if (chunkExisting) {
+            chunkExisting.forEach(c => existingSet.add(c.contract_no));
+          }
+        }
 
       const finalRows: ImportRow[] = [];
 
@@ -431,9 +447,10 @@ export async function commitImportBatch(
   await supabase
     .from("import_batches")
     .update({
-      imported_count: summary.imported,
-      duplicates_skipped: summary.skippedDuplicates,
-      failed_count: summary.failed
+      total_rows: Math.max(batch.total_rows || 0, summary.totalRows), // Ensure totalRows is accurate if appended
+      imported_count: (batch.imported_count || 0) + summary.imported,
+      duplicates_skipped: (batch.duplicates_skipped || 0) + summary.skippedDuplicates,
+      failed_count: (batch.failed_count || 0) + summary.failed
     })
     .eq("id", batch.id);
 
