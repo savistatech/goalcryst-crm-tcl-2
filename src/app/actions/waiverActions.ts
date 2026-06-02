@@ -12,7 +12,6 @@ export interface PendingWaiver {
   total_outstanding: number;
   pos: number;
   requested_waiver_amount: number;
-  customer_payable_amount: number;
   reason: string;
   employee_remarks: string;
   routed_to: string[];
@@ -26,7 +25,6 @@ export interface MyWaiverRequest {
   total_outstanding: number;
   pos: number;
   requested_waiver_amount: number;
-  customer_payable_amount: number;
   reason: string;
   employee_remarks: string;
   status: "Pending" | "Approved" | "Rejected";
@@ -55,7 +53,6 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       total_outstanding,
       pos,
       requested_waiver_amount,
-      customer_payable_amount,
       employee_remarks,
       status,
       manager_remarks,
@@ -89,7 +86,6 @@ export async function getMyWaiverRequests(): Promise<MyWaiverRequest[]> {
       total_outstanding: Number(row.total_outstanding || 0),
       pos: Number(row.pos || 0),
       requested_waiver_amount: Number(row.requested_waiver_amount || 0),
-      customer_payable_amount: Number(row.customer_payable_amount || 0),
       reason: row.waiver_reason?.reason || "Unknown",
       employee_remarks: row.employee_remarks || "",
       status: row.status as "Pending" | "Approved" | "Rejected",
@@ -116,7 +112,6 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       total_outstanding,
       pos,
       requested_waiver_amount,
-      customer_payable_amount,
       employee_remarks,
       routed_to,
       created_at,
@@ -152,7 +147,6 @@ export async function getPendingWaiverRequests(): Promise<PendingWaiver[]> {
       total_outstanding: Number(row.total_outstanding || 0),
       pos: Number(row.pos || 0),
       requested_waiver_amount: Number(row.requested_waiver_amount || 0),
-      customer_payable_amount: Number(row.customer_payable_amount || 0),
       reason: row.waiver_reason?.reason || "Unknown",
       employee_remarks: row.employee_remarks || "",
       routed_to: row.routed_to || [],
@@ -181,7 +175,7 @@ export async function reviewWaiverRequest(
   // 2. Fetch target waiver to capture details for audit log before updating
   const { data: targetWaiver, error: fetchErr } = await supabase
     .from("waiver_requests")
-    .select("contract_no, requested_waiver_amount, customer_payable_amount")
+    .select("contract_no, requested_waiver_amount")
     .eq("id", waiverId)
     .single();
 
@@ -213,7 +207,6 @@ export async function reviewWaiverRequest(
     metadata: {
       contract_no: targetWaiver.contract_no,
       waiver_amount: targetWaiver.requested_waiver_amount,
-      payable_amount: targetWaiver.customer_payable_amount,
       manager_remarks: managerRemarks
     }
   });

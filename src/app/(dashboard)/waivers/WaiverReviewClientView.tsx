@@ -124,7 +124,7 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
                   </div>
 
                   {/* Financial Metrics Indicators */}
-                  <div className="grid grid-cols-3 gap-2 bg-bg-warm/15 border border-border-custom p-3 rounded-xl">
+                  <div className="grid grid-cols-2 gap-2 bg-bg-warm/15 border border-border-custom p-3 rounded-xl">
                     <div className="text-[11px]">
                       <span className="text-ink-3 block">Principal POS</span>
                       <strong className="text-ink font-mono font-bold block mt-0.5">{formatMoney(row.pos)}</strong>
@@ -132,10 +132,6 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
                     <div className="text-[11px]">
                       <span className="text-bad block">Discount ({waiverPercent}%)</span>
                       <strong className="text-bad font-mono font-bold block mt-0.5">{formatMoney(row.requested_waiver_amount)}</strong>
-                    </div>
-                    <div className="text-[11px]">
-                      <span className="text-good block">Final Payable</span>
-                      <strong className="text-good font-mono font-bold block mt-0.5">{formatMoney(row.customer_payable_amount)}</strong>
                     </div>
                   </div>
 
@@ -198,10 +194,6 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
                 <div className="flex justify-between">
                   <span className="text-ink-3">Discount Requested:</span>
                   <strong className="text-bad font-mono font-bold">{formatMoney(activeReview.requested_waiver_amount)}</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-ink-3">Final Customer Payable:</span>
-                  <strong className="text-good font-mono font-bold">{formatMoney(activeReview.customer_payable_amount)}</strong>
                 </div>
               </div>
 

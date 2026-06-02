@@ -377,7 +377,7 @@ export async function getSupervisorsForRouting(): Promise<{ id: string; full_nam
   const { data, error } = await supabase
     .from("profiles")
     .select("id, full_name, role")
-    .in("role", ["Branch Manager", "Assistant Manager", "Team Leader"])
+    .in("role", ["Admin", "Branch Manager", "Assistant Manager", "Team Leader"])
     .eq("is_active", true)
     .order("role", { ascending: true })
     .order("full_name", { ascending: true });

@@ -193,9 +193,7 @@ export default function EmployeeWaiverTrackerView({ myWaivers }: EmployeeWaiverT
                     <p className="text-2xl font-bold text-accent-custom tabular-nums">
                       {formatMoney(waiver.requested_waiver_amount)}
                     </p>
-                    <p className="text-[11px] text-ink-3 mt-0.5">
-                      Customer pays: {formatMoney(waiver.customer_payable_amount)}
-                    </p>
+
                   </div>
                 </div>
 

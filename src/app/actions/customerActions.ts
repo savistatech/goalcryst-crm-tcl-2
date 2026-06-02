@@ -166,7 +166,6 @@ export async function logCallDisposition(
 export async function raiseWaiverRequest(
   contractNo: string,
   requestedWaiverAmount: number,
-  customerPayableAmount: number,
   reasonId: string,
   routedTo: string[],
   employeeRemarks?: string
@@ -202,7 +201,6 @@ export async function raiseWaiverRequest(
       total_outstanding: totalOutstanding,
       pos: posAmount,
       requested_waiver_amount: requestedWaiverAmount,
-      customer_payable_amount: customerPayableAmount,
       reason_id: reasonId,
       routed_to: routedTo,
       employee_remarks: employeeRemarks || null,
@@ -220,7 +218,7 @@ export async function raiseWaiverRequest(
     action: "RAISE_WAIVER",
     entity_type: "waiver_requests",
     entity_id: contractNo,
-    metadata: { totalOutstanding, requestedWaiverAmount, customerPayableAmount }
+    metadata: { totalOutstanding, requestedWaiverAmount }
   });
 
   revalidatePath(`/customers/${contractNo}`);

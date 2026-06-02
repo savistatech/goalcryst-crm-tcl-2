@@ -56,7 +56,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
   // Waiver request modal states
   const [isWaiverOpen, setIsWaiverOpen] = useState(false);
   const [waiverAmount, setWaiverAmount] = useState("");
-  const [payableAmount, setPayableAmount] = useState("");
   const [waiverReasonId, setWaiverReasonId] = useState("");
   const [waiverRemarks, setWaiverRemarks] = useState("");
   const [routedTo, setRoutedTo] = useState<string[]>([]);
@@ -121,15 +120,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
 
   // 21 detailed dispositions mapping handled dynamically now
   // Auto calculate payable in waiver request
-  useEffect(() => {
-    const posAmount = Number(data.financials.pos || 0);
-    const waiver = Number(waiverAmount || 0);
-    if (waiver > 0 && waiver <= posAmount) {
-      setPayableAmount((posAmount - waiver).toString());
-    } else {
-      setPayableAmount("");
-    }
-  }, [waiverAmount, data.financials.pos]);
+  // Removed payableAmount effect as requested
 
   // Submit Call Dispo
   const handleDispoSubmit = async (e: React.FormEvent) => {
@@ -191,13 +182,8 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
   // Submit Waiver Request
   const handleWaiverSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const totalOut = Number(data.financials.total_outstanding || 0);
+    const posAmount = Number(data.financials.pos || 0);
     const waiverVal = Number(waiverAmount);
-
-    if (waiverVal <= 0 || waiverVal > totalOut) {
-      alert("Waiver amount must be greater than 0 and less than or equal to active outstanding balance.");
-      return;
-    }
 
     if (routedTo.length === 0) {
       alert("Please select at least one supervisor to route this request to.");
@@ -209,7 +195,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
       const res = await raiseWaiverRequest(
         data.contract.contract_no,
         waiverVal,
-        Number(payableAmount),
         waiverReasonId,
         routedTo,
         waiverRemarks
@@ -220,7 +205,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
         const newWaiver = {
           created_at: new Date().toISOString(),
           requested_waiver_amount: waiverVal,
-          customer_payable_amount: Number(payableAmount),
           waiver_reason: { reason: reasonName },
           employee_remarks: waiverRemarks,
           status: "Pending",
@@ -587,7 +571,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                       <tr className="border-b border-border-custom text-[10px] uppercase font-semibold text-ink-3 bg-bg-warm/10">
                         <th className="py-2 px-3">Date Raised</th>
                         <th className="py-2 px-3">Waiver Amount</th>
-                        <th className="py-2 px-3">Customer Payable</th>
                         <th className="py-2 px-3">Reason</th>
                         <th className="py-2 px-3">Employee Remarks</th>
                         <th className="py-2 px-3 text-center">Status</th>
@@ -598,7 +581,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                         <tr key={idx} className="hover:bg-bg-warm/10">
                           <td className="py-3 px-3 font-mono text-ink-2">{new Date(w.created_at).toLocaleDateString()}</td>
                           <td className="py-3 px-3 font-semibold text-accent-custom font-mono">{formatMoney(w.requested_waiver_amount)}</td>
-                          <td className="py-3 px-3 font-semibold text-ink font-mono">{formatMoney(w.customer_payable_amount)}</td>
                           <td className="py-3 px-3 text-ink-2 max-w-[120px] truncate">{w.reason}</td>
                           <td className="py-3 px-3 text-ink-3 italic">{w.employee_remarks || "-"}</td>
                           <td className="py-3 px-3 text-center">
@@ -972,7 +954,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
             </div>
 
             <form onSubmit={handleWaiverSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-[12.5px]">
+              <div className="grid grid-cols-1 gap-3 text-[12.5px]">
                 <div className="space-y-1">
                   <label className="text-ink-3 font-semibold">Requested Waiver (₹)</label>
                   <input
@@ -982,16 +964,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     value={waiverAmount}
                     onChange={(e) => setWaiverAmount(e.target.value)}
                     className="w-full bg-bg border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-ink"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-ink-3 font-semibold">Payable Outstanding (₹)</label>
-                  <input
-                    type="text"
-                    disabled
-                    placeholder="Auto Calculated"
-                    value={payableAmount ? `₹${Number(payableAmount).toLocaleString("en-IN")}` : ""}
-                    className="w-full bg-bg-warm/50 border border-border-custom rounded-lg px-2.5 py-1.5 text-xs text-ink font-semibold font-mono"
                   />
                 </div>
               </div>
@@ -1063,7 +1035,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 </button>
                 <button
                   type="submit"
-                  disabled={waiverSubmitting || !payableAmount}
+                  disabled={waiverSubmitting || !waiverAmount}
                   className="h-9 px-4 bg-ink hover:bg-black text-surface text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
                 >
                   {waiverSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
