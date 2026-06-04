@@ -137,7 +137,48 @@ export interface ImportSummary {
   errors: any[];
 }
 
-const parseDate = (val?: string) => (val === "-" || !val ? null : val);
+const parseDate = (val?: any) => {
+  if (val === undefined || val === null || val === "-") return null;
+  const str = String(val).trim();
+  if (!str) return null;
+
+  // Check if it's an Excel serial date number
+  if (/^\d+(\.\d+)?$/.test(str)) {
+    const num = Number(str);
+    if (num > 0 && num < 100000) {
+      const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+      const date = new Date(excelEpoch.getTime() + num * 24 * 60 * 60 * 1000);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split("T")[0]; // YYYY-MM-DD
+      }
+    }
+  }
+
+  // Check if it's already in YYYY-MM-DD format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  // Try parsing DD/MM/YYYY or DD-MM-YYYY
+  const dmMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (dmMatch) {
+    const day = parseInt(dmMatch[1], 10);
+    const month = parseInt(dmMatch[2], 10) - 1;
+    const year = parseInt(dmMatch[3], 10);
+    const date = new Date(Date.UTC(year, month, day));
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split("T")[0];
+    }
+  }
+
+  // Try standard JS Date parsing
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split("T")[0];
+  }
+
+  return str; // Fallback to raw string if we can't parse it
+};
 
 /**
  * Commits parsed Excel records into the database in atomic chunks.

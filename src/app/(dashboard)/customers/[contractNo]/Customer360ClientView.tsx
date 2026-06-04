@@ -19,10 +19,11 @@ import {
   XCircle,
   PlusCircle,
   HelpCircle,
-  TrendingUp,
   MapPin,
   Car,
-  AlertTriangle
+  AlertTriangle,
+  AlertCircle,
+  Shield
 } from "lucide-react";
 
 interface ClientViewProps {
@@ -96,7 +97,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
   // Formatter helpers
   const formatMoney = (val: number | undefined | null) => {
     if (val === undefined || val === null) return "₹0.00";
-    if (!permissions.can_view_financial_data) return "[Access Gated]";
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -106,16 +106,54 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
 
   const maskPhone = (phone: string | undefined | null) => {
     if (!phone || phone === "-") return "-";
-    if (permissions.can_view_contact_numbers) return phone;
-    // Mask all but first 2 and last 2 digits
-    if (phone.length <= 4) return "••••••••";
-    return phone.slice(0, 2) + "••••••" + phone.slice(-2);
+    return phone;
   };
 
   const maskAddress = (address: string | undefined | null) => {
     if (!address || address === "-") return "-";
-    if (permissions.can_view_contact_numbers) return address;
-    return "Access Gated · Permissions Restricted";
+    return address;
+  };
+
+  const formatDate = (val: string | number | undefined | null) => {
+    if (val === undefined || val === null) return "-";
+    const str = String(val).trim();
+    if (!str || str === "-") return "-";
+
+    // Check if it's an Excel serial date number
+    if (/^\d+(\.\d+)?$/.test(str)) {
+      const num = Number(str);
+      if (num > 0 && num < 100000) {
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        const date = new Date(excelEpoch.getTime() + num * 24 * 60 * 60 * 1000);
+        if (!isNaN(date.getTime())) {
+          const dd = String(date.getUTCDate()).padStart(2, "0");
+          const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+          const yyyy = date.getUTCFullYear();
+          return `${dd}/${mm}/${yyyy}`;
+        }
+      }
+    }
+
+    const d = new Date(str);
+    if (isNaN(d.getTime())) return str;
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
+  const formatDateTime = (val: string | undefined | null) => {
+    if (!val || val === "-") return "-";
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return d.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
   };
 
   // 21 detailed dispositions mapping handled dynamically now
@@ -439,75 +477,228 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
         {activeTab === "contacts" && (
           <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
             <div>
-              <h3 className="text-base font-semibold text-ink">Demographics & Gated Contact Details</h3>
-              <p className="text-xs text-ink-2">Contact numbers are decrypted dynamically based on permission parameters.</p>
+              <h3 className="text-base font-semibold text-ink font-serif">Customer Demographics & Contact Profiles</h3>
+              <p className="text-xs text-ink-2">Complete dashboard of all demographics, phone numbers, references, and address databases.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/10">
-                <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Customer Name</span>
-                <strong className="text-ink block mt-0.5 font-medium">{data.contract.customer_name}</strong>
-              </div>
-              <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/10">
-                <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Primary Phone</span>
-                <strong className="text-ink block mt-0.5 font-mono">{maskPhone(data.contacts.mobile_1 || data.contacts.primary_mobile)}</strong>
-              </div>
-              <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/10">
-                <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Finnone Phone</span>
-                <strong className="text-ink block mt-0.5 font-mono">{maskPhone(data.contacts.primary_mobile_1 || data.contacts.latest_contact_no)}</strong>
-              </div>
-              <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/10">
-                <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Secured Flag</span>
-                <strong className="text-ink block mt-0.5 font-mono">{data.contract.secured_product_flag || "-"}</strong>
-              </div>
-            </div>
-
-            {/* Address segments (11 options) */}
-            <div className="space-y-4 pt-4 border-t border-border-custom">
-              <h4 className="text-sm font-semibold text-ink">Address Directories</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
-                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Master Primary Address</span>
-                  <p className="text-ink mt-1 font-medium leading-relaxed">
-                    {maskAddress(data.contacts.master_primary_address)}
-                  </p>
-                  <span className="text-[11px] text-ink-3 block mt-2">Pincode: {data.contacts.pincode || "522003"}</span>
+            {/* Sub-section 1: Demographics & Allocation Details */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Demographics & Allocation Details</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Customer Name</span>
+                  <strong className="text-ink block mt-0.5 font-medium">{data.contract.customer_name || "-"}</strong>
                 </div>
-
-                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
-                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Secondary Office Address</span>
-                  <p className="text-ink mt-1 font-medium leading-relaxed">
-                    {maskAddress(data.contacts.office_address)}
-                  </p>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Contract No</span>
+                  <strong className="text-ink block mt-0.5 font-mono">{data.contract.contract_no || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Product</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.product || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Product Detail</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.product_detail || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Branch</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.branch || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Area</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.area || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">State</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.state || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Region</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.region || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Secured Category</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.secured_category || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Secured Product Flag</span>
+                  <strong className="text-ink block mt-0.5 font-mono">{data.contract.secured_product_flag || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Allocation Category</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.allocation_category || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Allocation DPD Category</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.allocation_dpd_category || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">BOM DPD</span>
+                  <strong className="text-ink block mt-0.5 font-mono">{data.contract.bom_dpd !== undefined ? data.contract.bom_dpd : "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">MOB</span>
+                  <strong className="text-ink block mt-0.5 font-mono">{data.contract.mob !== undefined ? data.contract.mob : "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Bucket</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.bucket || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">BOM Bucket</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.bom_bucket || "-"}</strong>
                 </div>
               </div>
             </div>
 
-            {/* References panel */}
+            {/* Sub-section 2: Contact Numbers */}
             <div className="space-y-4 pt-4 border-t border-border-custom">
-              <h4 className="text-sm font-semibold text-ink">Reference Contacts</h4>
+              <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Contact Numbers (Phones)</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 1 - Mobile 1</span>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.mobile_1)}</strong>
+                  </div>
+                  <Phone className="w-4 h-4 text-accent-custom" />
+                </div>
+                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 2 - Mobile No</span>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.mobile_no)}</strong>
+                  </div>
+                  <Phone className="w-4 h-4 text-accent-custom" />
+                </div>
+                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 3 - Primary Mobile</span>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.primary_mobile)}</strong>
+                  </div>
+                  <Phone className="w-4 h-4 text-accent-custom" />
+                </div>
+                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 3 - Primary Mobile 1</span>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.primary_mobile_1)}</strong>
+                  </div>
+                  <Phone className="w-4 h-4 text-accent-custom" />
+                </div>
+                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 4 - Primary Mobile 2</span>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.primary_mobile_2)}</strong>
+                  </div>
+                  <Phone className="w-4 h-4 text-accent-custom" />
+                </div>
+                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 5 - Mobile No</span>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.mobile_no_2)}</strong>
+                  </div>
+                  <Phone className="w-4 h-4 text-accent-custom" />
+                </div>
+                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 6 - Latest Contact No</span>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.latest_contact_no)}</strong>
+                  </div>
+                  <Phone className="w-4 h-4 text-accent-custom" />
+                </div>
+              </div>
+            </div>
+
+            {/* Sub-section 3: Reference Contacts */}
+            <div className="space-y-4 pt-4 border-t border-border-custom">
+              <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Reference Contacts</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold block">Reference 1: {data.contacts.ref_name_1 || "Adi Ranga Rao"}</span>
+                    <span className="text-[10.5px] text-ink-3 uppercase tracking-wider font-semibold block">Reference 1: {data.contacts.ref_name_1 || "-"}</span>
                     <strong className="text-sm font-mono text-ink mt-1 block">
-                      {maskPhone(data.contacts.ref_mobile_1 || "9988223344")}
+                      {maskPhone(data.contacts.ref_mobile_1)}
                     </strong>
-                    <span className="text-[11px] text-ink-3 block mt-0.5">Relation: {data.contacts.ref_relation_1 || "Spouse"}</span>
+                    <span className="text-[11px] text-ink-3 block mt-1">Relation: {data.contacts.ref_relation_1 || "-"}</span>
                   </div>
-                  <span className="p-2 bg-bg-warm rounded-lg text-ink-2">
-                    <Phone className="w-4 h-4" />
-                  </span>
+                  <Phone className="w-4 h-4 text-ink-3" />
                 </div>
 
                 <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold block">Reference 2: {data.contacts.ref_name_2 || "-"}</span>
+                    <span className="text-[10.5px] text-ink-3 uppercase tracking-wider font-semibold block">Reference 2: {data.contacts.ref_name_2 || "-"}</span>
                     <strong className="text-sm font-mono text-ink mt-1 block">
                       {maskPhone(data.contacts.ref_mobile_2)}
                     </strong>
-                    <span className="text-[11px] text-ink-3 block mt-0.5">Relation: {data.contacts.ref_relation_2 || "-"}</span>
+                    <span className="text-[11px] text-ink-3 block mt-1">Relation: {data.contacts.ref_relation_2 || "-"}</span>
                   </div>
+                  <Phone className="w-4 h-4 text-ink-3" />
+                </div>
+              </div>
+            </div>
+
+            {/* Sub-section 4: Address Directories */}
+            <div className="space-y-4 pt-4 border-t border-border-custom">
+              <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Address Directories</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 1 - Base Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.base_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Landmark</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.landmark || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Pincode</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium font-mono">{data.contacts.pincode || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 2 - Permanent Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.permanent_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 2 - Master Primary Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.master_primary_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 3 - Permanent Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.permanent_address_2 || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 3 - Office Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.office_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 4 - Finnone Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.finnone_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 5 - Secondary Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.secondary_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 6 - Office Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.office_address_2 || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 7 - Additional Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.additional_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 8 - Residential Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.residential_address || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 9 - Reference Full Address 1</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.ref_full_address_1 || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 10 - Reference Full Address 2</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.ref_full_address_2 || "-"}</p>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
+                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 11 - PDPR Address</span>
+                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.pdpr_address || "-"}</p>
                 </div>
               </div>
             </div>
@@ -517,30 +708,94 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
         {/* ==================== 3. FINANCIALS & WAIVERS TAB ==================== */}
         {activeTab === "financials" && (
           <div className="space-y-6">
-            <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
               <div>
-                <h3 className="text-base font-semibold text-ink">Exposure Breakdown & Waivers Status</h3>
-                <p className="text-xs text-ink-2">Complete financial outstanding details gated by permissions policies.</p>
+                <h3 className="text-base font-semibold text-ink font-serif">Exposure Breakdown & Liability Database</h3>
+                <p className="text-xs text-ink-2">Complete details of account liabilities, dues, and settlement targets.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="border border-border-strong rounded-xl p-4 bg-bg-warm/20 text-center">
-                  <span className="text-xs text-ink-3 block uppercase tracking-wider font-semibold">Finance Principal</span>
-                  <strong className="text-2xl font-bold font-mono text-ink block mt-1.5">
-                    {formatMoney(data.financials.finance_amount)}
-                  </strong>
+              {/* Exposure Summary Metrics */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider font-sans">Exposure & POS Summary</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Finance Amount</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.finance_amount)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Total POS Outstanding</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.total_pos_outstanding)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Principal POS</span>
+                    <strong className="text-accent-custom block mt-0.5 font-mono">{formatMoney(data.financials.pos)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Sale Price</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.sale_price)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Total Amount Collectable</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.total_amount_collectable)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Total Outstanding</span>
+                    <strong className="text-bad block mt-0.5 font-mono">{formatMoney(data.financials.total_outstanding)}</strong>
+                  </div>
                 </div>
-                <div className="border border-border-strong rounded-xl p-4 bg-bg-warm/20 text-center">
-                  <span className="text-xs text-ink-3 block uppercase tracking-wider font-semibold">Principal POS</span>
-                  <strong className="text-2xl font-bold font-mono text-accent-custom block mt-1.5">
-                    {formatMoney(data.financials.pos)}
-                  </strong>
+              </div>
+
+              {/* Installments & Overdues */}
+              <div className="space-y-3 pt-4 border-t border-border-custom">
+                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider font-sans">Installments & Overdues</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">EMI Amount</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.emi_amount)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">OD Amount</span>
+                    <strong className="text-bad block mt-0.5 font-mono">{formatMoney(data.financials.od_amount)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Principal Overdue</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.principal_overdue)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Interest Overdue</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.interest_overdue)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Bounce Charges</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.bounce_charges)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Current ODC</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.current_odc)}</strong>
+                  </div>
                 </div>
-                <div className="border border-border-strong rounded-xl p-4 bg-bg-warm/20 text-center">
-                  <span className="text-xs text-ink-3 block uppercase tracking-wider font-semibold">Overdue (Principal + Interest)</span>
-                  <strong className="text-2xl font-bold font-mono text-bad block mt-1.5">
-                    {formatMoney(data.financials.od_amount)}
-                  </strong>
+              </div>
+
+              {/* Settlement & Waiver Details */}
+              <div className="space-y-3 pt-4 border-t border-border-custom">
+                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider font-sans">Settlement & Waiver Targets</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">OTS Amount</span>
+                    <strong className="text-good block mt-0.5 font-mono">{formatMoney(data.financials.ots_amount)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">POS Waiver Amount</span>
+                    <strong className="text-good block mt-0.5 font-mono">{formatMoney(data.financials.pos_waiver_amount)}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">POS Waiver Percent</span>
+                    <strong className="text-good block mt-0.5 font-mono">
+                      {data.financials.pos_waiver_percent !== undefined && data.financials.pos_waiver_percent !== null
+                        ? `${data.financials.pos_waiver_percent}%`
+                        : "-"}
+                    </strong>
+                  </div>
                 </div>
               </div>
             </div>
@@ -579,7 +834,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <tbody className="divide-y divide-border-custom/30 text-[12.5px]">
                       {data.waivers.map((w, idx) => (
                         <tr key={idx} className="hover:bg-bg-warm/10">
-                          <td className="py-3 px-3 font-mono text-ink-2">{new Date(w.created_at).toLocaleDateString()}</td>
+                          <td className="py-3 px-3 font-mono text-ink-2">{formatDate(w.created_at)}</td>
                           <td className="py-3 px-3 font-semibold text-accent-custom font-mono">{formatMoney(w.requested_waiver_amount)}</td>
                           <td className="py-3 px-3 text-ink-2 max-w-[120px] truncate">{w.reason}</td>
                           <td className="py-3 px-3 text-ink-3 italic">{w.employee_remarks || "-"}</td>
@@ -603,71 +858,65 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
         {activeTab === "assets" && (
           <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
             <div>
-              <h3 className="text-base font-semibold text-ink">Collateral Asset & Vehicle Gating</h3>
-              <p className="text-xs text-ink-2">Security parameters lock vehicle details. Requires `can_view_asset_data` validation.</p>
+              <h3 className="text-base font-semibold text-ink font-serif">Collateral Asset & Vehicle Details</h3>
+              <p className="text-xs text-ink-2">Detailed parameters of the collateralized asset vehicle compliance records.</p>
             </div>
 
-            {!permissions.can_view_asset_data ? (
-              <div className="flex flex-col items-center justify-center py-14 bg-bg-warm/20 border border-border-custom rounded-xl space-y-3">
-                <Lock className="w-8 h-8 text-accent-custom" />
-                <h4 className="text-sm font-semibold text-ink">Asset Information Gated</h4>
-                <p className="text-xs text-ink-3 max-w-sm text-center">
-                  Your current user profile does not hold authorization key `can_view_asset_data`. Contact the administrator to update permissions.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
-                  <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
-                    <Car className="w-4 h-4 text-accent-custom" />
-                    <span className="text-xs uppercase tracking-wider font-semibold text-ink">Asset Information</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <Car className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Asset Specifications</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-[13px]">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Manufacturer</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.assets.manufacturer || "-"}</strong>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-[13px]">
-                    <div>
-                      <span className="text-ink-3 block">Manufacturer:</span>
-                      <strong className="text-ink block mt-0.5">{data.assets.manufacturer || "-"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Asset Model:</span>
-                      <strong className="text-ink block mt-0.5">{data.assets.asset_model || "-"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Category:</span>
-                      <strong className="text-ink block mt-0.5">{data.assets.asset_category || "MUV / SUV"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Year of Mfg:</span>
-                      <strong className="text-ink block mt-0.5 font-mono">{data.assets.year_of_manufacture || "-"}</strong>
-                    </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Manufacturer 2</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.assets.manufacturer_2 || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Asset Model</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.assets.asset_model || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Asset Variant</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.assets.asset_variant || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Category</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.assets.asset_category || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Year of Mfg</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.assets.year_of_manufacture || "-"}</strong>
                   </div>
                 </div>
+              </div>
 
-                <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
-                  <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
-                    <Scale className="w-4 h-4 text-accent-custom" />
-                    <span className="text-xs uppercase tracking-wider font-semibold text-ink">Compliance Identifiers</span>
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <Scale className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Compliance Identifiers</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-[13px]">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Registration Number (RC)</span>
+                    <strong className="text-ink font-mono block mt-0.5">{data.assets.rc_number || "-"}</strong>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-[13px]">
-                    <div>
-                      <span className="text-ink-3 block">Registration Number:</span>
-                      <strong className="text-ink font-mono block mt-0.5">{data.assets.rc_number || "-"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Engine Number:</span>
-                      <strong className="text-ink font-mono block mt-0.5">{data.assets.engine_number || "-"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Chassis Number:</span>
-                      <strong className="text-ink font-mono block mt-0.5">{data.assets.chassis_number || "-"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Asset Variant:</span>
-                      <strong className="text-ink block mt-0.5">{data.assets.asset_variant || "-"}</strong>
-                    </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Engine Number</span>
+                    <strong className="text-ink font-mono block mt-0.5">{data.assets.engine_number || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Chassis Number</span>
+                    <strong className="text-ink font-mono block mt-0.5">{data.assets.chassis_number || "-"}</strong>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -675,83 +924,282 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
         {activeTab === "legal" && (
           <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
             <div>
-              <h3 className="text-base font-semibold text-ink">Litigation case, warrants, & NBW Records</h3>
-              <p className="text-xs text-ink-2">Detailed CC case hearing status and ep court coordinates (gated by `can_view_legal_data` key).</p>
+              <h3 className="text-base font-semibold text-ink font-serif">Litigation Cases & Warrants Database</h3>
+              <p className="text-xs text-ink-2">Detailed registry of case statuses, cheque bounces, warrants, arbitration, execution petitions, and notices.</p>
             </div>
 
-            {!permissions.can_view_legal_data ? (
-              <div className="flex flex-col items-center justify-center py-14 bg-bg-warm/20 border border-border-custom rounded-xl space-y-3">
-                <Lock className="w-8 h-8 text-accent-custom" />
-                <h4 className="text-sm font-semibold text-ink">Litigation Records Restricted</h4>
-                <p className="text-xs text-ink-3 max-w-sm text-center">
-                  Your current user profile does not hold authorization key `can_view_legal_data`. Contact the administrator to check status.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6 animate-fade-in">
-                {/* Court and Advocate section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px]">
-                    <span className="text-ink-3 block text-[10px] uppercase font-semibold">Litigation Case No</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{data.legal.case_no || "147/2019"}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px]">
-                    <span className="text-ink-3 block text-[10px] uppercase font-semibold">Advocate In-charge</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.advocate || "Kunuku Raja Sekhar"}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px]">
-                    <span className="text-ink-3 block text-[10px] uppercase font-semibold">Court Location / hall</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.court_location || "VIJAYAWADA"} / {data.legal.court_name || "Chief Magistrate"}</strong>
-                  </div>
+            <div className="space-y-6 animate-fade-in text-[13px]">
+              {/* Panel 1: Case & Trial Context */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <Scale className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Case & Trial Context</span>
                 </div>
-
-                {/* Notice and bounce details */}
-                <div className="border border-border-custom p-4 rounded-xl space-y-4 bg-bg-warm/10">
-                  <h4 className="text-xs uppercase tracking-wider font-semibold text-ink-2">Bounce Actions Parameters</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[13px]">
-                    <div>
-                      <span className="text-ink-3 block">Sec 138 Notice Status:</span>
-                      <strong className="text-ink block mt-0.5">{data.legal.notice_sent_sec138 || "SENT"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Cheque Number:</span>
-                      <strong className="text-ink font-mono block mt-0.5">{data.legal.cheque_no || "-"}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Cheque Amount:</span>
-                      <strong className="text-ink font-mono block mt-0.5">{formatMoney(data.legal.cheque_amount)}</strong>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Case Hearing Stage:</span>
-                      <strong className="text-accent-custom block mt-0.5">{data.legal.group_stage || "-"}</strong>
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Legal Status</span>
+                    <strong className="text-bad block mt-0.5">{data.legal.legal_status || "-"}</strong>
                   </div>
-                </div>
-
-                {/* Additional case properties (44 metadata fields check) */}
-                <div className="border border-border-custom p-4 rounded-xl space-y-4">
-                  <h4 className="text-xs uppercase tracking-wider font-semibold text-ink-2">Complete Court Hearings Parameters</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[12.5px] text-ink-2">
-                    <div>
-                      <span className="text-ink-3 block">LDOH (Last Date):</span>
-                      <span className="text-ink font-mono font-semibold block mt-0.5">{data.legal.ldoh || "45259"}</span>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">NDOH (Next Date):</span>
-                      <span className="text-ink font-mono font-semibold block mt-0.5">{data.legal.ndoh || "-"}</span>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Court Hall:</span>
-                      <span className="text-ink block mt-0.5">{data.legal.court_hall || "-"}</span>
-                    </div>
-                    <div>
-                      <span className="text-ink-3 block">Legal Status:</span>
-                      <span className="text-bad font-semibold block mt-0.5">{data.legal.legal_status || "-"}</span>
-                    </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Type of Case</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.type_of_case || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Case No</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.legal.case_no || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Group Stage</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.group_stage || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Current Stage</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.current_stage || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">CNR Number CC</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.legal.cnr_number_cc || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">CNR Number PCR</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.legal.cnr_number_pcr || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Advocate</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.advocate || "-"}</strong>
                   </div>
                 </div>
               </div>
-            )}
+
+              {/* Panel 2: Cheque & Section 138 Dues */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-bg-warm/5">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <AlertCircle className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Cheque & Sec 138 Details</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Notice Sent Sec 138</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.notice_sent_sec138 || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 138 Current Status</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.sec138_current_status || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Cheque No</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.legal.cheque_no || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Cheque Date</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.cheque_date)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Cheque Amount</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.legal.cheque_amount)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel 3: Court Coordinates */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <MapPin className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Court Jurisdictions</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Court Name</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.court_name || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Court Location</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.court_location || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Filed Location</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.filed_location || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Court Hall</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.court_hall || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Court Bench</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.court_bench || "-"}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel 4: Hearings Calendar */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-bg-warm/5">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <Calendar className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Hearing Dates</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                  <div className="bg-surface border border-border-custom/50 p-3 rounded-lg flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-ink-3 uppercase font-semibold">Last Date of Hearing (LDOH)</span>
+                      <strong className="text-sm font-mono text-ink mt-0.5 block">{formatDate(data.legal.ldoh)}</strong>
+                    </div>
+                  </div>
+                  <div className="bg-surface border border-border-custom/50 p-3 rounded-lg flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-ink-3 uppercase font-semibold">Next Date of Hearing (NDOH)</span>
+                      <strong className="text-sm font-mono text-accent-custom mt-0.5 block">{formatDate(data.legal.ndoh)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel 5: Summons & Warrants */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <FileText className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Summons & Warrants</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Hand Summons</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.hand_summons || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Hand Warrant 1</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.hand_warrant_1 || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Proclamation Orders</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.proclamation_orders || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Hand S/NBW/BW/PC</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.hand_s_nbw_bw_pc || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Hand S/NBW/BW/PC Type</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.hand_s_nbw_bw_pc_type || "-"}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel 6: Arbitration details */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-bg-warm/5">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <Scale className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Arbitration Proceedings</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">ARB Status</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.arb || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Arbitration Group Stage</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.arbitration_group_stage || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 17 Orders</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.sec17_orders || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 17 Orders Date</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.sec17_orders_date)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 17 Date</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.sec17_date)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Award Date</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.award_date)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Claim Amount</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.legal.claim_amount)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel 7: Execution Petition (EP) Details */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-surface">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <FileText className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Execution Petition (EP)</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP Stage</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.ep_stage || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP Case No</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.legal.ep_case_no || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP Advocate</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.ep_advocate || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP LDOH</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.ep_ldoh)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP NDOH</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.ep_ndoh)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP PDOH</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.ep_pdoh)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel 8: Other Legal Statuses */}
+              <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-bg-warm/5">
+                <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
+                  <Shield className="w-4 h-4 text-accent-custom" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Other Registries</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Termination Status/SA</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.termination_status_sa || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN/PRN Status</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.lrn_prn_status || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN/PRN Issue Date</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.lrn_prn_issue_date)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN Status</span>
+                    <strong className="text-ink block mt-0.5">{data.legal.lrn_status || "-"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN Date</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.lrn_date)}</strong>
+                  </div>
+                  <div className="col-span-2 md:col-span-3">
+                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN/PRN Link</span>
+                    {data.legal.lrn_prn_link && data.legal.lrn_prn_link !== "-" ? (
+                      <a
+                        href={data.legal.lrn_prn_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent-custom hover:underline block mt-0.5 break-all font-mono text-xs"
+                      >
+                        {data.legal.lrn_prn_link}
+                      </a>
+                    ) : (
+                      <span className="text-ink-3 block mt-0.5 font-mono">-</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
