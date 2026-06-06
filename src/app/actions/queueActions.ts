@@ -61,10 +61,10 @@ export async function getCallingQueue(): Promise<QueueSummary> {
     `)
     .eq("is_archived", false);
 
-  // Role Gate: Employees can only fetch their own assigned cases
-  if (role === "Employee") {
-    query = query.eq("allocated_to", user.id);
-  }
+  // Role Gate: Employees can only fetch their own assigned cases removed to allow open access
+  // if (role === "Employee") {
+  //   query = query.eq("allocated_to", user.id);
+  // }
 
   const { data: contractsList, error: contractsError } = await query;
 

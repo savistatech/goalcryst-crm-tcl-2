@@ -225,21 +225,20 @@ export default function ContractsMasterPage() {
                 <th className="py-3 px-4">Customer Name</th>
                 <th className="py-3 px-4">Branch</th>
                 <th className="py-3 px-4 text-center">DPD</th>
-                <th className="py-3 px-4">Employee</th>
                 <th className="py-3 px-4 text-center">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-custom/50 text-[13px]">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-ink-3">
+                  <td colSpan={6} className="py-12 text-center text-ink-3">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
                     Loading contracts...
                   </td>
                 </tr>
               ) : contracts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-ink-3">
+                  <td colSpan={6} className="py-12 text-center text-ink-3">
                     No contracts found.
                   </td>
                 </tr>
@@ -270,18 +269,6 @@ export default function ContractsMasterPage() {
                     </td>
                     <td className="py-3 px-4 text-center font-mono font-medium">
                       {contract.bom_dpd}
-                    </td>
-                    <td className="py-3 px-4">
-                      {contract.allocated_to ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-full bg-accent-soft text-accent-ink text-[8px] font-bold flex items-center justify-center select-none">
-                            {contract.employee_name?.split(" ").map(n => n[0]).join("").substring(0, 2)}
-                          </div>
-                          <span className="text-ink-2">{contract.employee_name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-ink-3 italic text-[11px]">Unassigned</span>
-                      )}
                     </td>
                     <td className="py-3 px-4 text-center">
                       {contract.is_archived ? (

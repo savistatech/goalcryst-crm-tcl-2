@@ -10,8 +10,6 @@ export interface AdminContractRow {
   branch: string;
   bom_dpd: number;
   is_archived: boolean;
-  allocated_to: string | null;
-  employee_name: string | null;
   imported_at: string;
 }
 
@@ -53,9 +51,7 @@ export async function getAllContracts(
       branch,
       bom_dpd,
       is_archived,
-      allocated_to,
-      imported_at,
-      employee_profile:profiles(full_name)
+      imported_at
     `,
       { count: "exact" }
     );
@@ -81,8 +77,6 @@ export async function getAllContracts(
   }
 
   const contracts: AdminContractRow[] = data.map((row: any) => {
-    const employeeRaw = row.employee_profile;
-    const employee = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
     return {
       contract_no: row.contract_no,
       customer_name: row.customer_name,
@@ -90,8 +84,6 @@ export async function getAllContracts(
       branch: row.branch || "-",
       bom_dpd: Number(row.bom_dpd || 0),
       is_archived: row.is_archived || false,
-      allocated_to: row.allocated_to,
-      employee_name: employee.full_name || "Unassigned",
       imported_at: row.imported_at,
     };
   });

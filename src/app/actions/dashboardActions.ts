@@ -304,11 +304,11 @@ export async function getEmployeeDashboardMetrics(): Promise<EmployeeDashboardMe
     .eq("id", user.id)
     .single();
 
-  // 2. My allocated contracts count (column is `allocated_to`, not `employee_id`)
+  // 2. Total active contracts count (since assignments are removed)
   const { count: allocCount } = await supabase
     .from("contracts")
     .select("*", { count: "exact", head: true })
-    .eq("allocated_to", user.id);
+    .eq("is_archived", false);
 
   // 3. My dispositions — today and total
   const startOfToday = new Date();

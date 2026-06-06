@@ -295,8 +295,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
             <span>Product: <strong className="text-ink font-semibold">{data.contract.product}</strong></span>
             <span>·</span>
             <span>BOM DPD: <strong className="text-ink font-mono font-semibold">{data.contract.bom_dpd} days</strong></span>
-            <span>·</span>
-            <span>Allocated To: <strong className="text-ink font-semibold">{data.contract.allocated_to_profile?.full_name || "Unassigned"}</strong></span>
           </div>
         </div>
 
