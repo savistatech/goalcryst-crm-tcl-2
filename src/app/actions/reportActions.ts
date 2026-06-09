@@ -138,10 +138,6 @@ export async function getScopedReportData(
       sub_disposition:sub_dispositions!inner(name),
       dynamic_data,
       remarks,
-      ptp_date,
-      ptp_amount,
-      paid_amount,
-      payment_date,
       created_at,
       contracts!inner(
         customer_name,
@@ -225,10 +221,16 @@ export async function getScopedReportData(
     const employee = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
 
     let amount = "-";
-    const ptpAmt = row.ptp_amount || row.dynamic_data?.ptp_amount;
-    const paidAmt = row.paid_amount || row.dynamic_data?.paid_amount;
+    const ptpAmt = row.dynamic_data?.ptp_amount;
+    const paidAmt = row.dynamic_data?.paid_amount;
     if (ptpAmt) amount = ptpAmt.toString();
     else if (paidAmt) amount = paidAmt.toString();
+
+    let dateValue = "-";
+    const ptpDate = row.dynamic_data?.ptp_date;
+    const paymentDate = row.dynamic_data?.payment_date;
+    if (ptpDate) dateValue = ptpDate;
+    else if (paymentDate) dateValue = paymentDate;
 
     return {
       "Contract No": row.contract_no,
@@ -238,7 +240,7 @@ export async function getScopedReportData(
       "Date Logged": new Date(row.created_at).toLocaleString("en-IN"),
       "Main Disposition": row.main_disposition?.name || "-",
       "Sub Disposition": row.sub_disposition?.name || "-",
-      "PTP Date": row.ptp_date || "-",
+      "PTP/Payment Date": dateValue,
       "PTP/Paid Amount": amount,
       "Principal POS": financials.pos != null ? Number(financials.pos).toLocaleString("en-IN") : "-",
       "Total Outstanding": financials.total_outstanding != null ? Number(financials.total_outstanding).toLocaleString("en-IN") : "-",
