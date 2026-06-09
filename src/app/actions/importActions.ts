@@ -177,7 +177,23 @@ const parseDate = (val?: any) => {
     return parsed.toISOString().split("T")[0];
   }
 
-  return str; // Fallback to raw string if we can't parse it
+  return null; // Force null instead of pushing bad strings to DB
+};
+
+const parseNum = (val?: any) => {
+  if (val === undefined || val === null || val === "" || val === "-" || String(val).toUpperCase() === "N/A") return 0;
+  const cleaned = String(val).replace(/[^0-9.-]/g, "");
+  if (!cleaned) return 0;
+  const num = Number(cleaned);
+  return isNaN(num) ? 0 : num;
+};
+
+const parseNumOrNull = (val?: any) => {
+  if (val === undefined || val === null || val === "" || val === "-" || String(val).toUpperCase() === "N/A") return null;
+  const cleaned = String(val).replace(/[^0-9.-]/g, "");
+  if (!cleaned) return null;
+  const num = Number(cleaned);
+  return isNaN(num) ? null : num;
 };
 
 /**
@@ -275,41 +291,9 @@ export async function commitImportBatch(
 
     const validContractNos = validRows.map(r => r.contract_no);
 
-      const existingSet = new Set<string>();
-
       if (validContractNos.length > 0) {
-        // Fetch existing contracts in smaller chunks to prevent "URI too long" errors from Supabase/PostgREST
-        const IN_CHUNK_SIZE = 100;
-        for (let j = 0; j < validContractNos.length; j += IN_CHUNK_SIZE) {
-          const idChunk = validContractNos.slice(j, j + IN_CHUNK_SIZE);
-          const { data: chunkExisting, error: checkError } = await supabase
-            .from("contracts")
-            .select("contract_no")
-            .in("contract_no", idChunk);
 
-          if (checkError) {
-            throw new Error("Database integrity check failed: " + checkError.message);
-          }
-          if (chunkExisting) {
-            chunkExisting.forEach(c => existingSet.add(c.contract_no));
-          }
-        }
-
-      const finalRows: ImportRow[] = [];
-
-      validRows.forEach(row => {
-        if (existingSet.has(row.contract_no)) {
-          skippedRows.push({
-            batch_id: batch.id,
-            row_number: rowNumMap.get(row.contract_no),
-            raw_data: row as any,
-            error_reason: `Duplicate Contract: Contract [${row.contract_no}] already exists in active allocations database. Skipped.`
-          });
-          summary.skippedDuplicates++;
-        } else {
-          finalRows.push(row);
-        }
-      });
+      const finalRows: ImportRow[] = validRows;
 
       if (finalRows.length > 0) {
         // Prepare arrays for insertion
@@ -323,8 +307,8 @@ export async function commitImportBatch(
           region: row.region || "Unknown",
           secured_category: row.secured_product_flag || "LOS",
           allocation_category: row.allocation_category || "LOS",
-          bom_dpd: Number(row.bom_dpd || 0),
-          mob: Number(row.mob || 0),
+          bom_dpd: parseNum(row.bom_dpd),
+          mob: parseNum(row.mob),
           bucket: row.bucket || null,
           bom_bucket: row.bom_bucket || null,
           secured_product_flag: row.secured_product_flag || "LOS",
@@ -380,28 +364,28 @@ export async function commitImportBatch(
 
         const financials = finalRows.map(row => ({
           contract_no: row.contract_no,
-          finance_amount: row.finance_amount || 0,
-          total_pos_outstanding: row.total_pos_outstanding || row.pos || 0,
-          pos: row.pos || 0,
-          total_amount_collectable: row.total_amount_collectable || 0,
-          sale_price: row.sale_price || 0,
-          emi_amount: row.emi_amount || 0,
-          od_amount: row.od_amount || 0,
-          principal_overdue: row.principal_overdue || 0,
-          interest_overdue: row.interest_overdue || 0,
-          bounce_charges: row.bounce_charges || 0,
-          current_odc: row.current_odc || 0,
-          total_outstanding: row.total_outstanding || row.od_amount || 0,
-          ots_amount: row.ots_amount || 0,
-          pos_waiver_amount: row.pos_waiver_amount || 0,
-          pos_waiver_percent: row.pos_waiver_percent || 0
+          finance_amount: parseNum(row.finance_amount),
+          total_pos_outstanding: parseNum(row.total_pos_outstanding || row.pos),
+          pos: parseNum(row.pos),
+          total_amount_collectable: parseNum(row.total_amount_collectable),
+          sale_price: parseNum(row.sale_price),
+          emi_amount: parseNum(row.emi_amount),
+          od_amount: parseNum(row.od_amount),
+          principal_overdue: parseNum(row.principal_overdue),
+          interest_overdue: parseNum(row.interest_overdue),
+          bounce_charges: parseNum(row.bounce_charges),
+          current_odc: parseNum(row.current_odc),
+          total_outstanding: parseNum(row.total_outstanding || row.od_amount),
+          ots_amount: parseNum(row.ots_amount),
+          pos_waiver_amount: parseNum(row.pos_waiver_amount),
+          pos_waiver_percent: parseNum(row.pos_waiver_percent)
         }));
 
         const legal = finalRows.map(row => ({
           contract_no: row.contract_no,
           notice_sent_sec138: row.notice_sent_sec138 || null,
           type_of_case: row.type_of_case || null,
-          cheque_amount: row.cheque_amount || null,
+          cheque_amount: parseNumOrNull(row.cheque_amount),
           cheque_date: parseDate(row.cheque_date),
           cheque_no: row.cheque_no || null,
           sec138_current_status: row.sec138_current_status || null,
@@ -436,7 +420,7 @@ export async function commitImportBatch(
           court_hall: row.court_hall || null,
           hand_s_nbw_bw_pc: row.hand_s_nbw_bw_pc || null,
           hand_s_nbw_bw_pc_type: row.hand_s_nbw_bw_pc_type || null,
-          claim_amount: row.claim_amount || null,
+          claim_amount: parseNumOrNull(row.claim_amount),
           arbitration_group_stage: row.arbitration_group_stage || null,
           sec17_orders: row.sec17_orders || null,
           sec17_date: parseDate(row.sec17_date),
@@ -446,20 +430,20 @@ export async function commitImportBatch(
         }));
 
         try {
-          const { error: contractErr } = await supabase.from("contracts").insert(contracts);
-          if (contractErr) throw new Error("Contracts batch insert failed: " + contractErr.message);
+          const { error: contractErr } = await supabase.from("contracts").upsert(contracts, { onConflict: 'contract_no' });
+          if (contractErr) throw new Error("Contracts batch upsert failed: " + contractErr.message);
 
           const [contactRes, assetRes, finRes, legalRes] = await Promise.all([
-            supabase.from("contract_contacts").insert(contacts),
-            supabase.from("contract_assets").insert(assets),
-            supabase.from("contract_financials").insert(financials),
-            supabase.from("contract_legal").insert(legal)
+            supabase.from("contract_contacts").upsert(contacts, { onConflict: 'contract_no' }),
+            supabase.from("contract_assets").upsert(assets, { onConflict: 'contract_no' }),
+            supabase.from("contract_financials").upsert(financials, { onConflict: 'contract_no' }),
+            supabase.from("contract_legal").upsert(legal, { onConflict: 'contract_no' })
           ]);
 
-          if (contactRes.error) console.error("Contacts batch warning:", contactRes.error.message);
-          if (assetRes.error) console.error("Assets batch warning:", assetRes.error.message);
-          if (finRes.error) console.error("Financials batch warning:", finRes.error.message);
-          if (legalRes.error) console.error("Legal batch warning:", legalRes.error.message);
+          if (contactRes.error) throw new Error("Contacts batch failed: " + contactRes.error.message);
+          if (assetRes.error) throw new Error("Assets batch failed: " + assetRes.error.message);
+          if (finRes.error) throw new Error("Financials batch failed: " + finRes.error.message);
+          if (legalRes.error) throw new Error("Legal batch failed: " + legalRes.error.message);
 
           summary.imported += finalRows.length;
         } catch (err: any) {
