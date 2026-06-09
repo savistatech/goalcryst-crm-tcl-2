@@ -70,7 +70,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     "can_view_legal_data",
     "can_add_disposition",
     "can_raise_waiver",
-    "can_export_reports"
+    "can_export_reports",
+    "can_view_all_dispositions"
   ]
 };
 
