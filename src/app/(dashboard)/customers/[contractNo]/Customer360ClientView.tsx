@@ -104,16 +104,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
     }).format(Number(val));
   };
 
-  const maskPhone = (phone: string | undefined | null) => {
-    if (!phone || phone === "-") return "-";
-    return phone;
-  };
-
-  const maskAddress = (address: string | undefined | null) => {
-    if (!address || address === "-") return "-";
-    return address;
-  };
-
   const formatDate = (val: string | number | undefined | null) => {
     if (val === undefined || val === null) return "-";
     const str = String(val).trim();
@@ -408,7 +398,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <div>
                       <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold block">Primary Mobile 1</span>
                       <strong className="text-[15px] font-mono text-ink mt-1 block">
-                        {maskPhone(data.contacts.mobile_1 || data.contacts.primary_mobile)}
+                        {data.contacts.mobile_1 || data.contacts.primary_mobile}
                       </strong>
                     </div>
                     <span className="p-2 bg-good-bg rounded-lg text-good">
@@ -420,7 +410,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <div>
                       <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold block">Alternate Mobile</span>
                       <strong className="text-[15px] font-mono text-ink mt-1 block">
-                        {maskPhone(data.contacts.mobile_no || data.contacts.mobile_no_2)}
+                        {data.contacts.mobile_no || data.contacts.mobile_no_2}
                       </strong>
                     </div>
                     <span className="p-2 bg-bg-warm rounded-lg text-ink-2">
@@ -557,49 +547,49 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 1 - Mobile 1</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.mobile_1)}</strong>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.mobile_1}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 2 - Mobile No</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.mobile_no)}</strong>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.mobile_no}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 3 - Primary Mobile</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.primary_mobile)}</strong>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.primary_mobile}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 3 - Primary Mobile 1</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.primary_mobile_1)}</strong>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.primary_mobile_1}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 4 - Primary Mobile 2</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.primary_mobile_2)}</strong>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.primary_mobile_2}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 5 - Mobile No</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.mobile_no_2)}</strong>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.mobile_no_2}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 6 - Latest Contact No</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{maskPhone(data.contacts.latest_contact_no)}</strong>
+                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.latest_contact_no}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
@@ -614,7 +604,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <div>
                     <span className="text-[10.5px] text-ink-3 uppercase tracking-wider font-semibold block">Reference 1: {data.contacts.ref_name_1 || "-"}</span>
                     <strong className="text-sm font-mono text-ink mt-1 block">
-                      {maskPhone(data.contacts.ref_mobile_1)}
+                      {data.contacts.ref_mobile_1}
                     </strong>
                     <span className="text-[11px] text-ink-3 block mt-1">Relation: {data.contacts.ref_relation_1 || "-"}</span>
                   </div>
@@ -625,7 +615,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <div>
                     <span className="text-[10.5px] text-ink-3 uppercase tracking-wider font-semibold block">Reference 2: {data.contacts.ref_name_2 || "-"}</span>
                     <strong className="text-sm font-mono text-ink mt-1 block">
-                      {maskPhone(data.contacts.ref_mobile_2)}
+                      {data.contacts.ref_mobile_2}
                     </strong>
                     <span className="text-[11px] text-ink-3 block mt-1">Relation: {data.contacts.ref_relation_2 || "-"}</span>
                   </div>
