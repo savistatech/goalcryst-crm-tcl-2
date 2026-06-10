@@ -60,20 +60,15 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   ].filter(item => item.value > 0);
 
   // Map Leaderboard (Format numbers and currency)
-  const defaultLeaderboard = [
-    { rank: "01", name: "Vikram Naidu", team: "South Team Operations", calls: 48, ptp: "₹45,000", achieved: "112%" }
-  ];
   const leaderboardRaw = stats.leaderboard || [];
-  const leaderboard = leaderboardRaw.length > 0 
-    ? leaderboardRaw.map((a: any, idx: number) => ({
-        rank: (idx + 1).toString().padStart(2, "0"),
-        name: a.name,
-        team: a.team,
-        calls: a.calls,
-        ptp: new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(a.ptpValue),
-        achieved: a.ptpValue > 20000 ? "105%" : "82%"
-      }))
-    : defaultLeaderboard;
+  const leaderboard = leaderboardRaw.map((a: any, idx: number) => ({
+    rank: (idx + 1).toString().padStart(2, "0"),
+    name: a.name,
+    team: a.team,
+    calls: a.calls,
+    ptp: new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(a.ptpValue),
+    achieved: a.ptpValue > 20000 ? "105%" : "82%"
+  }));
 
   // 7. Recent calls timeline feed (Fetch latest 5 attempts efficiently via limit)
   const { data: recCallsList } = await supabase

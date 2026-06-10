@@ -187,7 +187,7 @@ export default function ImportsPage() {
     reader.onload = (evt) => {
       try {
         const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
+        const wb = XLSX.read(bstr, { type: "binary", cellText: true, raw: false });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
 
@@ -209,7 +209,7 @@ export default function ImportsPage() {
         }
 
         const headers = data[headerRowIndex].map(h => String(h || "").trim()).filter(Boolean);
-        const rows = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex }) as any[];
+        const rows = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex, raw: false }) as any[];
 
         setExcelHeaders(headers);
         setExcelRows(rows);
@@ -299,13 +299,13 @@ export default function ImportsPage() {
 
       let currentBatchId = "";
       let aggregatedSummary: ImportSummary | null = null;
-      const CHUNK_SIZE = 500;
+      const CHUNK_SIZE = 1000;
       const totalChunks = Math.ceil(formattedRows.length / CHUNK_SIZE);
       let chunksCompleted = 0;
 
       for (let i = 0; i < formattedRows.length; i += CHUNK_SIZE) {
         const chunk = formattedRows.slice(i, i + CHUNK_SIZE);
-        const result = await commitImportBatch(filename, chunk, currentBatchId);
+        const result = await commitImportBatch(filename, chunk, currentBatchId || undefined, i === 0 ? formattedRows.length : undefined);
         currentBatchId = result.batchId;
 
         chunksCompleted++;
@@ -315,6 +315,8 @@ export default function ImportsPage() {
           aggregatedSummary = { ...result, totalRows: formattedRows.length };
         } else {
           aggregatedSummary.imported += result.imported;
+          aggregatedSummary.newContracts = (aggregatedSummary.newContracts || 0) + result.newContracts;
+          aggregatedSummary.updatedContracts = (aggregatedSummary.updatedContracts || 0) + result.updatedContracts;
           aggregatedSummary.skippedDuplicates += result.skippedDuplicates;
           aggregatedSummary.failed += result.failed;
           aggregatedSummary.errors.push(...result.errors);
@@ -384,7 +386,7 @@ export default function ImportsPage() {
         </div>
 
         {/* ===== STEP INDICATOR BAR ===== */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
             { num: 1, label: "Upload Sheets" },
             { num: 2, label: "Validate Data" },
@@ -453,9 +455,9 @@ export default function ImportsPage() {
             <div className="flex items-start gap-3 bg-bg-warm/40 border border-border-custom rounded-xl p-4 text-[12.5px] text-ink-2">
               <ShieldCheck className="w-4 h-4 text-accent-custom flex-shrink-0 mt-0.5" />
               <div>
-                <strong className="text-ink font-semibold">Integrity Protocol Enabled:</strong>
+                <strong className="text-ink font-semibold">Smart Upsert Enabled:</strong>
                 <span className="block mt-0.5">
-                  The import process operates on transactional isolation rules. Duplicates are auto-flagged and isolated into downloadable logs without touching existing active dispositions history profiles.
+                  Re-uploading an existing Excel sheet will automatically update contract data (financials, contacts, legal, assets) while preserving all employee call logs, dispositions, and waiver history.
                 </span>
               </div>
             </div>
@@ -487,14 +489,21 @@ export default function ImportsPage() {
                 </div>
               </div>
 
-              {/* Warning regarding duplicate contract actions */}
+              {/* Info notice about upsert behavior */}
+              <div className="flex items-start gap-3 border border-border-custom bg-surface rounded-xl p-4 text-[12.5px] leading-relaxed text-ink-2">
+                <HelpCircle className="w-4 h-4 text-accent-custom flex-shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-ink">Existing contracts will be updated,</strong> not duplicated. New contracts will be inserted fresh. Employee call histories and waivers are never touched by this operation.
+                </span>
+              </div>
+
               {innerDuplicates.length > 0 && (
                 <div className="flex items-start gap-3 border border-border-custom bg-warn-bg/10 rounded-xl p-4 text-[12.5px] leading-relaxed text-ink-2">
                   <AlertTriangle className="w-4 h-4 text-warn flex-shrink-0 mt-0.5" />
                   <div>
                     <strong className="text-ink font-semibold">Row Duplication Warning:</strong>
                     <span className="block mt-0.5">
-                      We detected <strong className="text-ink">{innerDuplicates.length} contract duplicate(s)</strong> within this file. The engine will automatically skip duplicates to guarantee database isolation integrity.
+                     We detected <strong className="text-ink">{innerDuplicates.length} contract duplicate(s)</strong> within this file. Only the first occurrence of each contract will be processed — subsequent duplicates within the same sheet will be skipped.
                     </span>
                   </div>
                 </div>
@@ -547,21 +556,25 @@ export default function ImportsPage() {
               </div>
 
               {/* Save statistics indicators */}
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-5 gap-3">
                 <div className="border border-border-custom rounded-xl p-3.5 text-center bg-bg-warm/15">
-                  <span className="text-[9.5px] uppercase font-semibold text-ink-3 block">Total Sheet Rows</span>
+                  <span className="text-[9.5px] uppercase font-semibold text-ink-3 block">Total Rows</span>
                   <strong className="text-xl font-bold font-mono text-ink block mt-1">{importSummary.totalRows}</strong>
                 </div>
                 <div className="border border-border-custom rounded-xl p-3.5 text-center bg-good-bg/15">
-                  <span className="text-[9.5px] uppercase font-semibold text-good block">Successfully Imported</span>
-                  <strong className="text-xl font-bold font-mono text-good block mt-1">{importSummary.imported}</strong>
+                  <span className="text-[9.5px] uppercase font-semibold text-good block">New Contracts</span>
+                  <strong className="text-xl font-bold font-mono text-good block mt-1">{importSummary.newContracts ?? 0}</strong>
+                </div>
+                <div className="border border-border-custom rounded-xl p-3.5 text-center bg-blue-50">
+                  <span className="text-[9.5px] uppercase font-semibold text-blue-600 block">Updated</span>
+                  <strong className="text-xl font-bold font-mono text-blue-600 block mt-1">{importSummary.updatedContracts ?? 0}</strong>
                 </div>
                 <div className="border border-border-custom rounded-xl p-3.5 text-center bg-warn-bg/15">
-                  <span className="text-[9.5px] uppercase font-semibold text-warn block">Skipped Duplicates</span>
+                  <span className="text-[9.5px] uppercase font-semibold text-warn block">Sheet Duplicates</span>
                   <strong className="text-xl font-bold font-mono text-warn block mt-1">{importSummary.skippedDuplicates}</strong>
                 </div>
                 <div className="border border-border-custom rounded-xl p-3.5 text-center bg-bad-bg/15">
-                  <span className="text-[9.5px] uppercase font-semibold text-bad block">Failed / Schema Errors</span>
+                  <span className="text-[9.5px] uppercase font-semibold text-bad block">Failed</span>
                   <strong className="text-xl font-bold font-mono text-bad block mt-1">{importSummary.failed}</strong>
                 </div>
               </div>
