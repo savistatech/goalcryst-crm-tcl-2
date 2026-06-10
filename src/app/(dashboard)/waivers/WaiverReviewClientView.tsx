@@ -120,7 +120,7 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
                       </span>
                       <h4 className="text-base font-semibold text-ink mt-1">{row.customer_name}</h4>
                     </div>
-                    <span className="text-[10px] text-ink-3 font-mono">{new Date(row.created_at).toLocaleDateString()}</span>
+                    <span className="text-[10px] text-ink-3 font-mono">{new Date(row.created_at).toLocaleDateString("en-GB")}</span>
                   </div>
 
                   {/* Financial Metrics Indicators */}

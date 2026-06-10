@@ -34,7 +34,7 @@ const formatRelTime = (iso: string) => {
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
-  return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+  return new Date(iso).toLocaleDateString("en-GB");
 };
 
 const DISPO_COLORS: Record<string, string> = {

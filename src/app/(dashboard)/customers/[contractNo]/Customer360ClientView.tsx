@@ -436,12 +436,12 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                         <span className="absolute -left-[17.5px] top-1.5 w-2 h-2 rounded-full border border-surface bg-accent-custom shadow-sm" />
                         <div className="flex justify-between items-baseline">
                           <span className="font-semibold text-ink">{dispo.sub_disposition?.name || "Unknown"}</span>
-                          <span className="text-[10px] font-mono text-ink-3">{new Date(dispo.created_at).toLocaleDateString()}</span>
+                          <span className="text-[10px] font-mono text-ink-3">{new Date(dispo.created_at).toLocaleDateString("en-GB")}</span>
                         </div>
                         <p className="text-ink-2 mt-0.5 line-clamp-2 italic">&quot;{dispo.remarks}&quot;</p>
                         {dispo.dynamic_data?.ptp_amount && (
                           <div className="text-[11.5px] font-semibold text-good mt-1 font-mono">
-                            Commitment: {formatMoney(dispo.dynamic_data.ptp_amount)} on {new Date(dispo.dynamic_data.ptp_date).toLocaleDateString()}
+                            Commitment: {formatMoney(dispo.dynamic_data.ptp_amount)} on {new Date(dispo.dynamic_data.ptp_date).toLocaleDateString("en-GB")}
                           </div>
                         )}
                         <span className="text-[10.5px] text-ink-3 block mt-1">Logged by: {dispo.employee_profile?.full_name}</span>
@@ -1229,7 +1229,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                           <span className="text-ink font-semibold">{dispo.sub_disposition?.name || "Unknown"}</span>
                         </div>
                         <span className="text-xs text-ink-3 font-mono">
-                          {new Date(dispo.created_at).toLocaleString()}
+                          {new Date(dispo.created_at).toLocaleString("en-GB")}
                         </span>
                       </div>
 
@@ -1237,13 +1237,13 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
 
                       {dispo.dynamic_data?.ptp_amount && (
                         <div className="bg-good-bg/30 border border-good/10 p-2 rounded-lg text-good font-semibold text-[12.5px] font-mono inline-block">
-                          Promise amount: {formatMoney(dispo.dynamic_data.ptp_amount)} | Commitment Date: {new Date(dispo.dynamic_data.ptp_date).toLocaleDateString()}
+                          Promise amount: {formatMoney(dispo.dynamic_data.ptp_amount)} | Commitment Date: {new Date(dispo.dynamic_data.ptp_date).toLocaleDateString("en-GB")}
                         </div>
                       )}
 
                       {dispo.dynamic_data?.paid_amount && (
                         <div className="bg-good-bg/30 border border-good/10 p-2 rounded-lg text-good font-semibold text-[12.5px] font-mono inline-block">
-                          Collected Paid: {formatMoney(dispo.dynamic_data.paid_amount)} | Date: {new Date(dispo.dynamic_data.payment_date).toLocaleDateString()} | UTR: {dispo.dynamic_data.proof_reference || "-"}
+                          Collected Paid: {formatMoney(dispo.dynamic_data.paid_amount)} | Date: {new Date(dispo.dynamic_data.payment_date).toLocaleDateString("en-GB")} | UTR: {dispo.dynamic_data.proof_reference || "-"}
                         </div>
                       )}
 

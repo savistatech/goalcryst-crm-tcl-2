@@ -229,15 +229,22 @@ export async function getScopedReportData(
     let dateValue = "-";
     const ptpDate = row.dynamic_data?.ptp_date;
     const paymentDate = row.dynamic_data?.payment_date;
-    if (ptpDate) dateValue = ptpDate;
-    else if (paymentDate) dateValue = paymentDate;
+    const rawDate = ptpDate || paymentDate;
+    if (rawDate) {
+      const d = new Date(rawDate);
+      if (!isNaN(d.getTime())) {
+        dateValue = d.toLocaleDateString("en-GB");
+      } else {
+        dateValue = String(rawDate);
+      }
+    }
 
     return {
       "Contract No": row.contract_no,
       "Customer Name": contract.customer_name || "-",
       "Employee Name": employee.full_name || "System",
       "Employee Role": employee.role || "-",
-      "Date Logged": new Date(row.created_at).toLocaleString("en-IN"),
+      "Date Logged": new Date(row.created_at).toLocaleString("en-GB"),
       "Main Disposition": row.main_disposition?.name || "-",
       "Sub Disposition": row.sub_disposition?.name || "-",
       "PTP/Payment Date": dateValue,

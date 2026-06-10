@@ -134,7 +134,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
                 {logs.map((row) => (
                   <tr key={row.id} className="hover:bg-bg-warm/10 transition-colors">
                     <td className="py-3.5 px-5 font-mono text-ink-2 whitespace-nowrap">
-                      {new Date(row.created_at).toLocaleString()}
+                      {new Date(row.created_at).toLocaleString("en-GB")}
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-1.5">

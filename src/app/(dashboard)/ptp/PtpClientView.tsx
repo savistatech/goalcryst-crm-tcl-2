@@ -81,7 +81,7 @@ export default function PtpClientView({ ptpSchedules }: PtpClientViewProps) {
                             {item.contract_no}
                           </span>
                           <span className="text-[10px] font-semibold text-ink-2 flex items-center gap-1">
-                            {new Date(item.ptp_date).toLocaleDateString()}
+                            {new Date(item.ptp_date).toLocaleDateString("en-GB")}
                           </span>
                         </div>
                         <h4 className="font-semibold text-ink text-sm truncate">{item.customer_name}</h4>
@@ -151,7 +151,7 @@ export default function PtpClientView({ ptpSchedules }: PtpClientViewProps) {
                           {row.board_status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-semibold text-ink-2 font-mono">{new Date(row.ptp_date).toLocaleDateString()}</td>
+                      <td className="py-3.5 px-4 font-semibold text-ink-2 font-mono">{new Date(row.ptp_date).toLocaleDateString("en-GB")}</td>
                       <td className="py-3.5 px-4 font-semibold text-ink font-mono">{formatMoney(row.ptp_amount)}</td>
                       <td className="py-3.5 px-4 font-mono text-ink-2">{formatMoney(row.pos)}</td>
                       <td className="py-3.5 px-4 text-ink-2">{row.employee_name}</td>

@@ -91,7 +91,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     if (minutes < 60) return `${minutes} mins ago`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours} hours ago`;
-    return new Date(isoStr).toLocaleDateString();
+    return new Date(isoStr).toLocaleDateString("en-GB");
   };
 
   const recentCalls = (recCallsList || []).map((row: any) => {
@@ -112,7 +112,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
       customer,
       dispo: subName,
       amt,
-      date: new Date(row.created_at).toLocaleDateString(),
+      date: new Date(row.created_at).toLocaleDateString("en-GB"),
       time: formatRelativeTime(row.created_at),
       type: mainName === "Contactable" ? "good" : "neutral"
     };
