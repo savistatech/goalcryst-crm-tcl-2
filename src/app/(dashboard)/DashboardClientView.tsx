@@ -206,7 +206,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
             {metrics.dispositionOutcomes.length === 0 ? (
               <div className="text-sm text-ink-3 text-center">No dispositions logged yet.</div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={metrics.dispositionOutcomes}
@@ -247,7 +247,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
           </div>
 
           <div className="h-44 w-full my-4 select-none">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={metrics.ptpAnalysis} margin={{ top: 5, right: 0, left: -25, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EAE3D5" vertical={false} />
                 <XAxis dataKey="week" stroke="#9A9285" fontSize={11} tickLine={false} axisLine={false} />

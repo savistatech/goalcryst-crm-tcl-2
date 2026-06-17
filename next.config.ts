@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '500mb',
+      allowedOrigins: [
+        'crm.goalcryst.co.in',
+        'crm.goalcryst.co.in.',
+        'api.goalcryst.co.in',
+        'api.goalcryst.co.in.'
+      ]
     },
   },
   async redirects() {

@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GoalCryst CRM: TCL Edition
 
-## Getting Started
+GoalCryst CRM (TCL) is a Next.js 15 standalone application integrated with a self-hosted Supabase Docker container database. It features client-side batched imports, a Customer 360 view, and real-time dashboard analytics.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 1. Local Development Setup
+
+### A. Environment Configuration
+Create a `.env` or `.env.local` file in the project root:
+```env
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_local_anon_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### B. Install & Run
+```bash
+# Install dependencies
+npm install
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Start local server
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the development app.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 2. Production Deployment (Host: 49.249.53.189)
 
-To learn more about Next.js, take a look at the following resources:
+The production architecture separates public browser requests from low-latency internal container communications (avoiding NAT loopback issues).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### A. Production Environment Variables
+*   **Build Time (`.env.production`)**: Baked into client assets.
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=https://api.goalcryst.co.in
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
+    ```
+*   **Run Time (`.env.docker`)**: Injected into the container environment.
+    ```env
+    SUPABASE_INTERNAL_URL=http://supabase-kong:8000
+    SUPABASE_SERVICE_ROLE_KEY=your_secret_service_role_key
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### B. Build and Deploy Container
+Execute the following commands on the server:
+```bash
+# 1. Build Docker image with client variables
+docker build \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=https://api.goalcryst.co.in \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key \
+  -t goalcryst-crm-tcl:latest .
 
-## Deploy on Vercel
+# 2. Run the container on the Supabase network
+docker run -d \
+  --name goalcryst-crm-tcl \
+  --restart unless-stopped \
+  --network supabase_default \
+  -p 3000:3000 \
+  --env-file .env.docker \
+  goalcryst-crm-tcl:latest
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 3. Production Domains & Nginx Configuration
+
+*   **Application Frontend URL**: `https://crm.goalcryst.co.in`
+*   **Supabase Public API URL**: `https://api.goalcryst.co.in`
+
+Make sure Nginx maps your public server port `3000` to `crm.goalcryst.co.in` and proxies `api.goalcryst.co.in` directly to Kong.
