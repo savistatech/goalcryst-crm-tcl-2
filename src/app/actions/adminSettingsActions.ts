@@ -154,3 +154,132 @@ export async function toggleWaiverReasonStatus(
   revalidatePath("/settings/waivers");
   return { success: true };
 }
+
+/**
+ * Creates a new Main Disposition
+ */
+export async function createMainDisposition(
+  name: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await getActiveUser();
+  if (!user) return { success: false, error: "Authentication expired." };
+
+  const { error } = await supabase
+    .from("main_dispositions")
+    .insert({ name, is_active: true });
+
+  if (error) {
+    console.error("Error creating main disposition:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/settings/dispositions");
+  return { success: true };
+}
+
+/**
+ * Updates a Main Disposition name
+ */
+export async function updateMainDisposition(
+  id: string,
+  name: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await getActiveUser();
+  if (!user) return { success: false, error: "Authentication expired." };
+
+  const { error } = await supabase
+    .from("main_dispositions")
+    .update({ name })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating main disposition:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/settings/dispositions");
+  return { success: true };
+}
+
+/**
+ * Toggles a Main Disposition active/inactive status
+ */
+export async function toggleMainDispositionStatus(
+  id: string,
+  isActive: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await getActiveUser();
+  if (!user) return { success: false, error: "Authentication expired." };
+
+  const { error } = await supabase
+    .from("main_dispositions")
+    .update({ is_active: isActive })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error toggling main disposition status:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/settings/dispositions");
+  return { success: true };
+}
+
+/**
+ * Updates an existing Sub Disposition
+ */
+export async function updateSubDisposition(
+  id: string,
+  mainDispositionId: string,
+  name: string,
+  formSchema: any[]
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await getActiveUser();
+  if (!user) return { success: false, error: "Authentication expired." };
+
+  const { error } = await supabase
+    .from("sub_dispositions")
+    .update({
+      main_disposition_id: mainDispositionId,
+      name,
+      form_schema: formSchema
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating sub disposition:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/settings/dispositions");
+  return { success: true };
+}
+
+/**
+ * Updates a Waiver Reason name
+ */
+export async function updateWaiverReason(
+  id: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const user = await getActiveUser();
+  if (!user) return { success: false, error: "Authentication expired." };
+
+  const { error } = await supabase
+    .from("waiver_reasons")
+    .update({ reason })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating waiver reason:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/settings/waivers");
+  return { success: true };
+}

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GoalCryst CRM",
-  description: "GoalCryst CRM - Contact Center Management System",
+  title: "Goalcryst CRM - TCL",
+  description: "Goalcryst CRM - Tata Capital Limited",
 };
 
 export default function RootLayout({

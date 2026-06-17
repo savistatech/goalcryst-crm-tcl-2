@@ -55,12 +55,8 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .eq("contract_no", contractNo)
     .single();
 
-  // 5. Fetch associated legal records
-  const { data: legal } = await supabase
-    .from("contract_legal")
-    .select("*")
-    .eq("contract_no", contractNo)
-    .single();
+  // 5. Removed contract_legal fetch as the table is deleted
+  const legal = {};
 
   // 6. Fetch dispositions call history ordered newest first
   const { data: dispositions } = await supabase
@@ -178,28 +174,12 @@ export async function raiseWaiverRequest(
     return { success: false, error: "Authentication expired. Please log in again." };
   }
 
-  // Fetch current financial exposure to compute totals
-  const { data: financials, error: finError } = await supabase
-    .from("contract_financials")
-    .select("total_outstanding, pos")
-    .eq("contract_no", contractNo)
-    .single();
-
-  if (finError || !financials) {
-    return { success: false, error: "Could not retrieve contract outstanding balance details." };
-  }
-
-  const totalOutstanding = Number(financials.total_outstanding || 0);
-  const posAmount = Number(financials.pos || 0);
-
   // Insert waiver request
   const { error: waiverError } = await supabase
     .from("waiver_requests")
     .insert({
       contract_no: contractNo,
       employee_id: user.id,
-      total_outstanding: totalOutstanding,
-      pos: posAmount,
       requested_waiver_amount: requestedWaiverAmount,
       reason_id: reasonId,
       routed_to: routedTo,
@@ -218,7 +198,7 @@ export async function raiseWaiverRequest(
     action: "RAISE_WAIVER",
     entity_type: "waiver_requests",
     entity_id: contractNo,
-    metadata: { totalOutstanding, requestedWaiverAmount }
+    metadata: { requestedWaiverAmount }
   });
 
   revalidatePath(`/customers/${contractNo}`);
