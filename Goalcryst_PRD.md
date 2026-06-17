@@ -62,8 +62,9 @@ This is a single-client internal CRM, not a multi-tenant SaaS product.
 * Manage roles and permissions
 * Upload Excel files
 * Export all reports (CSV/XLSX)
-* Configure dynamic dispositions and waiver reasons
+* Configure dynamic dispositions and waiver reasons (Full CRUD: Create, Read, Update, Toggle Active status)
 * View audit logs
+* Review and approve routed waiver requests (Admin role included in supervisor routing list)
 
 ### Branch Manager (Branch Operations)
 
@@ -169,7 +170,12 @@ The disposition module uses a dynamic, admin-configured schema consisting of:
 
 ### Admin Configuration
 
-Admins can configure new dispositions and attach specific form schemas (e.g., requiring a Date and Amount field when "Promise to Pay" is selected). 
+Admins have full CRUD (Create, Read, Update, Disable) control over the disposition setup. They can:
+* Create, rename, and toggle status (enable/disable) for **Main Dispositions**.
+* Create, update parent categories, edit dynamic form schemas, and toggle status for **Sub-Dispositions**.
+* Create, rename, and toggle status for **Waiver Reasons**.
+
+Form schemas allow dynamic input validation (e.g., specifying label, field type, and required flag for custom fields like PTP Date or PTP Amount). 
 
 ### Disposition Fields (Dynamic)
 
@@ -204,18 +210,17 @@ Employees should be able to raise waiver requests when customers ask for discoun
 * Principal POS (Primary Metric)
 * Total outstanding amount
 * Requested waiver amount (Calculated against POS)
-* Customer payable amount
 * Reason for waiver (Admin configured)
 * Employee remarks
 * Status: Pending / Approved / Rejected
-* Routed To (Specific Managers)
+* Routed To (Specific Managers or Admins)
 * Reviewed by
 * Supervisor remarks
 * Created/Updated dates
 
 ### Waiver Workflow
 
-Employee raises waiver request and selects specific supervisor(s) to route it to → Supervisor reviews → Approve or Reject → Status updated in CRM.
+Employee raises waiver request and selects specific supervisor(s) or Admin(s) to route it to → Reviewer reviews → Approve or Reject → Status updated in CRM. (No strict waiver limits or validations are enforced on the requested amount, allowing managers full discretion on settlements).
 
 ---
 
@@ -365,3 +370,8 @@ The system should maintain audit logs for important actions.
 * Should employees see full phone numbers or masked numbers?
 * Should Customer 360 show legal details to employees or only managers?
 * Should follow-up reminders be shown inside dashboard?
+
+---
+
+## 10. Cross-Application Differences (TMF vs TCL)
+For a detailed analysis of the exact database schema, UI components, and import mappings between the TMF and TCL instances, refer to the [Cross-Application Differences Guide](cross_app_differences.md).
