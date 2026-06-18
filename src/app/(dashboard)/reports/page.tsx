@@ -121,14 +121,22 @@ export default function ReportsPage() {
         return;
       }
 
+      // Format UTC timestamps to client-side local timezone
+      const localData = data.map((item: any) => ({
+        ...item,
+        "Date Logged": item["Date Logged"] && item["Date Logged"] !== "-"
+          ? new Date(item["Date Logged"]).toLocaleString("en-GB")
+          : "-"
+      }));
+
       // 2. Generate and download based on format
       const filename = getExportFilename(r.id, format);
 
       if (format === "csv") {
-        const csvContent = convertToCSV(data);
+        const csvContent = convertToCSV(localData);
         downloadFile(csvContent, filename, "text/csv;charset=utf-8;");
       } else {
-        const ws = XLSX.utils.json_to_sheet(data);
+        const ws = XLSX.utils.json_to_sheet(localData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Exported Data");
         const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });

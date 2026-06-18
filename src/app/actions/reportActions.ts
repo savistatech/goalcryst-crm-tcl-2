@@ -231,11 +231,16 @@ export async function getScopedReportData(
     const paymentDate = row.dynamic_data?.payment_date;
     const rawDate = ptpDate || paymentDate;
     if (rawDate) {
-      const d = new Date(rawDate);
-      if (!isNaN(d.getTime())) {
-        dateValue = d.toLocaleDateString("en-GB");
+      if (typeof rawDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+        const [year, month, day] = rawDate.split("-");
+        dateValue = `${day}/${month}/${year}`;
       } else {
-        dateValue = String(rawDate);
+        const d = new Date(rawDate);
+        if (!isNaN(d.getTime())) {
+          dateValue = d.toLocaleDateString("en-GB");
+        } else {
+          dateValue = String(rawDate);
+        }
       }
     }
 
@@ -244,7 +249,7 @@ export async function getScopedReportData(
       "Customer Name": contract.customer_name || "-",
       "Employee Name": employee.full_name || "System",
       "Employee Role": employee.role || "-",
-      "Date Logged": new Date(row.created_at).toLocaleString("en-GB"),
+      "Date Logged": row.created_at,
       "Main Disposition": row.main_disposition?.name || "-",
       "Sub Disposition": row.sub_disposition?.name || "-",
       "PTP/Payment Date": dateValue,

@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '500mb',
       allowedOrigins: [
-        'crm.goalcryst.co.in',
-        'crm.goalcryst.co.in.',
+        'goalcryst.co.in',
+        'goalcryst.co.in.',
         'api.goalcryst.co.in',
         'api.goalcryst.co.in.'
       ]
