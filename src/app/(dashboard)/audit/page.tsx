@@ -95,7 +95,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="w-full h-8.5 rounded-lg bg-ink hover:bg-black text-surface text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                className="w-full h-8.5 rounded-lg bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold shadow-sm transition-all cursor-pointer"
               >
                 Filter Logs
               </button>

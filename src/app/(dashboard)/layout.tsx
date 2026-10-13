@@ -49,7 +49,7 @@ export default function DashboardLayout({
   const [perms, setPerms] = useState<Record<string, boolean>>({});
   const [permsLoaded, setPermsLoaded] = useState(false);
 
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("dark");
 
   const applyTheme = (mode: "light" | "dark" | "system") => {
     if (typeof window === "undefined") return;
@@ -74,15 +74,16 @@ export default function DashboardLayout({
       }, 0);
       return () => clearTimeout(timer);
     } else {
-      applyTheme("system");
+      setTheme("dark");
+      applyTheme("dark");
     }
   }, []);
 
   const handleThemeToggle = () => {
-    let nextTheme: "light" | "dark" | "system" = "light";
-    if (theme === "light") nextTheme = "dark";
-    else if (theme === "dark") nextTheme = "system";
-    else nextTheme = "light";
+    let nextTheme: "light" | "dark" | "system" = "dark";
+    if (theme === "dark") nextTheme = "light";
+    else if (theme === "light") nextTheme = "system";
+    else nextTheme = "dark";
     setTheme(nextTheme);
     localStorage.setItem("theme", nextTheme);
     applyTheme(nextTheme);
@@ -202,7 +203,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-bg text-ink relative font-sans">
       {/* Noise overlay */}
-      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.02] mix-blend-multiply bg-[url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E')]" />
+      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.025] mix-blend-overlay bg-[url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E')]" />
 
       {/* ===== SIDEBAR ===== */}
       <aside className="w-60 flex-shrink-0 flex flex-col bg-bg-warm border-r border-border-custom">

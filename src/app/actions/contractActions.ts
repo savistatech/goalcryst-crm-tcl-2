@@ -9,6 +9,10 @@ export interface AdminContractRow {
   product: string;
   branch: string;
   bom_dpd: number;
+  bucket?: string;
+  bkt_tagging?: string;
+  finone_scheme_name?: string;
+  cif?: string;
   is_archived: boolean;
   imported_at: string;
 }
@@ -50,6 +54,10 @@ export async function getAllContracts(
       product,
       branch,
       bom_dpd,
+      bucket,
+      bkt_tagging,
+      finone_scheme_name,
+      cif,
       is_archived,
       imported_at
     `,
@@ -59,7 +67,7 @@ export async function getAllContracts(
   // Apply search filter if provided
   if (searchTerm) {
     query = query.or(
-      `contract_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,branch.ilike.%${searchTerm}%`
+      `contract_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,branch.ilike.%${searchTerm}%,cif.ilike.%${searchTerm}%`
     );
   }
 

@@ -30,7 +30,7 @@ interface FieldDefinition {
 }
 
 const TARGET_FIELDS: FieldDefinition[] = [
-  // Base
+  // 1. Base Loan & Account Classification
   { key: "contract_no", label: "Contract No", required: true, type: "string", aliases: ["contract_no", "contract no", "agreement no", "agreement_no", "lan", "loan account number"] },
   { key: "customer_name", label: "Customer Name", required: true, type: "string", aliases: ["customer_name", "customer name", "client name", "borrower name", "name"] },
   { key: "product", label: "Product", required: false, type: "string", aliases: ["product", "product_class", "product type"] },
@@ -38,119 +38,237 @@ const TARGET_FIELDS: FieldDefinition[] = [
   { key: "state", label: "State", required: false, type: "string", aliases: ["state", "state_name", "customer state"] },
   { key: "area", label: "Area", required: false, type: "string", aliases: ["area", "customer area"] },
   { key: "region", label: "Region", required: false, type: "string", aliases: ["region", "customer region"] },
+  { key: "prod_flag", label: "Product Flag", required: false, type: "string", aliases: ["prod_flag", "prod flag"] },
+  { key: "prod_d", label: "Product Detail / Code", required: false, type: "string", aliases: ["prod_d", "prod d"] },
+  { key: "new_cat", label: "New Category", required: false, type: "string", aliases: ["new_cat", "new cat"] },
   { key: "secured_category", label: "Secured Category", required: false, type: "string", aliases: ["secured category", "secured_category"] },
   { key: "allocation_category", label: "Allocation Category", required: false, type: "string", aliases: ["allocation category", "allocation_category"] },
+  { key: "allocation_status_sept", label: "Allocation Status Sept", required: false, type: "string", aliases: ["allocation status-sept 2026 2026", "allocation status sept", "allocation_status_sept"] },
+  { key: "system_flagging", label: "System Flagging", required: false, type: "string", aliases: ["system flagging", "system_flagging"] },
+  { key: "ccod_other", label: "CCOD Other", required: false, type: "string", aliases: ["ccod_other", "ccod other"] },
+  { key: "writeoff_flg", label: "Writeoff Flag", required: false, type: "string", aliases: ["writeoff_flg", "writeoff flag", "writeoff"] },
   { key: "bom_dpd", label: "BOM DPD", required: false, type: "number", aliases: ["bom dpd", "bom_dpd", "dpd"] },
+  { key: "bkt_tagging", label: "Bucket Tagging", required: false, type: "string", aliases: ["bkt tagging", "bkt_tagging", "bucket tagging"] },
   { key: "mob", label: "MOB", required: false, type: "number", aliases: ["mob", "months on book"] },
   { key: "bucket", label: "Bucket", required: false, type: "string", aliases: ["bucket"] },
-  { key: "bom_bucket", label: "BOM Bucket", required: false, type: "string", aliases: ["bom bucket", "bom_bucket"] },
-  { key: "secured_product_flag", label: "Secured Product Flag", required: false, type: "string", aliases: ["secured product flag", "secured_product_flag"] },
+  { key: "bom_bucket", label: "BOM Bucket", required: false, type: "string", aliases: ["bom bucket", "bom_bucket", "bom_bkt"] },
+  { key: "non_starter", label: "Non Starter", required: false, type: "string", aliases: ["non_starter", "non starter"] },
+  { key: "delq_string", label: "Delinquency String", required: false, type: "string", aliases: ["delq_string", "delq string"] },
+  { key: "finone_scheme_name", label: "Finnone Scheme Name", required: false, type: "string", aliases: ["finone_scheme_name", "finone scheme name", "scheme name"] },
+  { key: "cif", label: "CIF Number", required: false, type: "string", aliases: ["cif", "cif number", "cif "] },
+  { key: "secured_product_flag", label: "Secured Product Flag", required: false, type: "string", aliases: ["sec_prod_flag", "secured product flag", "secured_product_flag"] },
   { key: "product_detail", label: "Product Detail", required: false, type: "string", aliases: ["product detail", "product_detail"] },
   { key: "allocation_dpd_category", label: "Allocation DPD Category", required: false, type: "string", aliases: ["allocation dpd category", "allocation_dpd_category"] },
+  { key: "customer_profile", label: "Customer Profile", required: false, type: "string", aliases: ["customer profile", "customer_profile"] },
+  { key: "industry", label: "Industry", required: false, type: "string", aliases: ["industry"] },
+  { key: "occupation_type", label: "Occupation Type", required: false, type: "string", aliases: ["OccupationType", "occupation type", "occupation_type"] },
+  { key: "occupation_type_2", label: "Occupation Type (Secondary)", required: false, type: "string", aliases: ["OccupationType_1", "occupationtype_1"] },
+  { key: "organization_employer_name", label: "Employer / Organization", required: false, type: "string", aliases: ["organization_employername", "employer name", "organization employer name"] },
 
-  // Contacts
-  { key: "mobile_1", label: "Contact No 1 - Mobile 1", required: false, type: "string", aliases: ["contact no 1 - mobile 1", "mobile 1", "mobile_1", "phone"] },
-  { key: "mobile_no", label: "Contact No 2 - Mobile No", required: false, type: "string", aliases: ["contact no 2 - mobile no", "mobile 2", "mobile_no"] },
-  { key: "primary_mobile", label: "Contact No 3 - Primary Mobile", required: false, type: "string", aliases: ["contact no 3 - primary mobile", "primary mobile", "primary_mobile"] },
-  { key: "ref_name_1", label: "Reference Name 1", required: false, type: "string", aliases: ["reference name 1", "ref name 1", "ref_name_1"] },
-  { key: "ref_mobile_1", label: "Contact No 4 - Reference Mobile 1", required: false, type: "string", aliases: ["contact no 4 - reference mobile 1", "contact no 7 - reference mobile 1", "reference mobile 1", "ref_mobile_1"] },
-  { key: "ref_name_2", label: "Reference Name 2", required: false, type: "string", aliases: ["reference name 2", "ref name 2", "ref_name_2"] },
-  { key: "ref_mobile_2", label: "Contact No 5 - Reference Mobile 2", required: false, type: "string", aliases: ["contact no 5 - reference mobile 2", "reference mobile 2", "ref_mobile_2"] },
-  { key: "base_address", label: "Address 1 - Base Address", required: false, type: "string", aliases: ["address 1 - base address", "base address", "base_address"] },
-  { key: "landmark", label: "Landmark", required: false, type: "string", aliases: ["landmark"] },
+  // 2. Contacts & Addresses
+  { key: "mobile_1", label: "Mobile 1", required: false, type: "string", aliases: ["mobile 1", "mobile_1", "phone", "contact no 1 - mobile 1"] },
+  { key: "mobile_no", label: "Mobile No", required: false, type: "string", aliases: ["Mobile NO", "mobile_no", "contact no 2 - mobile no"] },
+  { key: "primary_mobile", label: "Primary Mobile", required: false, type: "string", aliases: ["primary mobile", "primary_mobile", "contact no 3 - primary mobile"] },
+  { key: "primary_mobile_1", label: "Primary Mobile 1", required: false, type: "string", aliases: ["primarymobilenumber1", "primary mobile number 1", "primary mobile 1", "primary_mobile_1"] },
+  { key: "primary_mobile_2", label: "Primary Mobile 2", required: false, type: "string", aliases: ["primarymobilenumber2", "primary mobile number 2", "primary mobile 2", "primary_mobile_2"] },
+  { key: "mobile_no_2", label: "Mobile No 2", required: false, type: "string", aliases: ["mobile_no_2", "mobile no 2", "contact no 5 - mobile no"] },
+  { key: "latest_contact_no", label: "Latest Contact No", required: false, type: "string", aliases: ["latesh contact no", "latest contact no", "latest_contact_no", "contact no 6 - latest contact no"] },
+  { key: "coapplicant_1", label: "Co-Applicant 1", required: false, type: "string", aliases: ["coapplicant1", "co-applicant 1", "coapplicant 1"] },
+  { key: "coapplicant_2", label: "Co-Applicant 2", required: false, type: "string", aliases: ["coapplicant2", "co-applicant 2", "coapplicant 2"] },
+  { key: "coapplicant_3", label: "Co-Applicant 3", required: false, type: "string", aliases: ["coapplicant3", "co-applicant 3", "coapplicant 3"] },
+  { key: "coapplicant_4", label: "Co-Applicant 4", required: false, type: "string", aliases: ["coapplicant4", "co-applicant 4", "coapplicant 4"] },
+  { key: "guarantor_1", label: "Guarantor 1", required: false, type: "string", aliases: ["guarantor1", "guarantor 1"] },
+  { key: "guarantor_2", label: "Guarantor 2", required: false, type: "string", aliases: ["guarantor2", "guarantor 2"] },
+  { key: "guarantor_3", label: "Guarantor 3", required: false, type: "string", aliases: ["guarantor3", "guarantor 3"] },
+  { key: "pan_no", label: "PAN No", required: false, type: "string", aliases: ["pan no", "pan_no", "pan"] },
+  { key: "is_primary_email_yes", label: "Primary Email (Yes)", required: false, type: "string", aliases: ["isprimaryemailyes", "is primary email yes", "email 1"] },
+  { key: "is_primary_email_no", label: "Secondary Email (No)", required: false, type: "string", aliases: ["isprimaryemailno", "is primary email no", "email 2"] },
+  { key: "ref_name_1", label: "Reference Name 1", required: false, type: "string", aliases: ["referancename1", "reference name 1", "ref name 1", "ref_name_1"] },
+  { key: "ref_full_address_1", label: "Reference Address 1", required: false, type: "string", aliases: ["referancefulladdress1", "reference full address 1", "ref full address 1", "ref_full_address_1"] },
+  { key: "ref_relation_1", label: "Reference Relation 1", required: false, type: "string", aliases: ["referancerelationship1", "reference relationship 1", "ref relation 1", "ref_relation_1"] },
+  { key: "ref_mobile_1", label: "Reference Mobile 1", required: false, type: "string", aliases: ["referancemobileno1", "reference mobile no 1", "ref mobile 1", "ref_mobile_1", "contact no 4 - reference mobile 1"] },
+  { key: "ref_name_2", label: "Reference Name 2", required: false, type: "string", aliases: ["referancename2", "reference name 2", "ref name 2", "ref_name_2"] },
+  { key: "ref_full_address_2", label: "Reference Address 2", required: false, type: "string", aliases: ["referancefulladdress2", "reference full address 2", "ref full address 2", "ref_full_address_2"] },
+  { key: "ref_relation_2", label: "Reference Relation 2", required: false, type: "string", aliases: ["referancerelationship2", "reference relationship 2", "ref relation 2", "ref_relation_2"] },
+  { key: "ref_mobile_2", label: "Reference Mobile 2", required: false, type: "string", aliases: ["referancemobileno2", "reference mobile no 2", "ref mobile 2", "ref_mobile_2", "contact no 5 - reference mobile 2"] },
+  { key: "base_address", label: "Base Address", required: false, type: "string", aliases: ["address", "base address", "base_address", "address 1 - base address"] },
+  { key: "landmark", label: "Landmark", required: false, type: "string", aliases: ["land mark", "landmark"] },
   { key: "pincode", label: "Pincode", required: false, type: "string", aliases: ["pincode", "zip", "postal code"] },
-  { key: "permanent_address", label: "Address 2 - Permanent Address", required: false, type: "string", aliases: ["address 2 - permanent address", "permanent address", "permanent_address"] },
-  { key: "office_address", label: "Address 3 - Office Address", required: false, type: "string", aliases: ["address 3 - office address", "office address", "office_address"] },
-  { key: "finnone_address", label: "Address 4 - Finnone Address", required: false, type: "string", aliases: ["address 4 - finnone address", "finnone address", "finnone_address"] },
-  { key: "primary_mobile_1", label: "Contact No 3 - Primary Mobile 1", required: false, type: "string", aliases: ["contact no 3 - primary mobile 1", "primary mobile 1", "primary_mobile_1"] },
-  { key: "primary_mobile_2", label: "Contact No 4 - Primary Mobile 2", required: false, type: "string", aliases: ["contact no 4 - primary mobile 2", "primary mobile 2", "primary_mobile_2"] },
-  { key: "mobile_no_2", label: "Contact No 5 - Mobile No", required: false, type: "string", aliases: ["contact no 5 - mobile no", "mobile no 2", "mobile_no_2"] },
-  { key: "latest_contact_no", label: "Contact No 6 - Latest Contact No", required: false, type: "string", aliases: ["contact no 6 - latest contact no", "latest contact no", "latest_contact_no"] },
-  { key: "ref_relation_1", label: "Reference Relationship 1", required: false, type: "string", aliases: ["reference relationship 1", "ref relation 1", "ref_relation_1"] },
-  { key: "ref_relation_2", label: "Reference Relationship 2", required: false, type: "string", aliases: ["reference relationship 2", "ref relation 2", "ref_relation_2"] },
-  { key: "master_primary_address", label: "Address 2 - Master Primary Address", required: false, type: "string", aliases: ["address 2 - master primary address", "master primary address", "master_primary_address"] },
-  { key: "permanent_address_2", label: "Address 3 - Permanent Address", required: false, type: "string", aliases: ["address 3 - permanent address", "permanent_address_2"] },
-  { key: "secondary_address", label: "Address 5 - Secondary Address", required: false, type: "string", aliases: ["address 5 - secondary address", "secondary address", "secondary_address"] },
-  { key: "office_address_2", label: "Address 6 - Office Address", required: false, type: "string", aliases: ["address 6 - office address", "office_address_2"] },
-  { key: "additional_address", label: "Address 7 - Additional Address", required: false, type: "string", aliases: ["address 7 - additional address", "additional address", "additional_address"] },
-  { key: "residential_address", label: "Address 8 - Residential Address", required: false, type: "string", aliases: ["address 8 - residential address", "residential address", "residential_address"] },
-  { key: "ref_full_address_1", label: "Address 9 - Reference Full Address 1", required: false, type: "string", aliases: ["address 9 - reference full address 1", "ref full address 1", "ref_full_address_1"] },
-  { key: "ref_full_address_2", label: "Address 10 - Reference Full Address 2", required: false, type: "string", aliases: ["address 10 - reference full address 2", "ref full address 2", "ref_full_address_2"] },
-  { key: "pdpr_address", label: "Address 11 - PDPR Address", required: false, type: "string", aliases: ["address 11 - pdpr address", "pdpr address", "pdpr_address"] },
+  { key: "permanent_address", label: "Permanent Address", required: false, type: "string", aliases: ["permanentaddress", "permanent address", "permanent_address", "address 2 - permanent address"] },
+  { key: "office_address", label: "Office Address", required: false, type: "string", aliases: ["office address", "office_address", "address 3 - office address"] },
+  { key: "finnone_address", label: "Finnone Address", required: false, type: "string", aliases: ["finnone address", "finnone_address", "address 4 - finnone address"] },
+  { key: "master_primary_address", label: "Master Primary Address", required: false, type: "string", aliases: ["masterprimaryaddress", "master primary address", "master_primary_address"] },
+  { key: "permanent_address_2", label: "Permanent Address 2", required: false, type: "string", aliases: ["permanent_address_2", "permanent address 2"] },
+  { key: "secondary_address", label: "Secondary Address", required: false, type: "string", aliases: ["secondaryaddress", "secondary address", "secondary_address", "address 5 - secondary address"] },
+  { key: "office_address_2", label: "Office Address 2", required: false, type: "string", aliases: ["office_address_2", "office address 2", "address 6 - office address"] },
+  { key: "additional_address", label: "Additional Address", required: false, type: "string", aliases: ["additionaladdress", "additional address", "additional_address", "address 7 - additional address"] },
+  { key: "residential_address", label: "Residential Address", required: false, type: "string", aliases: ["resi address", "residential address", "residential_address", "address 8 - residential address"] },
+  { key: "pdpr_address", label: "PDPR Address", required: false, type: "string", aliases: ["pdpr address", "pdpr_address", "address 11 - pdpr address"] },
 
-  // Assets
-  { key: "manufacturer", label: "Manufacturer", required: false, type: "string", aliases: ["manufacturer"] },
-  { key: "asset_model", label: "Asset Model", required: false, type: "string", aliases: ["asset model", "asset_model"] },
-  { key: "rc_number", label: "RC Number", required: false, type: "string", aliases: ["rc number", "rc_number"] },
-  { key: "manufacturer_2", label: "Manufacturer 2", required: false, type: "string", aliases: ["manufacturer 2", "manufacturer_2"] },
-  { key: "asset_category", label: "Asset Category", required: false, type: "string", aliases: ["asset category", "asset_category"] },
-  { key: "asset_variant", label: "Asset Variant", required: false, type: "string", aliases: ["asset variant", "asset_variant"] },
-  { key: "engine_number", label: "Engine Number", required: false, type: "string", aliases: ["engine number", "engine_number"] },
-  { key: "chassis_number", label: "Chassis Number", required: false, type: "string", aliases: ["chassis number", "chassis_number"] },
-  { key: "year_of_manufacture", label: "Year of Manufacture", required: false, type: "string", aliases: ["year of manufacture", "year_of_manufacture"] },
+  // 3. Asset & Vehicle Fields
+  { key: "asset_model", label: "Asset Model", required: false, type: "string", aliases: ["assetmodel", "asset model", "asset_model"] },
+  { key: "manufacturer", label: "Manufacturer", required: false, type: "string", aliases: ["manufacturer_name", "manufacturer", "make"] },
+  { key: "year_of_manufacture", label: "Year of Manufacture", required: false, type: "string", aliases: ["yearofmanufacture", "year of manufacture", "year_of_manufacture"] },
+  { key: "rc_number", label: "RC / Reg Number", required: false, type: "string", aliases: ["registrationnumber", "rc number", "rc_number", "reg no"] },
+  { key: "engine_number", label: "Engine Number", required: false, type: "string", aliases: ["enginenumber", "engine number", "engine_number"] },
+  { key: "chassis_number", label: "Chassis Number", required: false, type: "string", aliases: ["chasisnumber", "chassis number", "chassis_number"] },
+  { key: "asset_variant", label: "Asset Variant", required: false, type: "string", aliases: ["assetvariant", "asset variant", "asset_variant"] },
+  { key: "vehicle_available", label: "Vehicle Available", required: false, type: "string", aliases: ["vehicle available (yes/no)", "vehicle available", "vehicle_available"] },
+  { key: "secured_tagging", label: "Secured Tagging", required: false, type: "string", aliases: ["secured tagging ", "secured tagging", "secured_tagging"] },
 
-  // Financials
-  { key: "finance_amount", label: "Finance Amount", required: false, type: "number", aliases: ["finance amount", "finance_amount"] },
-  { key: "total_pos_outstanding", label: "Total POS Outstanding", required: false, type: "number", aliases: ["total pos outstanding", "total_pos_outstanding"] },
-  { key: "pos", label: "POS", required: false, type: "number", aliases: ["pos"] },
-  { key: "total_amount_collectable", label: "Total Amount Collectable", required: false, type: "number", aliases: ["total amount collectable", "total_amount_collectable"] },
-  { key: "sale_price", label: "Sale Price", required: false, type: "number", aliases: ["sale price", "sale_price"] },
+  // 4. Financial, Banking & Recovery Fields
+  { key: "insurance_type", label: "Insurance Type", required: false, type: "string", aliases: ["insurancetype", "insurance type"] },
+  { key: "insurance_policy_end_date", label: "Insurance End Date", required: false, type: "string", aliases: ["insurancepolicyenddate", "insurance policy end date"] },
+  { key: "sum_assured_amount", label: "Sum Assured Amount", required: false, type: "number", aliases: ["sumassuredamount", "sum assured amount"] },
+  { key: "death_case_insurance_update", label: "Death Case Insurance Update", required: false, type: "string", aliases: ["death case-insurance update", "death case insurance update"] },
+  { key: "contract_start_date", label: "Contract Start Date", required: false, type: "string", aliases: ["contract_start_date", "contract start date"] },
+  { key: "contract_end_date", label: "Contract End Date", required: false, type: "string", aliases: ["contract_end_date", "contract end date"] },
+  { key: "cycle", label: "Cycle", required: false, type: "string", aliases: ["cycle"] },
+  { key: "total_tenure", label: "Total Tenure", required: false, type: "string", aliases: ["total tenure", "tenure"] },
+  { key: "finance_amount", label: "Finance Amount", required: false, type: "number", aliases: ["finance_amount", "finance amount"] },
+  { key: "bank_account_no", label: "Bank Account No", required: false, type: "string", aliases: ["bank accountno", "bank account no", "bank_account_no"] },
+  { key: "ifsc_code", label: "IFSC Code", required: false, type: "string", aliases: ["ifsccode", "ifsc code", "ifsc"] },
   { key: "emi_amount", label: "EMI Amount", required: false, type: "number", aliases: ["emi amount", "emi_amount", "emi"] },
-  { key: "od_amount", label: "OD Amount", required: false, type: "number", aliases: ["od amount", "od_amount"] },
-  { key: "principal_overdue", label: "Principal Overdue", required: false, type: "number", aliases: ["principal overdue", "principal_overdue"] },
-  { key: "interest_overdue", label: "Interest Overdue", required: false, type: "number", aliases: ["interest overdue", "interest_overdue"] },
+  { key: "od_amount", label: "OD Amount", required: false, type: "number", aliases: ["emi/los od amount", "od amount", "od_amount"] },
+  { key: "principal_overdue", label: "Principal Overdue", required: false, type: "number", aliases: ["principle_overdue", "principal overdue", "principal_overdue"] },
+  { key: "interest_overdue", label: "Interest Overdue", required: false, type: "number", aliases: ["interest over due", "interest overdue", "interest_overdue"] },
+  { key: "future_pos", label: "Future POS", required: false, type: "number", aliases: ["future pos", "future_pos"] },
   { key: "bounce_charges", label: "Bounce Charges", required: false, type: "number", aliases: ["bounce charges", "bounce_charges"] },
-  { key: "current_odc", label: "Current ODC", required: false, type: "number", aliases: ["current odc", "current_odc"] },
+  { key: "current_odc", label: "Current ODC", required: false, type: "number", aliases: ["current_odc", "current odc"] },
   { key: "total_outstanding", label: "Total Outstanding", required: false, type: "number", aliases: ["total outstanding", "total_outstanding"] },
+  { key: "pos", label: "POS", required: false, type: "number", aliases: ["pos"] },
+  { key: "pos_in_cr", label: "POS In Cr", required: false, type: "string", aliases: ["pos in cr", "pos_in_cr"] },
+  { key: "act_pct_cr", label: "Act % CR", required: false, type: "string", aliases: ["act % cr", "act_pct_cr"] },
+  { key: "collxn_act_tar", label: "Collxn - Act Tar", required: false, type: "string", aliases: ["collxn-act tar", "collxn act tar"] },
+  { key: "ror", label: "ROR", required: false, type: "string", aliases: ["ror"] },
+  { key: "target_pct", label: "Target %", required: false, type: "string", aliases: ["target%", "target percent"] },
+  { key: "paid_on_funding_amt", label: "Paid on Funding Amt", required: false, type: "number", aliases: ["paid on funding amt", "paid_on_funding_amt"] },
+  { key: "paid_pct", label: "Paid %", required: false, type: "string", aliases: ["paid %", "paid percent"] },
+  { key: "sms_camp", label: "SMS Campaign", required: false, type: "string", aliases: ["sms camp", "sms_camp"] },
+  { key: "ptp", label: "PTP Status", required: false, type: "string", aliases: ["ptp"] },
+  { key: "ptp_in_cr", label: "PTP In Cr", required: false, type: "string", aliases: ["ptp in cr", "ptp_in_cr"] },
+  { key: "ptp_mobile_no", label: "PTP Mobile No", required: false, type: "string", aliases: ["Mobile No", "ptp_mobile_no", "ptp mobile"] },
+  { key: "ptp_date", label: "PTP Date", required: false, type: "string", aliases: ["Date", "ptp_date", "ptp date"] },
+  { key: "bptp_date", label: "BPTP Date", required: false, type: "string", aliases: ["bptp date", "bptp_date"] },
+  { key: "otc", label: "OTC", required: false, type: "string", aliases: ["otc"] },
+  { key: "rec_mis", label: "Rec MIS", required: false, type: "string", aliases: ["rec mis", "rec_mis"] },
+  { key: "docs", label: "Docs", required: false, type: "string", aliases: ["docs"] },
+  { key: "collxn", label: "Collection Amount", required: false, type: "number", aliases: ["collxn", "collection"] },
+  { key: "collection_in_cr", label: "Collection in Cr", required: false, type: "string", aliases: ["collection in cr", "collection_in_cr"] },
+  { key: "collection_mode", label: "Collection Mode", required: false, type: "string", aliases: ["mode", "collection_mode"] },
+  { key: "collection_date", label: "Collection Date", required: false, type: "string", aliases: ["DATE", "collection_date", "receipt date"] },
+  { key: "receipt", label: "Receipt No", required: false, type: "string", aliases: ["reciept", "receipt"] },
+  { key: "pym_status", label: "Payment Status", required: false, type: "string", aliases: [" pym status ", "pym status", "pym_status"] },
+  { key: "last_month_pay_collxn", label: "Last Month Pay Collxn", required: false, type: "string", aliases: ["last month pay collxn", "last_month_pay_collxn"] },
+  { key: "last_month_pay_status", label: "Last Month Pay Status", required: false, type: "string", aliases: ["last month pay status", "last_month_pay_status"] },
+  { key: "outside_pay_l3m_vs_emi", label: "Outside Pay L3M vs EMI", required: false, type: "string", aliases: ["outside_payl3m_vs_emi", "outside pay l3m vs emi"] },
+  { key: "paid_outside", label: "Paid Outside", required: false, type: "string", aliases: ["paid out side", "paid outside"] },
+  { key: "ratio_offus_paylm_tcl_emi", label: "Ratio Offus Pay LM TCL EMI", required: false, type: "string", aliases: ["ratio_offus_paylm_tcl_emi", "ratio offus paylm tcl emi"] },
+  { key: "ecs_autodebit", label: "ECS / AutoDebit", required: false, type: "string", aliases: ["ecs/autodebit", "ecs autodebit"] },
+  { key: "settlement_mis", label: "Settlement MIS", required: false, type: "string", aliases: ["settlement mis", "settlement_mis"] },
   { key: "ots_amount", label: "OTS Amount", required: false, type: "number", aliases: ["ots amount", "ots_amount"] },
-  { key: "pos_waiver_amount", label: "POS Waiver Amount", required: false, type: "number", aliases: ["pos waiver amount", "pos_waiver_amount"] },
-  { key: "pos_waiver_percent", label: "POS Waiver %", required: false, type: "number", aliases: ["pos waiver %", "pos waiver percent", "pos_waiver_percent"] },
+  { key: "pos_waiver_amount", label: "POS Waiver Amount", required: false, type: "number", aliases: ["pos waiver amt", "pos_waiver_amount", "pos waiver amount"] },
+  { key: "pos_waiver_percent", label: "POS Waiver %", required: false, type: "number", aliases: ["pos waiver %", "pos_waiver_percent", "pos waiver percent"] },
+  { key: "settlement_initiation_date", label: "Settlement Initiation Date", required: false, type: "string", aliases: ["settlement initiation date", "settlement_initiation_date"] },
+  { key: "settlement_end_date", label: "Settlement End Date", required: false, type: "string", aliases: ["settlement end date", "settlement_end_date"] },
+  { key: "trench", label: "Trench", required: false, type: "string", aliases: ["trench"] },
+  { key: "settlement_remark", label: "Settlement Remark", required: false, type: "string", aliases: ["remark", "settlement_remark"] },
+  { key: "ots_status", label: "OTS Status", required: false, type: "string", aliases: ["ots status", "ots_status"] },
+  { key: "smis", label: "SMIS", required: false, type: "string", aliases: ["smis ", "smis"] },
+  { key: "rmis", label: "RMIS", required: false, type: "string", aliases: ["rmis"] },
+  { key: "settlement_status", label: "Settlement Status", required: false, type: "string", aliases: ["STATUS", "settlement_status"] },
+  { key: "repo_mis", label: "Repo MIS", required: false, type: "string", aliases: ["repo mis", "repo_mis"] },
+  { key: "repo_date", label: "Repo Date", required: false, type: "string", aliases: ["repo date", "repo_date"] },
+  { key: "sale_release_date", label: "Sale / Release Date", required: false, type: "string", aliases: ["sale/release date", "sale release date"] },
+  { key: "settlement_serial_46173", label: "Settlement Flag (46173)", required: false, type: "string", aliases: ["46173", "31 May 2026", "31 may 2026", "settlement_serial_46173"] },
 
-  // Legal
+  // 5. Legal & Litigation Fields
   { key: "notice_sent_sec138", label: "Notice Sent in Sec 138", required: false, type: "string", aliases: ["notice sent in sec 138", "notice sent sec138", "notice_sent_sec138"] },
-  { key: "type_of_case", label: "Type of Case", required: false, type: "string", aliases: ["type of case", "type_of_case"] },
-  { key: "cheque_amount", label: "Cheque Amount", required: false, type: "number", aliases: ["cheque amount", "cheque_amount"] },
-  { key: "cheque_date", label: "Cheque Date", required: false, type: "string", aliases: ["cheque date", "cheque_date"] },
-  { key: "cheque_no", label: "Cheque No", required: false, type: "string", aliases: ["cheque no", "cheque_no"] },
-  { key: "sec138_current_status", label: "Sec 138 Current Status", required: false, type: "string", aliases: ["sec 138 current status", "sec138_current_status"] },
-  { key: "group_stage", label: "Group Stage", required: false, type: "string", aliases: ["group stage", "group_stage"] },
+  { key: "cheque_amount", label: "Cheque Amount", required: false, type: "number", aliases: ["chq amt", "cheque amount", "cheque_amount"] },
+  { key: "cnr_number_cc", label: "CNR Number (CC)", required: false, type: "string", aliases: ["cnr number(cc)", "cnr number cc", "cnr_number_cc"] },
+  { key: "new_cnr_number_cc", label: "New CNR Number (CC)", required: false, type: "string", aliases: ["new cnr number(c.c)", "new cnr number cc", "new_cnr_number_cc"] },
+  { key: "cnr_number_pcr", label: "CNR Number (PCR)", required: false, type: "string", aliases: ["cnr number(pcr)", "cnr number pcr", "cnr_number_pcr"] },
+  { key: "current_stage", label: "Current Stage (Sec 138)", required: false, type: "string", aliases: ["current stage", "current_stage"] },
+  { key: "group_stage", label: "Group Stage (Sec 138)", required: false, type: "string", aliases: ["Group stage", "group_stage"] },
   { key: "case_no", label: "Case No", required: false, type: "string", aliases: ["case no", "case_no"] },
-  { key: "court_location", label: "Court Location", required: false, type: "string", aliases: ["court location", "court_location"] },
-  { key: "court_name", label: "Court Name", required: false, type: "string", aliases: ["court name", "court_name"] },
-  { key: "ldoh", label: "LDOH", required: false, type: "string", aliases: ["ldoh"] },
-  { key: "ndoh", label: "NDOH", required: false, type: "string", aliases: ["ndoh"] },
-  { key: "advocate", label: "Advocate", required: false, type: "string", aliases: ["advocate"] },
-  { key: "hand_summons", label: "Hand Summons", required: false, type: "string", aliases: ["hand summons", "hand_summons"] },
-  { key: "hand_warrant_1", label: "Hand Warrant 1", required: false, type: "string", aliases: ["hand warrant 1", "hand_warrant_1"] },
-  { key: "proclamation_orders", label: "Proclamation Orders", required: false, type: "string", aliases: ["proclamation orders", "proclamation_orders"] },
-  { key: "lrn_status", label: "LRN Status", required: false, type: "string", aliases: ["lrn status", "lrn_status"] },
-  { key: "lrn_date", label: "LRN Date", required: false, type: "string", aliases: ["lrn date", "lrn_date"] },
-  { key: "arb", label: "ARB", required: false, type: "string", aliases: ["arb"] },
-  { key: "sec17_orders_date", label: "Sec 17 Orders Date", required: false, type: "string", aliases: ["sec 17 orders date", "sec17_orders_date"] },
-  { key: "award_date", label: "Award Date", required: false, type: "string", aliases: ["award date", "award_date"] },
-  { key: "ep_stage", label: "EP Stage", required: false, type: "string", aliases: ["ep stage", "ep_stage"] },
-  { key: "ep_ldoh", label: "EP LDOH", required: false, type: "string", aliases: ["ep ldoh", "ep_ldoh"] },
-  { key: "ep_ndoh", label: "EP NDOH", required: false, type: "string", aliases: ["ep ndoh", "ep_ndoh"] },
-  { key: "ep_case_no", label: "EP Case No", required: false, type: "string", aliases: ["ep case no", "ep_case_no"] },
-  { key: "ep_advocate", label: "EP Advocate", required: false, type: "string", aliases: ["ep advocate", "ep_advocate"] },
-  { key: "termination_status_sa", label: "Termination Status / SA", required: false, type: "string", aliases: ["termination status / sa", "termination status sa", "termination_status_sa"] },
-  { key: "lrn_prn_status", label: "LRN/PRN Status", required: false, type: "string", aliases: ["lrn/prn status", "lrn prn status", "lrn_prn_status"] },
-  { key: "lrn_prn_issue_date", label: "LRN/PRN Issue Date", required: false, type: "string", aliases: ["lrn/prn issue date", "lrn prn issue date", "lrn_prn_issue_date"] },
-  { key: "lrn_prn_link", label: "LRN/PRN Link", required: false, type: "string", aliases: ["lrn/prn link", "lrn prn link", "lrn_prn_link"] },
-  { key: "cnr_number_cc", label: "CNR Number CC", required: false, type: "string", aliases: ["cnr number cc", "cnr_number_cc"] },
-  { key: "cnr_number_pcr", label: "CNR Number PCR", required: false, type: "string", aliases: ["cnr number pcr", "cnr_number_pcr"] },
-  { key: "current_stage", label: "Current Stage", required: false, type: "string", aliases: ["current stage", "current_stage"] },
   { key: "filed_location", label: "Filed Location", required: false, type: "string", aliases: ["filed location", "filed_location"] },
   { key: "court_hall", label: "Court Hall", required: false, type: "string", aliases: ["court hall", "court_hall"] },
-  { key: "hand_s_nbw_bw_pc", label: "Hand S/NBW/BW/PC", required: false, type: "string", aliases: ["hand s/nbw/bw/pc", "hand s nbw bw pc", "hand_s_nbw_bw_pc"] },
-  { key: "hand_s_nbw_bw_pc_type", label: "Hand S/NBW/BW/PC Type", required: false, type: "string", aliases: ["hand s/nbw/bw/pc type", "hand s nbw bw pc type", "hand_s_nbw_bw_pc_type"] },
+  { key: "ldoh", label: "LDOH", required: false, type: "string", aliases: ["ldoh"] },
+  { key: "ndoh", label: "NDOH (Sec 138)", required: false, type: "string", aliases: ["NDOH", "sec138 ndoh"] },
+  { key: "advocate", label: "Advocate", required: false, type: "string", aliases: ["Advocate", "sec138 advocate"] },
+  { key: "hand_summons", label: "Hand Summons", required: false, type: "string", aliases: ["hand s/nbw/bw/pc", "hand summons", "hand_summons"] },
+  { key: "hand_s_nbw_bw_pc_type", label: "Hand Summons Type", required: false, type: "string", aliases: ["Hand S/NBW/BW/PC_TYPE", "hand summons type"] },
+  { key: "hand_s_nbw_bw_pc_oct8", label: "Hand Summons Oct 8", required: false, type: "string", aliases: ["hand s/nbw/bw/pc-8th oct", "hand_s_nbw_bw_pc_oct8"] },
+  { key: "hand_s_nbw_bw_pc_type2", label: "Hand Summons Type 2", required: false, type: "string", aliases: ["Hand S/NBW/BW/PC_TYPE_1", "hand summons type 2"] },
+  { key: "arbitrator_type", label: "Arbitrator Type", required: false, type: "string", aliases: ["institutional/sole arbitrator", "arbitrator type"] },
+  { key: "lrn_date", label: "LRN Date", required: false, type: "string", aliases: ["lrn date", "lrn_date"] },
+  { key: "arb", label: "Arbitration Status", required: false, type: "string", aliases: ["arb"] },
   { key: "claim_amount", label: "Claim Amount", required: false, type: "number", aliases: ["claim amount", "claim_amount"] },
-  { key: "arbitration_group_stage", label: "Arbitration Group Stage", required: false, type: "string", aliases: ["arbitration group stage", "arbitration_group_stage"] },
+  { key: "arbitration_group_stage", label: "Arbitration Group Stage", required: false, type: "string", aliases: ["Group Stage", "arbitration_group_stage"] },
   { key: "sec17_orders", label: "Sec 17 Orders", required: false, type: "string", aliases: ["sec 17 orders", "sec17_orders"] },
-  { key: "sec17_date", label: "Sec 17 Date", required: false, type: "string", aliases: ["sec 17 date", "sec17_date"] },
+  { key: "award_date", label: "Award Date", required: false, type: "string", aliases: ["award date", "award_date"] },
+  { key: "arbitration_ndoh", label: "Arbitration NDOH", required: false, type: "string", aliases: ["NDOH_1", "arbitration ndoh", "arbitration_ndoh"] },
+  { key: "ep_stage", label: "EP Stage", required: false, type: "string", aliases: ["ep stage", "ep_stage"] },
+  { key: "ep_group_stage", label: "EP Group Stage", required: false, type: "string", aliases: ["Group Stage_1", "ep_group_stage"] },
   { key: "court_bench", label: "Court Bench", required: false, type: "string", aliases: ["court bench", "court_bench"] },
-  { key: "ep_pdoh", label: "EP PDOH", required: false, type: "string", aliases: ["ep pdoh", "ep_pdoh"] },
-  { key: "legal_status", label: "Legal Status", required: false, type: "string", aliases: ["legal status", "legal_status"] }
+  { key: "court_location", label: "Court Location", required: false, type: "string", aliases: ["court location", "court_location"] },
+  { key: "ep_pdoh", label: "EP PDOH", required: false, type: "string", aliases: ["ep-pdoh", "ep pdoh"] },
+  { key: "ep_ndoh", label: "EP NDOH", required: false, type: "string", aliases: ["ep-ndoh", "ep ndoh"] },
+  { key: "ep_case_no", label: "EP Case No", required: false, type: "string", aliases: ["ep-case no", "ep case no"] },
+  { key: "ep_advocate", label: "EP Advocate", required: false, type: "string", aliases: ["ADVOCATE", "ep advocate", "ep_advocate"] },
+  { key: "termination_status_sa", label: "Termination Status SA", required: false, type: "string", aliases: ["termination status/sa", "termination status sa", "termination_status_sa"] },
+  { key: "legal_status", label: "Legal Status", required: false, type: "string", aliases: ["legal status", "legal_status"] },
+
+  // 6. Agency Hierarchy Fields
+  { key: "sept_allocation_type", label: "Sept Allocation Type", required: false, type: "string", aliases: ["sept  allocation type", "sept allocation type"] },
+  { key: "sept_agency_code", label: "Sept Agency Code", required: false, type: "string", aliases: ["sept agency code", "sept_agency_code"] },
+  { key: "sept_month_agency", label: "Sept Month Agency", required: false, type: "string", aliases: ["sept 2026 month agency", "sept month agency"] },
+  { key: "final_allocation_tagging", label: "Final Allocation Tagging", required: false, type: "string", aliases: ["final allocation tagging", "final_allocation_tagging"] },
+  { key: "oct_allocation_type", label: "Oct Allocation Type", required: false, type: "string", aliases: ["oct 2026 allocation type", "oct allocation type"] },
+  { key: "oct_agency_code", label: "Oct Agency Code", required: false, type: "string", aliases: ["oct 2026 agency code", "oct agency code"] },
+  { key: "oct_month_agency", label: "Oct Month Agency", required: false, type: "string", aliases: ["oct 2026 month agency", "oct month agency"] },
+  { key: "changes_ss", label: "Changes SS", required: false, type: "string", aliases: ["changes ss", "changes_ss"] },
+  { key: "agent_name", label: "Agent Name", required: false, type: "string", aliases: ["agent_name", "agent name"] },
+  { key: "agent_id", label: "Agent ID", required: false, type: "string", aliases: ["agent_id", "agent id"] },
+  { key: "agent_mobile_no", label: "Agent Mobile No", required: false, type: "string", aliases: ["agent_mobile_no", "agent mobile no"] },
+  { key: "cre_name", label: "CRE Name", required: false, type: "string", aliases: ["cre name", "cre_name"] },
+  { key: "cm_code", label: "Collection Manager Code", required: false, type: "string", aliases: ["cm code", "cm_code"] },
+  { key: "cm_name", label: "Collection Manager Name", required: false, type: "string", aliases: ["cm name", "cm_name"] },
+  { key: "ccm_code", label: "Cluster Manager Code", required: false, type: "string", aliases: ["ccm code", "ccm_code"] },
+  { key: "ccm_name", label: "Cluster Manager Name", required: false, type: "string", aliases: ["ccm name", "ccm_name"] },
+  { key: "rcm_code", label: "Regional Manager Code", required: false, type: "string", aliases: ["rcm code", "rcm_code"] },
+  { key: "rcm_name", label: "Regional Manager Name", required: false, type: "string", aliases: ["rcm name", "rcm_name"] },
+  { key: "ncm_code", label: "National Manager Code", required: false, type: "string", aliases: ["ncm code", "ncm_code"] },
+  { key: "ncm_name", label: "National Manager Name", required: false, type: "string", aliases: ["ncm name", "ncm_name"] },
+
+  // 7. Bureau & Credit Scores
+  { key: "credit_score", label: "Credit Score", required: false, type: "string", aliases: ["creditscore", "credit score"] },
+  { key: "cibil_score", label: "CIBIL Score", required: false, type: "string", aliases: ["cibil score", "cibil_score"] },
+  { key: "sourcing_cibil_score", label: "Sourcing CIBIL Score", required: false, type: "string", aliases: ["sourcing cibil score", "sourcing_cibil_score"] },
+  { key: "bureau_details_1", label: "Bureau Details 1", required: false, type: "string", aliases: ["bureau_details_1", "bureau details 1"] },
+  { key: "bureau_details_2", label: "Bureau Details 2", required: false, type: "string", aliases: ["bureau_details_2", "bureau details 2"] },
+  { key: "bureau_details_3", label: "Bureau Details 3", required: false, type: "string", aliases: ["bureau_details_3", "bureau details 3"] },
+  { key: "bureau_details_4", label: "Bureau Details 4", required: false, type: "string", aliases: ["bureau_details_4", "bureau details 4"] },
+  { key: "del_vs_new_contact", label: "Del vs New Contact", required: false, type: "string", aliases: ["del vs new contact", "del_vs_new_contact"] },
+
+  // 8. Call Trails & Dispositions
+  { key: "sept_trails", label: "Sept Trails", required: false, type: "string", aliases: ["SEPT  2026 TRAILS", "sept trails", "sept  2026 trails"] },
+  { key: "sept_contact_mode", label: "Sept Contact Mode", required: false, type: "string", aliases: ["CONTACT_MODE", "sept contact mode"] },
+  { key: "sept_trail_recorded_by", label: "Sept Trail Recorded By", required: false, type: "string", aliases: ["NON_CC_TRAIL_RECORDED_BY", "sept trail recorded by"] },
+  { key: "oct_trails", label: "Oct Trails", required: false, type: "string", aliases: ["OCT  2026 Trails", "oct trails", "oct  2026 trails"] },
+  { key: "oct_contact_mode", label: "Oct Contact Mode", required: false, type: "string", aliases: ["CONTACT_MODE_1", "oct contact mode"] },
+  { key: "oct_trail_recorded_by", label: "Oct Trail Recorded By", required: false, type: "string", aliases: ["NON_CC_TRAIL_RECORDED_BY_1", "oct trail recorded by"] },
+  { key: "contactability_status", label: "Contactability Status", required: false, type: "string", aliases: ["Contactability Status", "contactability_status"] },
+  { key: "dispo_status", label: "Disposition Status", required: false, type: "string", aliases: ["Status", "dispo_status", "disposition status"] },
+  { key: "dispo_code", label: "Dispo Code", required: false, type: "string", aliases: ["Dispo Code", "dispo code", "dispo_code"] },
+  { key: "sub_dispo_code", label: "Sub Dispo Code", required: false, type: "string", aliases: ["Sub Dispo Code", "sub dispo code", "sub_dispo_code"] },
+  { key: "mode_of_contact", label: "Mode of Contact", required: false, type: "string", aliases: ["Mode of Contact", "mode of contact", "mode_of_contact"] },
+  { key: "caller_fb", label: "Caller Feedback", required: false, type: "string", aliases: ["Caller FB", "caller fb", "caller feedback"] },
+  { key: "agency_tl_manager_fb", label: "Agency Manager Feedback", required: false, type: "string", aliases: ["Agency TL/Manager FB", "agency tl/manager fb", "agency manager feedback"] },
+  { key: "detailed_fb", label: "Detailed Feedback", required: false, type: "string", aliases: ["Detailed FB", "detailed fb", "detailed feedback"] },
+  { key: "reason_for_default_1", label: "Reason for Default 1", required: false, type: "string", aliases: ["Reason for default", "reason for default 1"] },
+  { key: "reason_for_default_2", label: "Reason for Default 2", required: false, type: "string", aliases: ["Reason for default_1", "reason for default 2"] },
+  { key: "reason_for_default_3", label: "Reason for Default 3", required: false, type: "string", aliases: ["Reason for default_2", "reason for default 3"] }
 ];
 
 
@@ -171,6 +289,10 @@ export default function ImportsPage() {
   // Final execution state
   const [commitLoading, setCommitLoading] = useState(false);
   const [commitProgress, setCommitProgress] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [totalToProcess, setTotalToProcess] = useState(0);
+  const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
+  const [totalChunkCount, setTotalChunkCount] = useState(0);
   const [importSummary, setImportSummary] = useState<ImportSummary | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -214,22 +336,28 @@ export default function ImportsPage() {
         setExcelHeaders(headers);
         setExcelRows(rows);
 
-        // Auto Map Columns logic
+        // Get all unique keys (headers + row object keys for duplicate resolution e.g. CONTACT_MODE_1)
+        const rowKeys = rows.length > 0 ? Object.keys(rows[0]) : [];
+        const allSearchableHeaders = Array.from(new Set([...rowKeys, ...headers]));
+
+        // Auto Map Columns logic (2-Pass: exact case-sensitive trimmed alias match, then case-insensitive normalized match)
         const initialMappings: Record<string, string> = {};
         TARGET_FIELDS.forEach(field => {
-          // Find standard match or matching alias
-          const match = headers.find(h => {
-            const cleanH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
-            return field.aliases.some(alias => {
-              const cleanAlias = alias.toLowerCase().replace(/[^a-z0-9]/g, "");
-              return cleanH === cleanAlias;
+          // Pass 1: exact case-sensitive trimmed match
+          let match = allSearchableHeaders.find(h =>
+            field.aliases.some(alias => h.trim() === alias.trim())
+          );
+          // Pass 2: normalized case-insensitive alphanumeric match
+          if (!match) {
+            match = allSearchableHeaders.find(h => {
+              const cleanH = h.toLowerCase().replace(/[^a-z0-9]/g, "");
+              return field.aliases.some(alias => {
+                const cleanAlias = alias.toLowerCase().replace(/[^a-z0-9]/g, "");
+                return cleanH === cleanAlias;
+              });
             });
-          });
-          if (match) {
-            initialMappings[field.key] = match;
-          } else {
-            initialMappings[field.key] = "";
           }
+          initialMappings[field.key] = match || "";
         });
 
         setMappings(initialMappings);
@@ -285,10 +413,15 @@ export default function ImportsPage() {
 
           if (field.type === "number") {
             if (typeof val === 'string') {
-              const cleanVal = val.replace(/,/g, '');
-              item[field.key] = cleanVal ? Number(cleanVal) : 0;
+              const cleanVal = val.replace(/,/g, '').trim();
+              if (cleanVal === "" || cleanVal === "-" || cleanVal.toUpperCase() === "N/A") {
+                item[field.key] = 0;
+              } else {
+                const num = Number(cleanVal);
+                item[field.key] = isNaN(num) ? 0 : num;
+              }
             } else {
-              item[field.key] = val !== undefined && val !== null ? Number(val) : 0;
+              item[field.key] = val !== undefined && val !== null && !isNaN(Number(val)) ? Number(val) : 0;
             }
           } else {
             item[field.key] = val !== undefined && val !== null ? String(val).trim() : "";
@@ -299,9 +432,14 @@ export default function ImportsPage() {
 
       let currentBatchId = "";
       let aggregatedSummary: ImportSummary | null = null;
-      const CHUNK_SIZE = 1000;
+      const CHUNK_SIZE = 350;
       const totalChunks = Math.ceil(formattedRows.length / CHUNK_SIZE);
       let chunksCompleted = 0;
+
+      setTotalToProcess(formattedRows.length);
+      setTotalChunkCount(totalChunks);
+      setProcessedCount(0);
+      setCurrentChunkIndex(0);
 
       for (let i = 0; i < formattedRows.length; i += CHUNK_SIZE) {
         const chunk = formattedRows.slice(i, i + CHUNK_SIZE);
@@ -309,6 +447,8 @@ export default function ImportsPage() {
         currentBatchId = result.batchId;
 
         chunksCompleted++;
+        setCurrentChunkIndex(chunksCompleted);
+        setProcessedCount(Math.min(i + chunk.length, formattedRows.length));
         setCommitProgress(Math.round((chunksCompleted / totalChunks) * 100));
 
         if (!aggregatedSummary) {
@@ -428,7 +568,7 @@ export default function ImportsPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,.csv"
                 className="hidden"
                 onChange={handleFileChange}
               />
@@ -436,18 +576,23 @@ export default function ImportsPage() {
                 <div className="space-y-2 select-none">
                   <Loader2 className="w-8 h-8 animate-spin text-accent-custom mx-auto" />
                   <p className="text-sm font-semibold text-ink">Analyzing workbook parameters...</p>
-                  <p className="text-xs text-ink-3">Structuring columns sheets data...</p>
+                  <p className="text-xs text-ink-3">Structuring columns and auto-mapping headers...</p>
                 </div>
               ) : (
                 <div className="space-y-2 select-none">
                   <Upload className="w-10 h-10 text-ink-3 mx-auto" />
                   <h3 className="text-base font-semibold text-ink">Select Allocation Sheet</h3>
                   <p className="text-xs text-ink-2 max-w-sm mx-auto">
-                    Drag and drop your active allocation Excel sheet here, or click to browse. Supports `.xlsx` and `.xls` templates.
+                    Drag and drop your active allocation sheet here, or click to browse. Supports `.xlsx`, `.xls`, and `.csv` files.
                   </p>
-                  <span className="inline-block px-3 py-1 bg-bg-warm border border-border-custom rounded-md text-[10.5px] text-ink-2 font-mono mt-2">
-                    114 target fields supported
-                  </span>
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                    <span className="inline-block px-3 py-1 bg-bg-warm border border-border-custom rounded-md text-[10.5px] text-ink-2 font-mono">
+                      216 target fields supported (TCL Retail Portfolio)
+                    </span>
+                    <span className="inline-block px-2.5 py-1 bg-accent-soft border border-accent-ink/20 text-accent-ink rounded-md text-[10.5px] font-medium">
+                      Tip: For 15K+ dumps, saving as CSV parses 4x faster
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -616,7 +761,7 @@ export default function ImportsPage() {
                   setImportSummary(null);
                   setStep(1);
                 }}
-                className="h-9 px-6 bg-ink hover:bg-black text-surface text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
+                className="h-9 px-6 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold rounded-lg shadow-sm transition-all cursor-pointer"
               >
                 Upload another sheet
               </button>
@@ -626,17 +771,19 @@ export default function ImportsPage() {
 
         {/* ==================== MODAL: PROGRESS OVERLAY ==================== */}
         {commitLoading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-fade-in">
             <div className="bg-surface border border-border-strong rounded-2xl w-full max-w-sm p-6 shadow-2xl relative text-center space-y-4">
               <Loader2 className="w-8 h-8 animate-spin text-accent-custom mx-auto" />
               <div>
-                <h3 className="text-base font-semibold text-ink">Saving Data...</h3>
-                <p className="text-xs text-ink-3 mt-1">Please do not close or refresh this page. Your records are being securely inserted into the database.</p>
+                <h3 className="text-base font-semibold text-ink">Saving Portfolio Contracts...</h3>
+                <p className="text-xs text-ink-3 mt-1">Please keep this page open. Records are being committed across 8 relational tables in resilient 350-row chunks.</p>
               </div>
 
               <div className="space-y-1.5 pt-2">
-                <div className="flex justify-between text-[11px] font-semibold text-ink uppercase tracking-wider">
-                  <span>Progress</span>
+                <div className="flex justify-between items-baseline text-[11px] font-semibold text-ink uppercase tracking-wider">
+                  <span>
+                    {processedCount.toLocaleString()} / {totalToProcess.toLocaleString()}
+                  </span>
                   <span className="font-mono text-accent-custom text-sm">{commitProgress}%</span>
                 </div>
                 <div className="w-full h-2 bg-bg-warm rounded-full overflow-hidden border border-border-custom/50">
@@ -644,6 +791,9 @@ export default function ImportsPage() {
                     className="h-full bg-accent-custom transition-all duration-300 ease-out"
                     style={{ width: `${commitProgress}%` }}
                   />
+                </div>
+                <div className="text-[10px] text-ink-3 font-mono pt-1 text-right">
+                  Batch {currentChunkIndex} of {totalChunkCount}
                 </div>
               </div>
             </div>

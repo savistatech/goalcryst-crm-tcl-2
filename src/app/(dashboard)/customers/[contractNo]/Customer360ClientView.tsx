@@ -23,7 +23,10 @@ import {
   Car,
   AlertTriangle,
   AlertCircle,
-  Shield
+  Shield,
+  Building,
+  TrendingUp,
+  UserCheck
 } from "lucide-react";
 
 interface ClientViewProps {
@@ -36,7 +39,7 @@ interface ClientViewProps {
 
 export default function Customer360ClientView({ initialData, permissions, mainDispositions, subDispositions, waiverReasons }: ClientViewProps) {
   const [data, setData] = useState<Customer360Data>(initialData);
-  const [activeTab, setActiveTab] = useState<"overview" | "contacts" | "financials" | "assets" | "legal" | "timeline">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "contacts" | "financials" | "assets" | "legal" | "agency" | "bureau" | "timeline">("overview");
 
   // Call outcome modal states
   const [isDispoOpen, setIsDispoOpen] = useState(false);
@@ -263,7 +266,9 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
     { id: "financials", label: "Exposures & Waivers", icon: DollarSign },
     { id: "assets", label: "Asset & Collateral", icon: Car },
     { id: "legal", label: "Legal litigation", icon: Scale },
-    { id: "timeline", label: "timeline & feeds", icon: FileText }
+    { id: "agency", label: "Agency & Hierarchy", icon: Building },
+    { id: "bureau", label: "Bureau & CIBIL", icon: Shield },
+    { id: "timeline", label: "Timeline & Feeds", icon: FileText }
   ] as const;
 
   return (
@@ -795,7 +800,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 {permissions.can_raise_waiver && (
                   <button
                     onClick={() => setIsWaiverOpen(true)}
-                    className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-ink hover:bg-black text-surface text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold shadow-sm transition-all cursor-pointer"
                   >
                     <PlusCircle className="w-3.5 h-3.5" />
                     <span>Raise new request</span>
@@ -1191,7 +1196,149 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
           </div>
         )}
 
-        {/* ==================== 6. TIMELINE & LOGS TAB ==================== */}
+        {/* ==================== 6. AGENCY & HIERARCHY TAB ==================== */}
+        {activeTab === "agency" && (
+          <div className="space-y-6">
+            <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-base font-semibold text-ink font-serif">Agency Allocations & Operations Hierarchy</h3>
+                  <p className="text-xs text-ink-2 mt-0.5">Recovery vendor tracking, monthly allocation tags, and management reporting lines.</p>
+                </div>
+              </div>
+
+              {/* Management Chain Grid */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Management Hierarchy</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Collection Manager (CM)</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.cm_name || "-"}</strong>
+                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.cm_code || "-"}</span>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Cluster Manager (CCM)</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.ccm_name || "-"}</strong>
+                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.ccm_code || "-"}</span>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Regional Manager (RCM)</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.rcm_name || "-"}</strong>
+                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.rcm_code || "-"}</span>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">National Manager (NCM)</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.ncm_name || "-"}</strong>
+                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.ncm_code || "-"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Vendor Allocation */}
+              <div className="space-y-3 pt-4 border-t border-border-custom">
+                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Agency Allocations & Vendor Tagging</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Current Month Agency</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.oct_month_agency || "-"}</strong>
+                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.oct_agency_code || "-"} ({data.agency?.oct_allocation_type || "-"})</span>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Previous Month Agency</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.sept_month_agency || "-"}</strong>
+                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.sept_agency_code || "-"} ({data.agency?.sept_allocation_type || "-"})</span>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Final Tagging</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.final_allocation_tagging || "-"}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Changes Status (SS)</span>
+                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.changes_ss || "-"}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Agent & Field Ops Slots */}
+              <div className="space-y-3 pt-4 border-t border-border-custom">
+                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Field Executive & Calling Agent</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Agent Name</span>
+                    <strong className="text-ink block mt-0.5">{data.agency?.agent_name || "-"}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Agent ID</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.agency?.agent_id || "-"}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Agent Mobile</span>
+                    <strong className="text-ink block mt-0.5 font-mono">{data.agency?.agent_mobile_no || "-"}</strong>
+                  </div>
+                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">CRE Name</span>
+                    <strong className="text-ink block mt-0.5">{data.agency?.cre_name || "-"}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== 7. BUREAU & CIBIL TAB ==================== */}
+        {activeTab === "bureau" && (
+          <div className="space-y-6">
+            <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
+              <div>
+                <h3 className="text-base font-semibold text-ink font-serif">Credit Bureau Intelligence & Risk Scores</h3>
+                <p className="text-xs text-ink-2 mt-0.5">Credit report scores, bureau contact traces, and delinquency flags.</p>
+              </div>
+
+              {/* Score Badges */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="border border-border-custom p-4 rounded-xl text-center bg-bg-warm/15">
+                  <span className="text-[10px] text-ink-3 uppercase font-semibold block">Credit Score</span>
+                  <strong className="text-2xl font-bold font-mono text-ink block mt-1">{data.bureau?.credit_score || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-center bg-accent-soft/20">
+                  <span className="text-[10px] text-accent-ink uppercase font-semibold block">CIBIL Score</span>
+                  <strong className="text-2xl font-bold font-mono text-accent-custom block mt-1">{data.bureau?.cibil_score || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-4 rounded-xl text-center bg-bg-warm/15">
+                  <span className="text-[10px] text-ink-3 uppercase font-semibold block">Sourcing CIBIL Score</span>
+                  <strong className="text-2xl font-bold font-mono text-ink block mt-1">{data.bureau?.sourcing_cibil_score || "-"}</strong>
+                </div>
+              </div>
+
+              {/* Bureau Contact & Trace Details */}
+              <div className="space-y-3 pt-4 border-t border-border-custom">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Bureau Profile Addresses & Data Feeds</h4>
+                  {data.bureau?.del_vs_new_contact && (
+                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-bg-warm border border-border-custom text-ink-2">
+                      Trace: {data.bureau.del_vs_new_contact}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { label: "Bureau Details 1", val: data.bureau?.bureau_details_1 },
+                    { label: "Bureau Details 2", val: data.bureau?.bureau_details_2 },
+                    { label: "Bureau Details 3", val: data.bureau?.bureau_details_3 },
+                    { label: "Bureau Details 4", val: data.bureau?.bureau_details_4 },
+                  ].map((item, idx) => (
+                    <div key={idx} className="border border-border-custom p-3.5 rounded-xl bg-bg-warm/5">
+                      <span className="text-[10.5px] uppercase font-semibold text-ink-3 block">{item.label}</span>
+                      <p className="text-[13px] text-ink font-mono mt-1 leading-relaxed break-words">{item.val || "No records reported"}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== 8. TIMELINE & LOGS TAB ==================== */}
         {activeTab === "timeline" && (
           <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
             <div className="flex justify-between items-center">
@@ -1202,7 +1349,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
               {permissions.can_add_disposition && (
                 <button
                   onClick={() => setIsDispoOpen(true)}
-                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-ink hover:bg-black text-surface text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold shadow-sm transition-all cursor-pointer"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   <span>Log new call</span>
@@ -1368,7 +1515,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <button
                   type="submit"
                   disabled={dispoSubmitting}
-                  className="h-9 px-4 bg-ink hover:bg-black text-surface text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
+                  className="h-9 px-4 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
                 >
                   {dispoSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Save Disposition</span>
@@ -1472,7 +1619,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <button
                   type="submit"
                   disabled={waiverSubmitting || !waiverAmount}
-                  className="h-9 px-4 bg-ink hover:bg-black text-surface text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
+                  className="h-9 px-4 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
                 >
                   {waiverSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Submit Request</span>

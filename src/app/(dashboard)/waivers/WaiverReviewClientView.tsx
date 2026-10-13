@@ -165,7 +165,7 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
                   </button>
                   <button
                     onClick={() => handleOpenReview(row, "Approved")}
-                    className="flex-1 flex items-center justify-center gap-1.5 h-8.5 rounded-lg bg-ink hover:bg-black text-[12.5px] font-semibold text-surface transition-all shadow-sm cursor-pointer"
+                    className="flex-1 flex items-center justify-center gap-1.5 h-8.5 rounded-lg bg-ink hover:opacity-90 active:scale-[0.99] text-[12.5px] font-semibold text-surface transition-all shadow-sm cursor-pointer"
                   >
                     <CheckCircle className="w-3.5 h-3.5 text-good" />
                     <span>Approve</span>
@@ -224,7 +224,7 @@ export default function WaiverReviewClientView({ initialWaivers }: ClientViewPro
                   disabled={submitting}
                   className={`h-9 px-5 text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-75 ${
                     reviewStatus === "Approved"
-                      ? "bg-ink hover:bg-black text-surface"
+                      ? "bg-ink hover:opacity-90 active:scale-[0.99] text-surface"
                       : "bg-bad hover:bg-bad-bg/85 text-surface"
                   }`}
                 >

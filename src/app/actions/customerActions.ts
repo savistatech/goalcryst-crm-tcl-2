@@ -9,6 +9,9 @@ export interface Customer360Data {
   assets: any;
   financials: any;
   legal: any;
+  agency?: any;
+  bureau?: any;
+  trails?: any;
   dispositions: any[];
   waivers: any[];
 }
@@ -39,30 +42,51 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .from("contract_contacts")
     .select("*")
     .eq("contract_no", contractNo)
-    .single();
+    .maybeSingle();
 
   // 3. Fetch associated assets
   const { data: assets } = await supabase
     .from("contract_assets")
     .select("*")
     .eq("contract_no", contractNo)
-    .single();
+    .maybeSingle();
 
   // 4. Fetch associated financials
   const { data: financials } = await supabase
     .from("contract_financials")
     .select("*")
     .eq("contract_no", contractNo)
-    .single();
+    .maybeSingle();
 
   // 5. Fetch associated legal records
   const { data: legal } = await supabase
     .from("contract_legal")
     .select("*")
     .eq("contract_no", contractNo)
-    .single();
+    .maybeSingle();
 
-  // 6. Fetch dispositions call history ordered newest first
+  // 6. Fetch associated agency hierarchy
+  const { data: agency } = await supabase
+    .from("contract_agency_hierarchy")
+    .select("*")
+    .eq("contract_no", contractNo)
+    .maybeSingle();
+
+  // 7. Fetch associated bureau scores
+  const { data: bureau } = await supabase
+    .from("contract_bureau_scores")
+    .select("*")
+    .eq("contract_no", contractNo)
+    .maybeSingle();
+
+  // 8. Fetch associated call trails
+  const { data: trails } = await supabase
+    .from("contract_trails")
+    .select("*")
+    .eq("contract_no", contractNo)
+    .maybeSingle();
+
+  // 9. Fetch dispositions call history ordered newest first
   const { data: dispositions } = await supabase
     .from("dispositions")
     .select(`
@@ -74,7 +98,7 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .eq("contract_no", contractNo)
     .order("created_at", { ascending: false });
 
-  // 7. Fetch waiver requests
+  // 10. Fetch waiver requests
   const { data: waivers } = await supabase
     .from("waiver_requests")
     .select(`
@@ -86,8 +110,7 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     .eq("contract_no", contractNo)
     .order("created_at", { ascending: false });
 
-  // 8. Log a compliance audit access record
-  // Fetch active user session to bind audit logs
+  // 11. Log a compliance audit access record
   const user = await getActiveUser();
   if (user) {
     await supabase.from("audit_logs").insert({
@@ -105,6 +128,9 @@ export async function getCustomer360Details(contractNo: string): Promise<Custome
     assets: assets || {},
     financials: financials || {},
     legal: legal || {},
+    agency: agency || {},
+    bureau: bureau || {},
+    trails: trails || {},
     dispositions: dispositions || [],
     waivers: waivers || []
   };

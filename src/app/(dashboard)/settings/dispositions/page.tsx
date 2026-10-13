@@ -453,7 +453,7 @@ export default function DispositionsSetupPage() {
 
               <div className="flex justify-end gap-2 pt-4 border-t border-border-custom">
                 <button type="button" onClick={() => setIsSubModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-ink-3 hover:text-ink">Cancel</button>
-                <button type="submit" disabled={submitting} className="px-4 py-2 bg-ink hover:bg-black text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
+                <button type="submit" disabled={submitting} className="px-4 py-2 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Save Configuration
                 </button>
               </div>
@@ -557,7 +557,7 @@ export default function DispositionsSetupPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={updatingSub} className="px-4 py-2 bg-ink hover:bg-black text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
+                <button type="submit" disabled={updatingSub} className="px-4 py-2 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
                   {updatingSub && <Loader2 className="w-4 h-4 animate-spin" />} Save Changes
                 </button>
               </div>
@@ -586,7 +586,7 @@ export default function DispositionsSetupPage() {
 
               <div className="flex justify-end gap-2 pt-4 border-t border-border-custom">
                 <button type="button" onClick={() => setIsMainModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-ink-3 hover:text-ink">Cancel</button>
-                <button type="submit" disabled={submittingMain} className="px-4 py-2 bg-ink hover:bg-black text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
+                <button type="submit" disabled={submittingMain} className="px-4 py-2 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
                   {submittingMain && <Loader2 className="w-4 h-4 animate-spin" />} Save
                 </button>
               </div>
@@ -624,7 +624,7 @@ export default function DispositionsSetupPage() {
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={updatingMain} className="px-4 py-2 bg-ink hover:bg-black text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
+                <button type="submit" disabled={updatingMain} className="px-4 py-2 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2">
                   {updatingMain && <Loader2 className="w-4 h-4 animate-spin" />} Save Changes
                 </button>
               </div>

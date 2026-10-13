@@ -22,22 +22,28 @@ export default function LoginPage() {
 
     const usernameTrim = username.trim().toLowerCase();
 
-    const { data: email, error: lookupError } = await supabase.rpc("get_auth_email_by_username", {
-      input_username: usernameTrim,
-    });
+    let targetEmail = usernameTrim;
+    if (!usernameTrim.includes("@")) {
+      const { data: lookedUpEmail, error: lookupError } = await supabase.rpc("get_auth_email_by_username", {
+        input_username: usernameTrim,
+      });
 
-    if (lookupError || !email) {
-      setError("Invalid username or password.");
-      setLoading(false);
-      return;
+      if (lookupError || !lookedUpEmail) {
+        console.error("Username lookup failed:", lookupError);
+        setError("Invalid username or password.");
+        setLoading(false);
+        return;
+      }
+      targetEmail = lookedUpEmail;
     }
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
+      email: targetEmail,
       password: password,
     });
 
     if (authError) {
+      console.error("Authentication failed:", authError);
       setError("Invalid username or password.");
       setLoading(false);
       return;
@@ -56,7 +62,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-bg text-ink relative flex flex-col items-center justify-center p-6 font-sans">
       {/* Noise filter overlay */}
-      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.02] mix-blend-multiply bg-[url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E')]" />
+      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.025] mix-blend-overlay bg-[url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E')]" />
 
       <div className="w-full max-w-md space-y-6">
         {/* Brand header */}
@@ -132,7 +138,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-10 bg-ink hover:bg-black text-surface text-sm font-semibold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full h-10 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-sm font-semibold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

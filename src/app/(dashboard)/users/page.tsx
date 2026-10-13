@@ -1049,7 +1049,7 @@ export default function UsersPage() {
                   <button
                     type="submit"
                     disabled={isResetting}
-                    className="h-10 px-6 rounded-xl bg-ink text-white hover:bg-black text-[13px] font-semibold shadow-sm flex items-center gap-2 disabled:opacity-50 cursor-pointer transition-all"
+                    className="h-10 px-6 rounded-xl bg-ink text-surface hover:opacity-90 active:scale-[0.99] text-[13px] font-semibold shadow-sm flex items-center gap-2 disabled:opacity-50 cursor-pointer transition-all"
                   >
                     {isResetting && <Loader2 className="w-4 h-4 animate-spin" />}
                     <span>Reset Password</span>

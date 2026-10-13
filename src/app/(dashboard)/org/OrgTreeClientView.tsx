@@ -196,7 +196,7 @@ function AssignModal({
           <button
             onClick={handleSave}
             disabled={submitting}
-            className="h-9 px-5 rounded-lg bg-ink hover:bg-black text-surface text-xs font-semibold shadow-sm flex items-center gap-1.5 disabled:opacity-70 cursor-pointer"
+            className="h-9 px-5 rounded-lg bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold shadow-sm flex items-center gap-1.5 disabled:opacity-70 cursor-pointer"
           >
             {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             <span>Save</span>

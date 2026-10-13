@@ -60,7 +60,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
           </Link>
           <Link
             href="/imports"
-            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-ink text-surface text-[13.5px] font-medium hover:bg-black transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-ink text-surface text-[13.5px] font-medium hover:opacity-90 active:scale-[0.99] transition-all shadow-sm cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Bulk Import</span>

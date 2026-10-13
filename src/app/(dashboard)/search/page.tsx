@@ -91,7 +91,7 @@ export default function SearchPage() {
               <button
                 type="submit"
                 disabled={loading || query.trim().length < 2}
-                className="h-9 px-4 bg-ink hover:bg-black text-surface text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-9 px-4 bg-ink hover:opacity-90 active:scale-[0.99] text-surface text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

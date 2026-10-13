@@ -30,7 +30,7 @@ export async function searchContracts(query: string): Promise<SearchResult[]> {
       branch,
       bom_dpd
     `)
-    .or(`contract_no.ilike.%${cleanQuery}%,customer_name.ilike.%${cleanQuery}%`);
+    .or(`contract_no.ilike.%${cleanQuery}%,customer_name.ilike.%${cleanQuery}%,cif.ilike.%${cleanQuery}%`);
 
   if (detailsError) {
     console.error("Error searching contracts by details:", detailsError);
