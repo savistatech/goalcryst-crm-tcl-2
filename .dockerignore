@@ -1,9 +1,34 @@
+# Docker & Git
 Dockerfile
+compose*.yaml
+docker-compose*.yml
 .dockerignore
-node_modules
-npm-debug.log
-README.md
-.next
 .git
+.gitignore
+
+# Dependencies & Build Output
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+
+# Environment & Secrets (never copy into image layers)
 .env
 .env.*
+
+# Local Supabase & Data Files
+supabase
+*.xlsx
+*.csv
+*.dump
+*.sql
+
+# Logs & Documentation
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+pnpm-lock.yaml
+*.md

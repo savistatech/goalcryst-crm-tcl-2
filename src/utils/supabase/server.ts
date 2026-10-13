@@ -9,7 +9,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: {
-        name: "sb-goalcryst-auth"
+        name: "sb-goalcryst-tcl2-auth"
       },
       cookies: {
         get(name: string) {

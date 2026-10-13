@@ -6,10 +6,15 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '500mb',
       allowedOrigins: [
+        'tcl.goalcryst.co.in',
+        'tcl.goalcryst.co.in.',
+        'tcl-api.goalcryst.co.in',
+        'tcl-api.goalcryst.co.in.',
         'goalcryst.co.in',
         'goalcryst.co.in.',
-        'api.goalcryst.co.in',
-        'api.goalcryst.co.in.'
+        '*.goalcryst.co.in',
+        'localhost:3001',
+        '127.0.0.1:3001'
       ]
     },
   },

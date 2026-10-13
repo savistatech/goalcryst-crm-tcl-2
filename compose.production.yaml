@@ -1,0 +1,45 @@
+name: tcl2
+
+services:
+  goalcryst-crm-tcl-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?NEXT_PUBLIC_SUPABASE_ANON_KEY is required}
+    image: goalcryst-crm-tcl-2:latest
+    container_name: goalcryst-crm-tcl-2
+    ports:
+      # Bound to localhost for Nginx reverse-proxy routing (tcl.goalcryst.co.in -> 127.0.0.1:3001).
+      # Existing TCL-1 port 3000 (goalcryst.co.in) remains completely untouched.
+      - "127.0.0.1:3001:3000"
+    env_file:
+      - /apps/tcl-2/.env.production
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    restart: unless-stopped
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - supabase-tcl2_default
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+networks:
+  # Isolated Docker network exclusively for TCL-2 and its dedicated Supabase stack.
+  # Never connects to or modifies TCL-1's `supabase_default` network.
+  supabase-tcl2_default:
+    external: true
