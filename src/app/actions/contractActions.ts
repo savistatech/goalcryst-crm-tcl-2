@@ -9,7 +9,7 @@ export interface AdminContractRow {
   product: string;
   branch: string;
   bom_dpd: number;
-  bucket?: string;
+  bom_bucket?: string;
   bkt_tagging?: string;
   finone_scheme_name?: string;
   cif?: string;
@@ -54,7 +54,7 @@ export async function getAllContracts(
       product,
       branch,
       bom_dpd,
-      bucket,
+      bom_bucket,
       bkt_tagging,
       finone_scheme_name,
       cif,

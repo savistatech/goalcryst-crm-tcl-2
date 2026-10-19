@@ -49,7 +49,7 @@ export async function searchContracts(query: string): Promise<SearchResult[]> {
         bom_dpd
       )
     `)
-    .or(`mobile_1.like.%${cleanQuery}%,mobile_no.like.%${cleanQuery}%,primary_mobile.like.%${cleanQuery}%,primary_mobile_1.like.%${cleanQuery}%,primary_mobile_2.like.%${cleanQuery}%,mobile_no_2.like.%${cleanQuery}%,latest_contact_no.like.%${cleanQuery}%,ref_mobile_1.like.%${cleanQuery}%,ref_mobile_2.like.%${cleanQuery}%`);
+    .or(`mobile_1.like.%${cleanQuery}%,primary_mobile_1.like.%${cleanQuery}%,primary_mobile_2.like.%${cleanQuery}%,ref_mobile_1.like.%${cleanQuery}%,ref_mobile_2.like.%${cleanQuery}%`);
 
   if (phoneError) {
     console.error("Error searching contracts by phone:", phoneError);

@@ -1140,6 +1140,7 @@ CREATE TABLE IF NOT EXISTS public.contract_trails (
   contract_no TEXT REFERENCES public.contracts(contract_no) ON DELETE CASCADE PRIMARY KEY,
   sept_trails TEXT,
   sept_contact_mode TEXT,
+  contact_mode TEXT,
   sept_trail_recorded_by TEXT,
   oct_trails TEXT,
   oct_contact_mode TEXT,

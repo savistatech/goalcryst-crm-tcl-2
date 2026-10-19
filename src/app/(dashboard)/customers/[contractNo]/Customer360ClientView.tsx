@@ -266,7 +266,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
     { id: "financials", label: "Exposures & Waivers", icon: DollarSign },
     { id: "assets", label: "Asset & Collateral", icon: Car },
     { id: "legal", label: "Legal litigation", icon: Scale },
-    { id: "agency", label: "Agency & Hierarchy", icon: Building },
+    { id: "agency", label: "Account Owner", icon: Building },
     { id: "bureau", label: "Bureau & CIBIL", icon: Shield },
     { id: "timeline", label: "Timeline & Feeds", icon: FileText }
   ] as const;
@@ -281,7 +281,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
               CONTRACT NO: {data.contract.contract_no}
             </span>
             <span className="text-xs text-ink-3">·</span>
-            <span className="text-xs text-ink-3">{data.contract.branch} Branch ({data.contract.region})</span>
+            <span className="text-xs text-ink-3">{data.contract.branch} Branch</span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
             {data.contract.customer_name}
@@ -403,7 +403,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <div>
                       <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold block">Primary Mobile 1</span>
                       <strong className="text-[15px] font-mono text-ink mt-1 block">
-                        {data.contacts.mobile_1 || data.contacts.primary_mobile}
+                        {data.contacts.mobile_1}
                       </strong>
                     </div>
                     <span className="p-2 bg-good-bg rounded-lg text-good">
@@ -415,7 +415,7 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <div>
                       <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold block">Alternate Mobile</span>
                       <strong className="text-[15px] font-mono text-ink mt-1 block">
-                        {data.contacts.mobile_no || data.contacts.mobile_no_2}
+                        {data.contacts.primary_mobile_1 || data.contacts.primary_mobile_2}
                       </strong>
                     </div>
                     <span className="p-2 bg-bg-warm rounded-lg text-ink-2">
@@ -491,36 +491,12 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <strong className="text-ink block mt-0.5">{data.contract.product || "-"}</strong>
                 </div>
                 <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Product Detail</span>
-                  <strong className="text-ink block mt-0.5">{data.contract.product_detail || "-"}</strong>
-                </div>
-                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                   <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Branch</span>
                   <strong className="text-ink block mt-0.5">{data.contract.branch || "-"}</strong>
                 </div>
                 <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Area</span>
-                  <strong className="text-ink block mt-0.5">{data.contract.area || "-"}</strong>
-                </div>
-                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                   <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">State</span>
                   <strong className="text-ink block mt-0.5">{data.contract.state || "-"}</strong>
-                </div>
-                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Region</span>
-                  <strong className="text-ink block mt-0.5">{data.contract.region || "-"}</strong>
-                </div>
-                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Secured Category</span>
-                  <strong className="text-ink block mt-0.5">{data.contract.secured_category || "-"}</strong>
-                </div>
-                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Secured Product Flag</span>
-                  <strong className="text-ink block mt-0.5 font-mono">{data.contract.secured_product_flag || "-"}</strong>
-                </div>
-                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Allocation Category</span>
-                  <strong className="text-ink block mt-0.5">{data.contract.allocation_category || "-"}</strong>
                 </div>
                 <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                   <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Allocation DPD Category</span>
@@ -533,10 +509,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                   <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">MOB</span>
                   <strong className="text-ink block mt-0.5 font-mono">{data.contract.mob !== undefined ? data.contract.mob : "-"}</strong>
-                </div>
-                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Bucket</span>
-                  <strong className="text-ink block mt-0.5">{data.contract.bucket || "-"}</strong>
                 </div>
                 <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                   <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">BOM Bucket</span>
@@ -558,20 +530,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 </div>
                 <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 2 - Mobile No</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.mobile_no}</strong>
-                  </div>
-                  <Phone className="w-4 h-4 text-accent-custom" />
-                </div>
-                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 3 - Primary Mobile</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.primary_mobile}</strong>
-                  </div>
-                  <Phone className="w-4 h-4 text-accent-custom" />
-                </div>
-                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
-                  <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 3 - Primary Mobile 1</span>
                     <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.primary_mobile_1}</strong>
                   </div>
@@ -581,20 +539,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <div>
                     <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 4 - Primary Mobile 2</span>
                     <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.primary_mobile_2}</strong>
-                  </div>
-                  <Phone className="w-4 h-4 text-accent-custom" />
-                </div>
-                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 5 - Mobile No</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.mobile_no_2}</strong>
-                  </div>
-                  <Phone className="w-4 h-4 text-accent-custom" />
-                </div>
-                <div className="border border-border-custom p-3 rounded-xl text-[13px] bg-surface flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-ink-3 uppercase font-semibold block">Contact 6 - Latest Contact No</span>
-                    <strong className="text-sm font-mono text-ink mt-0.5 block">{data.contacts.latest_contact_no}</strong>
                   </div>
                   <Phone className="w-4 h-4 text-accent-custom" />
                 </div>
@@ -650,14 +594,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.permanent_address || "-"}</p>
                 </div>
                 <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
-                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 2 - Master Primary Address</span>
-                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.master_primary_address || "-"}</p>
-                </div>
-                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
-                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 3 - Permanent Address</span>
-                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.permanent_address_2 || "-"}</p>
-                </div>
-                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
                   <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 3 - Office Address</span>
                   <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.office_address || "-"}</p>
                 </div>
@@ -668,10 +604,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
                   <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 5 - Secondary Address</span>
                   <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.secondary_address || "-"}</p>
-                </div>
-                <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
-                  <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 6 - Office Address</span>
-                  <p className="text-ink mt-1 leading-relaxed font-medium">{data.contacts.office_address_2 || "-"}</p>
                 </div>
                 <div className="border border-border-custom p-4 rounded-xl text-[13px] bg-surface">
                   <span className="text-ink-3 font-semibold text-[10px] uppercase tracking-wide block">Address 7 - Additional Address</span>
@@ -765,29 +697,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                     <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Current ODC</span>
                     <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.current_odc)}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Settlement & Waiver Details */}
-              <div className="space-y-3 pt-4 border-t border-border-custom">
-                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider font-sans">Settlement & Waiver Targets</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">OTS Amount</span>
-                    <strong className="text-good block mt-0.5 font-mono">{formatMoney(data.financials.ots_amount)}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">POS Waiver Amount</span>
-                    <strong className="text-good block mt-0.5 font-mono">{formatMoney(data.financials.pos_waiver_amount)}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">POS Waiver Percent</span>
-                    <strong className="text-good block mt-0.5 font-mono">
-                      {data.financials.pos_waiver_percent !== undefined && data.financials.pos_waiver_percent !== null
-                        ? `${data.financials.pos_waiver_percent}%`
-                        : "-"}
-                    </strong>
                   </div>
                 </div>
               </div>
@@ -1156,10 +1065,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Termination Status/SA</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.termination_status_sa || "-"}</strong>
-                  </div>
-                  <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN/PRN Status</span>
                     <strong className="text-ink block mt-0.5">{data.legal.lrn_prn_status || "-"}</strong>
                   </div>
@@ -1199,87 +1104,11 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
         {/* ==================== 6. AGENCY & HIERARCHY TAB ==================== */}
         {activeTab === "agency" && (
           <div className="space-y-6">
-            <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-base font-semibold text-ink font-serif">Agency Allocations & Operations Hierarchy</h3>
-                  <p className="text-xs text-ink-2 mt-0.5">Recovery vendor tracking, monthly allocation tags, and management reporting lines.</p>
-                </div>
-              </div>
-
-              {/* Management Chain Grid */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Management Hierarchy</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Collection Manager (CM)</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.cm_name || "-"}</strong>
-                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.cm_code || "-"}</span>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Cluster Manager (CCM)</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.ccm_name || "-"}</strong>
-                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.ccm_code || "-"}</span>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Regional Manager (RCM)</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.rcm_name || "-"}</strong>
-                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.rcm_code || "-"}</span>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">National Manager (NCM)</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.ncm_name || "-"}</strong>
-                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.ncm_code || "-"}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Monthly Vendor Allocation */}
-              <div className="space-y-3 pt-4 border-t border-border-custom">
-                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Agency Allocations & Vendor Tagging</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Current Month Agency</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.oct_month_agency || "-"}</strong>
-                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.oct_agency_code || "-"} ({data.agency?.oct_allocation_type || "-"})</span>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Previous Month Agency</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.sept_month_agency || "-"}</strong>
-                    <span className="text-ink-3 text-xs font-mono">Code: {data.agency?.sept_agency_code || "-"} ({data.agency?.sept_allocation_type || "-"})</span>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Final Tagging</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.final_allocation_tagging || "-"}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Changes Status (SS)</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.agency?.changes_ss || "-"}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Agent & Field Ops Slots */}
-              <div className="space-y-3 pt-4 border-t border-border-custom">
-                <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Field Executive & Calling Agent</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Agent Name</span>
-                    <strong className="text-ink block mt-0.5">{data.agency?.agent_name || "-"}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Agent ID</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{data.agency?.agent_id || "-"}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Agent Mobile</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{data.agency?.agent_mobile_no || "-"}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">CRE Name</span>
-                    <strong className="text-ink block mt-0.5">{data.agency?.cre_name || "-"}</strong>
-                  </div>
-                </div>
+            <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-4">
+              <h3 className="text-base font-semibold text-ink font-serif">Account Owner</h3>
+              <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5 max-w-sm">
+                <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">CM Name</span>
+                <strong className="text-ink block mt-0.5 font-medium">{data.agency?.cm_name || "-"}</strong>
               </div>
             </div>
           </div>
@@ -1314,11 +1143,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
               <div className="space-y-3 pt-4 border-t border-border-custom">
                 <div className="flex justify-between items-center">
                   <h4 className="text-xs font-semibold text-accent-custom uppercase tracking-wider">Bureau Profile Addresses & Data Feeds</h4>
-                  {data.bureau?.del_vs_new_contact && (
-                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-bg-warm border border-border-custom text-ink-2">
-                      Trace: {data.bureau.del_vs_new_contact}
-                    </span>
-                  )}
                 </div>
                 <div className="space-y-3">
                   {[
