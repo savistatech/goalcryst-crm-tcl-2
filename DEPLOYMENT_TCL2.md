@@ -15,7 +15,7 @@ graph TD
         TCL1_Kong --> TCL1_DB[("supabase-db (Port 54322)")]
     end
 
-    subgraph TCL2["TCL-2 Isolated 216-Field Stack (/apps/tcl-2)"]
+    subgraph TCL2["TCL-2 Isolated 125-Field Stack (/apps/tcl-2)"]
         Nginx -->|"tcl.goalcryst.co.in -> 127.0.0.1:3001"| TCL2_App["goalcryst-crm-tcl-2"]
         Nginx -->|"tcl-api.goalcryst.co.in -> 127.0.0.1:8011"| TCL2_Kong["supabase-tcl2-kong"]
         TCL2_App -->|"http://supabase-tcl2-kong:8000"| TCL2_Kong
@@ -25,7 +25,7 @@ graph TD
 
 ### Side-by-Side Comparison Matrix
 
-| Resource | TCL-1 (Existing — DO NOT TOUCH) | TCL-2 (New 216-Field Stack) |
+| Resource | TCL-1 (Existing — DO NOT TOUCH) | TCL-2 (New 125-Field Stack) |
 | :--- | :--- | :--- |
 | **Frontend Domain** | `https://goalcryst.co.in` | `https://tcl.goalcryst.co.in` |
 | **Supabase API Domain** | `https://api.goalcryst.co.in` | `https://tcl-api.goalcryst.co.in` |
@@ -98,12 +98,25 @@ cd /apps/tcl-2/supabase-tcl2
 docker compose -p supabase-tcl2 up -d
 ```
 
-### Step 3.4: Apply Complete 216-Field TCL-2 Schema (`supabase/tcl2-production-init.sql`)
-Once `supabase-tcl2-db` is healthy, apply the consolidated schema (containing all base tables, RLS policies, RPCs, and the 216-field contract tables `contract_agency_hierarchy`, `contract_bureau_scores`, `contract_trails`):
+### Step 3.4: Apply the Clean 125-Field TCL-2 Schema (`supabase/migrations/20261020000000_tcl2_baseline.sql`)
+Once `supabase-tcl2-db` is healthy, apply the single baseline schema (base tables, auth sync, RLS policies, RPCs, and the six 125-field contract tables `contracts`, `contract_contacts`, `contract_assets`, `contract_financials`, `contract_legal`, `contract_bureau_scores`). **Fresh installs only.**
 
 ```bash
-docker exec -i supabase-tcl2-db psql -U postgres -d postgres < /apps/tcl-2/app/supabase/tcl2-production-init.sql
+docker exec -i supabase-tcl2-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /apps/tcl-2/app/supabase/migrations/20261020000000_tcl2_baseline.sql
 ```
+
+### Step 3.5: Moving an EXISTING TCL-2 database to the clean schema (one time, destructive)
+`supabase/upgrade/tcl2-reset-to-clean-125.sql` deletes all imported contract data and everything linked to a contract (call dispositions, waiver requests, import history), then rebuilds the contract tables with the 125 template fields. Users, permissions, disposition setup, waiver reasons and audit logs are kept. It runs in one transaction.
+
+```bash
+# 1. Backup first
+docker exec supabase-tcl2-db pg_dump -U postgres -d postgres -Fc > /apps/tcl-2/backups/pre-clean-$(date +%Y%m%d-%H%M).dump
+# 2. Apply
+docker exec -i supabase-tcl2-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /apps/tcl-2/app/supabase/upgrade/tcl2-reset-to-clean-125.sql
+# 3. Refresh the API schema cache
+docker restart supabase-tcl2-rest
+```
+Apply it **before** starting the new app build, then re-import the data file from the Bulk Import page.
 
 ---
 

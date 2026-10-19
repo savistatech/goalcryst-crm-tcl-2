@@ -130,7 +130,7 @@ export interface ImportRow {
   arbitration_ndoh?: string;
   ep_group_stage?: string;
 
-  // Agency Hierarchy fields
+  // Collection manager
   cm_name?: string;
 
   // Bureau Scores fields
@@ -142,7 +142,7 @@ export interface ImportRow {
   bureau_details_3?: string;
   bureau_details_4?: string;
 
-  // Call Trails & Disposition fields
+  // Contact mode
   contact_mode?: string;
 }
 
@@ -227,7 +227,7 @@ const parseStrOrNull = (val?: any): string | null => {
 
 // ---------------------------------------------------------------------------
 // commitImportBatch
-// Upserts a chunk of rows into all 8 contract tables.
+// Upserts a chunk of rows into the 6 contract tables.
 // ---------------------------------------------------------------------------
 export async function commitImportBatch(
   filename: string,
@@ -333,15 +333,13 @@ export async function commitImportBatch(
       existingCount += count || 0;
     }
 
-    // 5. Build upsert payloads across 8 tables
+    // 5. Build upsert payloads across 6 tables
     const contracts = validRows.map(row => ({
       contract_no: row.contract_no,
       customer_name: row.customer_name,
       product: row.product || "TW",
       branch: row.branch || "Unknown",
       state: row.state || "Unknown",
-      area: row.branch || "Unknown",
-      region: "Unknown",
       writeoff_flg: parseStrOrNull(row.writeoff_flg),
       bom_dpd: parseNum(row.bom_dpd),
       bkt_tagging: parseStrOrNull(row.bkt_tagging),
@@ -349,6 +347,8 @@ export async function commitImportBatch(
       bom_bucket: parseStrOrNull(row.bom_bucket),
       finone_scheme_name: parseStrOrNull(row.finone_scheme_name),
       cif: parseStrOrNull(row.cif),
+      contact_mode: parseStrOrNull(row.contact_mode),
+      cm_name: parseStrOrNull(row.cm_name),
       allocation_dpd_category: parseStrOrNull(row.allocation_dpd_category),
       occupation_type: parseStrOrNull(row.occupation_type),
       organization_employer_name: parseStrOrNull(row.organization_employer_name),
@@ -409,7 +409,6 @@ export async function commitImportBatch(
     const financials = validRows.map(row => ({
       contract_no: row.contract_no,
       finance_amount: parseNum(row.finance_amount),
-      total_pos_outstanding: parseNum(row.pos),
       pos: parseNum(row.pos),
       emi_amount: parseNum(row.emi_amount),
       od_amount: parseNum(row.od_amount),
@@ -479,12 +478,6 @@ export async function commitImportBatch(
       updated_at: new Date().toISOString()
     }));
 
-    const agencyHierarchy = validRows.map(row => ({
-      contract_no: row.contract_no,
-      cm_name: parseStrOrNull(row.cm_name),
-      updated_at: new Date().toISOString()
-    }));
-
     const bureauScores = validRows.map(row => ({
       contract_no: row.contract_no,
       credit_score: parseStrOrNull(row.credit_score),
@@ -497,36 +490,26 @@ export async function commitImportBatch(
       updated_at: new Date().toISOString()
     }));
 
-    const trails = validRows.map(row => ({
-      contract_no: row.contract_no,
-      contact_mode: parseStrOrNull(row.contact_mode),
-      updated_at: new Date().toISOString()
-    }));
-
-    // 6. Execute all upserts — contracts first (parent), then 7 child tables in parallel
+    // 6. Execute all upserts — contracts first (parent), then 5 child tables in parallel
     try {
       const { error: contractErr } = await supabase
         .from("contracts")
         .upsert(contracts, { onConflict: "contract_no" });
       if (contractErr) throw new Error("Contracts upsert failed: " + contractErr.message);
 
-      const [contactRes, assetRes, finRes, legalRes, agencyRes, bureauRes, trailRes] = await Promise.all([
+      const [contactRes, assetRes, finRes, legalRes, bureauRes] = await Promise.all([
         supabase.from("contract_contacts").upsert(contacts, { onConflict: "contract_no" }),
         supabase.from("contract_assets").upsert(assets, { onConflict: "contract_no" }),
         supabase.from("contract_financials").upsert(financials, { onConflict: "contract_no" }),
         supabase.from("contract_legal").upsert(legal, { onConflict: "contract_no" }),
-        supabase.from("contract_agency_hierarchy").upsert(agencyHierarchy, { onConflict: "contract_no" }),
         supabase.from("contract_bureau_scores").upsert(bureauScores, { onConflict: "contract_no" }),
-        supabase.from("contract_trails").upsert(trails, { onConflict: "contract_no" })
       ]);
 
       if (contactRes.error) throw new Error("Contacts upsert failed: " + contactRes.error.message);
       if (assetRes.error) throw new Error("Assets upsert failed: " + assetRes.error.message);
       if (finRes.error) throw new Error("Financials upsert failed: " + finRes.error.message);
       if (legalRes.error) throw new Error("Legal upsert failed: " + legalRes.error.message);
-      if (agencyRes.error) throw new Error("Agency Hierarchy upsert failed: " + agencyRes.error.message);
       if (bureauRes.error) throw new Error("Bureau Scores upsert failed: " + bureauRes.error.message);
-      if (trailRes.error) throw new Error("Trails upsert failed: " + trailRes.error.message);
 
       summary.imported += validRows.length;
       summary.updatedContracts += existingCount;

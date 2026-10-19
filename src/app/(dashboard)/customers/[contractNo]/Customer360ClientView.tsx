@@ -24,7 +24,6 @@ import {
   AlertTriangle,
   AlertCircle,
   Shield,
-  Building,
   TrendingUp,
   UserCheck
 } from "lucide-react";
@@ -39,7 +38,7 @@ interface ClientViewProps {
 
 export default function Customer360ClientView({ initialData, permissions, mainDispositions, subDispositions, waiverReasons }: ClientViewProps) {
   const [data, setData] = useState<Customer360Data>(initialData);
-  const [activeTab, setActiveTab] = useState<"overview" | "contacts" | "financials" | "assets" | "legal" | "agency" | "bureau" | "timeline">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "contacts" | "financials" | "assets" | "legal" | "bureau" | "timeline">("overview");
 
   // Call outcome modal states
   const [isDispoOpen, setIsDispoOpen] = useState(false);
@@ -266,7 +265,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
     { id: "financials", label: "Exposures & Waivers", icon: DollarSign },
     { id: "assets", label: "Asset & Collateral", icon: Car },
     { id: "legal", label: "Legal litigation", icon: Scale },
-    { id: "agency", label: "Account Owner", icon: Building },
     { id: "bureau", label: "Bureau & CIBIL", icon: Shield },
     { id: "timeline", label: "Timeline & Feeds", icon: FileText }
   ] as const;
@@ -388,10 +386,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <span className="text-ink-3 block">Current ODC Rate:</span>
                     <strong className="text-ink font-mono font-semibold block mt-0.5">{formatMoney(data.financials.current_odc)}</strong>
                   </div>
-                  <div className="border border-border-custom rounded-xl p-3.5 bg-surface text-[12.5px]">
-                    <span className="text-ink-3 block">Total Collectable:</span>
-                    <strong className="text-bad font-mono font-semibold block mt-0.5">{formatMoney(data.financials.total_amount_collectable)}</strong>
-                  </div>
                 </div>
               </div>
 
@@ -489,6 +483,14 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                 <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                   <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Product</span>
                   <strong className="text-ink block mt-0.5">{data.contract.product || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">CM Name</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.cm_name || "-"}</strong>
+                </div>
+                <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
+                  <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Contact Mode</span>
+                  <strong className="text-ink block mt-0.5">{data.contract.contact_mode || "-"}</strong>
                 </div>
                 <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                   <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Branch</span>
@@ -648,20 +650,8 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.finance_amount)}</strong>
                   </div>
                   <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Total POS Outstanding</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.total_pos_outstanding)}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                     <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Principal POS</span>
                     <strong className="text-accent-custom block mt-0.5 font-mono">{formatMoney(data.financials.pos)}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Sale Price</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.sale_price)}</strong>
-                  </div>
-                  <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
-                    <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Total Amount Collectable</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.financials.total_amount_collectable)}</strong>
                   </div>
                   <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5">
                     <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">Total Outstanding</span>
@@ -776,20 +766,12 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <strong className="text-ink block mt-0.5 font-medium">{data.assets.manufacturer || "-"}</strong>
                   </div>
                   <div>
-                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Manufacturer 2</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.assets.manufacturer_2 || "-"}</strong>
-                  </div>
-                  <div>
                     <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Asset Model</span>
                     <strong className="text-ink block mt-0.5 font-medium">{data.assets.asset_model || "-"}</strong>
                   </div>
                   <div>
                     <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Asset Variant</span>
                     <strong className="text-ink block mt-0.5 font-medium">{data.assets.asset_variant || "-"}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Category</span>
-                    <strong className="text-ink block mt-0.5 font-medium">{data.assets.asset_category || "-"}</strong>
                   </div>
                   <div>
                     <span className="text-ink-3 block text-[11px] font-semibold uppercase tracking-wide">Year of Mfg</span>
@@ -843,10 +825,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <strong className="text-bad block mt-0.5">{data.legal.legal_status || "-"}</strong>
                   </div>
                   <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Type of Case</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.type_of_case || "-"}</strong>
-                  </div>
-                  <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">Case No</span>
                     <strong className="text-ink block mt-0.5 font-mono">{data.legal.case_no || "-"}</strong>
                   </div>
@@ -885,18 +863,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <strong className="text-ink block mt-0.5">{data.legal.notice_sent_sec138 || "-"}</strong>
                   </div>
                   <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 138 Current Status</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.sec138_current_status || "-"}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Cheque No</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{data.legal.cheque_no || "-"}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Cheque Date</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.cheque_date)}</strong>
-                  </div>
-                  <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">Cheque Amount</span>
                     <strong className="text-ink block mt-0.5 font-mono">{formatMoney(data.legal.cheque_amount)}</strong>
                   </div>
@@ -910,10 +876,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <span className="text-xs uppercase tracking-wider font-semibold text-ink">Court Jurisdictions</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Court Name</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.court_name || "-"}</strong>
-                  </div>
                   <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">Court Location</span>
                     <strong className="text-ink block mt-0.5">{data.legal.court_location || "-"}</strong>
@@ -967,18 +929,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <strong className="text-ink block mt-0.5">{data.legal.hand_summons || "-"}</strong>
                   </div>
                   <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Hand Warrant 1</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.hand_warrant_1 || "-"}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Proclamation Orders</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.proclamation_orders || "-"}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Hand S/NBW/BW/PC</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.hand_s_nbw_bw_pc || "-"}</strong>
-                  </div>
-                  <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">Hand S/NBW/BW/PC Type</span>
                     <strong className="text-ink block mt-0.5">{data.legal.hand_s_nbw_bw_pc_type || "-"}</strong>
                   </div>
@@ -1003,14 +953,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                   <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 17 Orders</span>
                     <strong className="text-ink block mt-0.5">{data.legal.sec17_orders || "-"}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 17 Orders Date</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.sec17_orders_date)}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">Sec 17 Date</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.sec17_date)}</strong>
                   </div>
                   <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">Award Date</span>
@@ -1043,10 +985,6 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
                     <strong className="text-ink block mt-0.5">{data.legal.ep_advocate || "-"}</strong>
                   </div>
                   <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP LDOH</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.ep_ldoh)}</strong>
-                  </div>
-                  <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">EP NDOH</span>
                     <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.ep_ndoh)}</strong>
                   </div>
@@ -1061,54 +999,14 @@ export default function Customer360ClientView({ initialData, permissions, mainDi
               <div className="border border-border-custom p-4 rounded-xl space-y-3.5 bg-bg-warm/5">
                 <div className="flex items-center gap-2 pb-1 border-b border-border-custom">
                   <Shield className="w-4 h-4 text-accent-custom" />
-                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">Other Registries</span>
+                  <span className="text-xs uppercase tracking-wider font-semibold text-ink">LRN</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN/PRN Status</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.lrn_prn_status || "-"}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN/PRN Issue Date</span>
-                    <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.lrn_prn_issue_date)}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN Status</span>
-                    <strong className="text-ink block mt-0.5">{data.legal.lrn_status || "-"}</strong>
-                  </div>
                   <div>
                     <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN Date</span>
                     <strong className="text-ink block mt-0.5 font-mono">{formatDate(data.legal.lrn_date)}</strong>
                   </div>
-                  <div className="col-span-2 md:col-span-3">
-                    <span className="text-ink-3 block text-[11px] uppercase font-semibold">LRN/PRN Link</span>
-                    {data.legal.lrn_prn_link && data.legal.lrn_prn_link !== "-" ? (
-                      <a
-                        href={data.legal.lrn_prn_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent-custom hover:underline block mt-0.5 break-all font-mono text-xs"
-                      >
-                        {data.legal.lrn_prn_link}
-                      </a>
-                    ) : (
-                      <span className="text-ink-3 block mt-0.5 font-mono">-</span>
-                    )}
-                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ==================== 6. AGENCY & HIERARCHY TAB ==================== */}
-        {activeTab === "agency" && (
-          <div className="space-y-6">
-            <div className="bg-surface border border-border-custom rounded-2xl p-6 shadow-sm space-y-4">
-              <h3 className="text-base font-semibold text-ink font-serif">Account Owner</h3>
-              <div className="border border-border-custom p-3.5 rounded-xl text-[13px] bg-bg-warm/5 max-w-sm">
-                <span className="text-ink-3 font-semibold block text-[10.5px] uppercase tracking-wide">CM Name</span>
-                <strong className="text-ink block mt-0.5 font-medium">{data.agency?.cm_name || "-"}</strong>
               </div>
             </div>
           </div>
