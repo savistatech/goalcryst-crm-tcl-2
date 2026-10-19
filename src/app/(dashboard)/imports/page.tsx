@@ -224,15 +224,18 @@ export default function ImportsPage() {
           return;
         }
 
-        // Find which row contains the headers (look for 'Contract No' or 'Customer Name' in first 10 rows)
-        let headerRowIndex = 0;
-        for (let i = 0; i < Math.min(10, data.length); i++) {
-          const rowValues = data[i].map(h => String(h || "").toLowerCase().replace(/[^a-z0-9]/g, ""));
-          if (rowValues.includes("contractno") || rowValues.includes("customername")) {
-            headerRowIndex = i;
-            break;
-          }
+        // Find which row contains the headers. Prefer the row holding the Contract No column
+        // (the section banner row above it also repeats names like CUSTOMER_NAME).
+        const normalizeCell = (h: any) => String(h || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const scanRows = Math.min(10, data.length);
+        let headerRowIndex = -1;
+        for (let i = 0; i < scanRows && headerRowIndex < 0; i++) {
+          if (data[i].map(normalizeCell).includes("contractno")) headerRowIndex = i;
         }
+        for (let i = 0; i < scanRows && headerRowIndex < 0; i++) {
+          if (data[i].map(normalizeCell).includes("customername")) headerRowIndex = i;
+        }
+        if (headerRowIndex < 0) headerRowIndex = 0;
 
         const headers = data[headerRowIndex].map(h => String(h || "").trim()).filter(Boolean);
         const rows = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex, raw: false }) as any[];
