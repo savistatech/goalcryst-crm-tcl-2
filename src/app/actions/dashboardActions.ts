@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient, getActiveUser } from "@/utils/supabase/server";
+import { getVisibilityScope } from "@/utils/scope";
 
 
 export interface DashboardMetrics {
@@ -27,6 +28,8 @@ export interface DashboardMetrics {
   ptpAnalysis: { week: string; ptpCount: number; ptpValue: number; contactable: number }[];
   leaderboard: { rank: string; name: string; team: string; calls: number; ptp: string; achieved: string }[];
   recentCalls: { employee: string; customer: string; dispo: string; amt: string | null; date: string; time: string; type: string }[];
+  /** Whose activity the dashboard covers, e.g. "All employees" or "You + your team (4 members)". */
+  scopeLabel: string;
 }
 
 /**
@@ -34,8 +37,9 @@ export interface DashboardMetrics {
  */
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const supabase = await createClient();
+  const scope = await getVisibilityScope();
 
-  // Call the robust Postgres RPC to calculate everything natively
+  // Postgres RPC; it scopes call/PTP/leaderboard/user counts to the caller's team itself
   const { data: rawStats, error } = await supabase.rpc("get_global_dashboard_stats");
   
   if (error || !rawStats) {
@@ -44,7 +48,8 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
       totalContracts: 0, activeContracts: 0, totalUsers: 0, totalBatches: 0,
       totalDispositions: 0, contactableDispositions: 0, nonContactableDispositions: 0, ptpDispositions: 0,
       agreeToPayDispositions: 0, partPaidDispositions: 0, brokenPtpDispositions: 0, callbackDispositions: 0,
-      dispositionOutcomes: [], ptpAnalysis: [], leaderboard: [], recentCalls: []
+      dispositionOutcomes: [], ptpAnalysis: [], leaderboard: [], recentCalls: [],
+      scopeLabel: scope.scopeLabel
     };
   }
 
@@ -70,8 +75,8 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     achieved: a.ptpValue > 20000 ? "105%" : "82%"
   }));
 
-  // 7. Recent calls timeline feed (Fetch latest 5 attempts efficiently via limit)
-  const { data: recCallsList } = await supabase
+  // 7. Recent calls timeline feed (latest 5 within the caller's scope)
+  let recentQuery = supabase
     .from("dispositions")
     .select(`
       sub_disposition:sub_dispositions(name),
@@ -83,6 +88,10 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     `)
     .order("created_at", { ascending: false })
     .limit(5);
+  if (scope.employeeIds !== null) {
+    recentQuery = recentQuery.in("employee_id", scope.employeeIds);
+  }
+  const { data: recCallsList } = await recentQuery;
 
   const formatRelativeTime = (isoStr: string) => {
     const elapsed = Date.now() - new Date(isoStr).getTime();
@@ -134,7 +143,8 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     dispositionOutcomes,
     ptpAnalysis: stats.ptpAnalysis || [],
     leaderboard,
-    recentCalls: recentCalls.length > 0 ? recentCalls : []
+    recentCalls: recentCalls.length > 0 ? recentCalls : [],
+    scopeLabel: scope.scopeLabel
   };
 }
 

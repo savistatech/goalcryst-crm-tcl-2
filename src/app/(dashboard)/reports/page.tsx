@@ -50,7 +50,7 @@ export default function ReportsPage() {
       name: "All Dispositions Report",
       category: "operations",
       desc: "Complete log of all call attempts and dispositions.",
-      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
+      columns: ["Contract No", "Customer Name", "Mobile 1", "Primary Mobile 1", "Primary Mobile 2", "Reference Mobile 1", "Reference Mobile 2", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
       icon: Timer
     },
     {
@@ -58,7 +58,7 @@ export default function ReportsPage() {
       name: "PTP Report",
       category: "financial",
       desc: "Log of Promise to Pay commitments.",
-      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
+      columns: ["Contract No", "Customer Name", "Mobile 1", "Primary Mobile 1", "Primary Mobile 2", "Reference Mobile 1", "Reference Mobile 2", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
       icon: Coins
     },
     {
@@ -66,7 +66,7 @@ export default function ReportsPage() {
       name: "Agree To Pay Report",
       category: "financial",
       desc: "Log of Agree to Pay commitments.",
-      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
+      columns: ["Contract No", "Customer Name", "Mobile 1", "Primary Mobile 1", "Primary Mobile 2", "Reference Mobile 1", "Reference Mobile 2", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
       icon: CheckCircle
     },
     {
@@ -74,7 +74,7 @@ export default function ReportsPage() {
       name: "Broken PTP Report",
       category: "operations",
       desc: "Log of Broken Promise to Pay dispositions.",
-      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
+      columns: ["Contract No", "Customer Name", "Mobile 1", "Primary Mobile 1", "Primary Mobile 2", "Reference Mobile 1", "Reference Mobile 2", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
       icon: TrendingUp
     },
     {
@@ -82,7 +82,7 @@ export default function ReportsPage() {
       name: "Part Paid Report",
       category: "financial",
       desc: "Log of Part Paid dispositions.",
-      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
+      columns: ["Contract No", "Customer Name", "Mobile 1", "Primary Mobile 1", "Primary Mobile 2", "Reference Mobile 1", "Reference Mobile 2", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
       icon: FileSpreadsheet
     },
     {
@@ -90,7 +90,7 @@ export default function ReportsPage() {
       name: "Contactable Report",
       category: "operations",
       desc: "Log of Contactable dispositions.",
-      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
+      columns: ["Contract No", "Customer Name", "Mobile 1", "Primary Mobile 1", "Primary Mobile 2", "Reference Mobile 1", "Reference Mobile 2", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
       icon: Timer
     },
     {
@@ -98,7 +98,7 @@ export default function ReportsPage() {
       name: "Non-Contactable Report",
       category: "operations",
       desc: "Log of Non-Contactable dispositions.",
-      columns: ["Contract No", "Customer Name", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
+      columns: ["Contract No", "Customer Name", "Mobile 1", "Primary Mobile 1", "Primary Mobile 2", "Reference Mobile 1", "Reference Mobile 2", "Employee Name", "Date Logged", "Main Disposition", "Sub Disposition", "PTP/Paid Amount", "Remarks", "Principal POS"],
       icon: Timer
     }
   ];

@@ -47,7 +47,7 @@ export default function DashboardClientView({ metrics }: DashboardProps) {
             Dashboard
           </h1>
           <p className="text-[13.5px] text-ink-2 mt-1">
-            Overview of key system metrics.
+            Overview of key system metrics. Calls, follow-ups and users: <strong className="text-ink font-semibold">{metrics.scopeLabel}</strong>
           </p>
         </div>
         <div className="flex items-center gap-2.5">

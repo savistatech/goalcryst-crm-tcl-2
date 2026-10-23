@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient, getActiveUser } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
+import { getVisibilityScope, type VisibilityScope } from "@/utils/scope";
 
 export type ReportScope = {
   role: string;
@@ -9,85 +10,20 @@ export type ReportScope = {
   subordinateCount: number;
 };
 
-/**
- * Recursively walks the reporting_to tree downward from a given userId
- * and returns all subordinate profile IDs (not including the user themselves).
- */
-async function getSubordinateIds(userId: string): Promise<string[]> {
-  const supabase = await createClient();
-
-  // Fetch ALL profiles with their reporting_to in one query
-  const { data: allProfiles, error } = await supabase
-    .from("profiles")
-    .select("id, reporting_to")
-    .eq("is_active", true);
-
-  if (error || !allProfiles) return [];
-
-  // Build adjacency list: parent → children[]
-  const childrenMap = new Map<string, string[]>();
-  for (const p of allProfiles) {
-    if (p.reporting_to) {
-      const existing = childrenMap.get(p.reporting_to) || [];
-      existing.push(p.id);
-      childrenMap.set(p.reporting_to, existing);
-    }
-  }
-
-  // BFS/DFS to collect all descendants
-  const result: string[] = [];
-  const queue = [userId];
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const children = childrenMap.get(current) || [];
-    for (const childId of children) {
-      result.push(childId);
-      queue.push(childId);
-    }
-  }
-
-  return result;
+function toReportScope(scope: VisibilityScope): ReportScope {
+  return {
+    role: scope.role,
+    scopeLabel: scope.scopeLabel,
+    hasSubordinates: scope.employeeIds === null || scope.subordinateCount > 0,
+    subordinateCount: scope.subordinateCount,
+  };
 }
 
 /**
  * Resolves the current user's report scope — who they can see data for.
  */
 export async function getReportScope(): Promise<ReportScope> {
-  const supabase = await createClient();
-  const user = await getActiveUser();
-
-  if (!user) {
-    return { role: "Unknown", scopeLabel: "Unauthenticated", hasSubordinates: false, subordinateCount: 0 };
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const role = profile?.role || "Employee";
-
-  if (role === "Admin") {
-    return { role, scopeLabel: "All employees — Full portfolio access", hasSubordinates: true, subordinateCount: -1 };
-  }
-
-  const subIds = await getSubordinateIds(user.id);
-
-  const scopeLabels: Record<string, string> = {
-    "Branch Manager": "Your branch team + subordinates",
-    "Assistant Manager": "Your assigned teams + subordinates",
-    "Team Leader": "Your direct team members",
-    "Employee": "Your own dispositions only",
-  };
-
-  return {
-    role,
-    scopeLabel: scopeLabels[role] || "Your own dispositions only",
-    hasSubordinates: subIds.length > 0,
-    subordinateCount: subIds.length,
-  };
+  return toReportScope(await getVisibilityScope());
 }
 
 /**
@@ -100,35 +36,17 @@ export async function getScopedReportData(
   dateTo?: string
 ): Promise<{ data: any[]; scope: ReportScope }> {
   const supabase = await createClient();
-  const user = await getActiveUser();
+  const visibility = await getVisibilityScope();
+  const scope = toReportScope(visibility);
 
-  if (!user) {
-    return { data: [], scope: { role: "Unknown", scopeLabel: "Unauthenticated", hasSubordinates: false, subordinateCount: 0 } };
+  if (!visibility.userId) {
+    return { data: [], scope };
   }
 
-  // 1. Get user role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // Employee ids this user can see (null = everyone, for Admin)
+  const scopedEmployeeIds = visibility.employeeIds;
 
-  const role = profile?.role || "Employee";
-
-  // 2. Determine which employee_ids this user can see
-  let scopedEmployeeIds: string[] | null = null; // null = no filter (Admin)
-
-  if (role === "Admin") {
-    scopedEmployeeIds = null; // See everything
-  } else if (role === "Employee") {
-    scopedEmployeeIds = [user.id]; // Only self
-  } else {
-    // TL, AM, BM — self + subordinates
-    const subIds = await getSubordinateIds(user.id);
-    scopedEmployeeIds = [user.id, ...subIds];
-  }
-
-  // 3. Build query
+  // 1. Build query
   let query = supabase
     .from("dispositions")
     .select(`
@@ -141,12 +59,13 @@ export async function getScopedReportData(
       created_at,
       contracts!inner(
         customer_name,
-        contract_financials(pos, total_outstanding)
+        contract_financials(pos, total_outstanding),
+        contract_contacts(mobile_1, primary_mobile_1, primary_mobile_2, ref_mobile_1, ref_mobile_2)
       ),
       employee_profile:profiles!dispositions_employee_id_fkey(full_name, role)
     `);
 
-  // 4. Apply report type filter
+  // 2. Apply report type filter
   switch (reportType) {
     case "all_dispositions":
       break;
@@ -169,15 +88,15 @@ export async function getScopedReportData(
       query = query.eq("main_dispositions.name", "Non-Contactable");
       break;
     default:
-      return { data: [], scope: { role, scopeLabel: "Unknown report", hasSubordinates: false, subordinateCount: 0 } };
+      return { data: [], scope: { ...scope, scopeLabel: "Unknown report" } };
   }
 
-  // 5. Apply role scope filter
+  // 3. Apply role scope filter
   if (scopedEmployeeIds !== null) {
     query = query.in("employee_id", scopedEmployeeIds);
   }
 
-  // 6. Apply date range filters
+  // 4. Apply date range filters
   if (dateFrom) {
     query = query.gte("created_at", new Date(dateFrom).toISOString());
   }
@@ -188,7 +107,7 @@ export async function getScopedReportData(
     query = query.lte("created_at", endOfDay.toISOString());
   }
 
-  // 7. Order by latest first
+  // 5. Order by latest first
   query = query.order("created_at", { ascending: false });
 
   const { data, error } = await query;
@@ -198,25 +117,16 @@ export async function getScopedReportData(
     throw new Error("Failed to compile report data: " + error.message);
   }
 
-  // 8. Build scope info
-  const subIds = role !== "Admin" && role !== "Employee" ? await getSubordinateIds(user.id) : [];
-  const scope: ReportScope = {
-    role,
-    scopeLabel: role === "Admin"
-      ? "All employees — Full portfolio access"
-      : role === "Employee"
-        ? "Your own dispositions only"
-        : `Your team (${subIds.length} subordinate${subIds.length !== 1 ? "s" : ""})`,
-    hasSubordinates: role === "Admin" || role === "Employee" || subIds.length > 0,
-    subordinateCount: role === "Admin" ? -1 : subIds.length,
-  };
-
-  // 9. Transform to flat export rows
+  // 6. Transform to flat export rows
   const rows = (data || []).map((row: any) => {
     const contract = Array.isArray(row.contracts) ? row.contracts[0] : (row.contracts || {});
     const financials = Array.isArray(contract.contract_financials)
       ? contract.contract_financials[0]
       : (contract.contract_financials || {});
+    const contacts = Array.isArray(contract.contract_contacts)
+      ? contract.contract_contacts[0] || {}
+      : (contract.contract_contacts || {});
+    const phone = (v: any) => (v === null || v === undefined || v === "" ? "-" : String(v));
     const employeeRaw = row.employee_profile;
     const employee = Array.isArray(employeeRaw) ? employeeRaw[0] : (employeeRaw || {});
 
@@ -247,6 +157,11 @@ export async function getScopedReportData(
     return {
       "Contract No": row.contract_no,
       "Customer Name": contract.customer_name || "-",
+      "Mobile 1": phone(contacts.mobile_1),
+      "Primary Mobile 1": phone(contacts.primary_mobile_1),
+      "Primary Mobile 2": phone(contacts.primary_mobile_2),
+      "Reference Mobile 1": phone(contacts.ref_mobile_1),
+      "Reference Mobile 2": phone(contacts.ref_mobile_2),
       "Employee Name": employee.full_name || "System",
       "Employee Role": employee.role || "-",
       "Date Logged": row.created_at,

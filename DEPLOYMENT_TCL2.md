@@ -102,7 +102,11 @@ docker compose -p supabase-tcl2 up -d
 Once `supabase-tcl2-db` is healthy, apply the single baseline schema (base tables, auth sync, RLS policies, RPCs, and the six 125-field contract tables `contracts`, `contract_contacts`, `contract_assets`, `contract_financials`, `contract_legal`, `contract_bureau_scores`). **Fresh installs only.**
 
 ```bash
-docker exec -i supabase-tcl2-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /apps/tcl-2/app/supabase/migrations/20261020000000_tcl2_baseline.sql
+# Apply every file in supabase/migrations in name order (baseline first, then later changes)
+for f in /apps/tcl-2/app/supabase/migrations/*.sql; do
+  echo "Applying $f"
+  docker exec -i supabase-tcl2-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < "$f" || break
+done
 ```
 
 ### Step 3.5: Moving an EXISTING TCL-2 database to the clean schema (one time, destructive)
@@ -113,6 +117,8 @@ docker exec -i supabase-tcl2-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 
 docker exec supabase-tcl2-db pg_dump -U postgres -d postgres -Fc > /apps/tcl-2/backups/pre-clean-$(date +%Y%m%d-%H%M).dump
 # 2. Apply
 docker exec -i supabase-tcl2-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /apps/tcl-2/app/supabase/upgrade/tcl2-reset-to-clean-125.sql
+# 2b. Apply migrations newer than the baseline (team-scoped follow-ups/dashboard)
+docker exec -i supabase-tcl2-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < /apps/tcl-2/app/supabase/migrations/20261023000000_team_scoped_visibility.sql
 # 3. Refresh the API schema cache
 docker restart supabase-tcl2-rest
 ```

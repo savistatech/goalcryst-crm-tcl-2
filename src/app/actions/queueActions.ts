@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient, getActiveUser } from "@/utils/supabase/server";
+import { getVisibilityScope } from "@/utils/scope";
 
 export interface QueueItem {
   contract_no: string;
@@ -150,31 +151,56 @@ export async function getCallingQueue(): Promise<QueueSummary> {
   };
 }
 
-export interface PtpItem {
+export type FollowUpType = "Promise to Pay" | "Agree to Pay" | "Call Back";
+export type FollowUpStatus = "Due Today" | "Upcoming" | "Overdue" | "Done";
+
+export interface FollowUpItem {
   contract_no: string;
   customer_name: string;
-  ptp_date: string;
-  ptp_amount: number;
+  type: FollowUpType;
+  /** PTP/ATP: commitment date (YYYY-MM-DD). Call Back: callback date-time. */
+  due_date: string;
+  amount: number | null;
   total_outstanding: number;
   pos: number;
   primary_mobile: string;
   employee_name: string;
-  board_status: "Due Today" | "Upcoming" | "Broken" | "Kept";
+  board_status: FollowUpStatus;
   created_at: string;
 }
 
+export interface FollowUpList {
+  items: FollowUpItem[];
+  scopeLabel: string;
+}
+
+const FOLLOW_UP_TYPES: FollowUpType[] = ["Promise to Pay", "Agree to Pay", "Call Back"];
+const KEPT_OUTCOMES = new Set(["Part Paid", "Customer Claims Paid"]);
+
+/** Today's date as YYYY-MM-DD in India time, so "Due Today" doesn't depend on the server timezone. */
+function todayInIndia(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+}
+
 /**
- * Fetches all Promise-To-Pay (PTP) schedules ordered by payment commitment date.
+ * Fetches follow-ups (Promise to Pay, Agree to Pay, Call Back) the current user may see:
+ * Admin sees everyone's; anyone else sees their own plus their reporting tree's.
+ * Ordered by due date, earliest first.
  */
-export async function getPtpSchedules(): Promise<PtpItem[]> {
+export async function getFollowUps(): Promise<FollowUpList> {
   const supabase = await createClient();
+  const scope = await getVisibilityScope();
+  if (!scope.userId) return { items: [], scopeLabel: scope.scopeLabel };
 
-  // Resolve user session
-  const user = await getActiveUser();
-  if (!user) return [];
+  // Resolve the follow-up sub-disposition ids by name
+  const { data: subDispos } = await supabase
+    .from("sub_dispositions")
+    .select("id, name")
+    .in("name", FOLLOW_UP_TYPES);
+  const subIds = (subDispos || []).map((d: any) => d.id);
+  if (subIds.length === 0) return { items: [], scopeLabel: scope.scopeLabel };
 
-  // Query dispositions with PTP details
-    const { data: ptpList, error } = await supabase
+  let query = supabase
     .from("dispositions")
     .select(`
       contract_no,
@@ -190,76 +216,65 @@ export async function getPtpSchedules(): Promise<PtpItem[]> {
         )
       ),
       employee_profile:profiles(full_name),
-      sub_disposition:sub_dispositions!inner(name)
+      sub_disposition:sub_dispositions(name)
     `)
-    .eq("sub_dispositions.name", "Promise to Pay");
+    .in("sub_disposition_id", subIds);
 
-  if (error || !ptpList) {
-    console.error("Error fetching PTP schedules:", error);
-    return [];
+  if (scope.employeeIds !== null) {
+    query = query.in("employee_id", scope.employeeIds);
   }
 
-  return ptpList.map((row: any) => {
-    const contracts = row.contracts || {};
-    const primary_mobile = contracts.contract_contacts?.primary_mobile || "-";
-    const total_outstanding = Number(contracts.contract_financials?.total_outstanding || 0);
-    const pos = Number(contracts.contract_financials?.pos || 0);
+  const { data: rows, error } = await query;
 
-    const ptpDate = row.dynamic_data?.ptp_date || "";
-    const ptpAmt = row.dynamic_data?.ptp_amount || 0;
+  if (error || !rows) {
+    console.error("Error fetching follow-ups:", error);
+    return { items: [], scopeLabel: scope.scopeLabel };
+  }
 
-    // Calculate Board Status
-    const allDispositions = contracts.dispositions || [];
-    const ptpCreatedAt = new Date(row.created_at);
-    
-    let hasKept = false;
-    let hasBroken = false;
+  const today = todayInIndia();
 
-    for (const d of allDispositions) {
-      const dDate = new Date(d.created_at);
-      if (dDate > ptpCreatedAt) {
-        const subName = d.sub_disposition?.name;
-        if (subName === "Part Paid" || subName === "Customer Claims Paid") {
-          hasKept = true;
-        } else if (subName === "Broken PTP") {
-          hasBroken = true;
-        }
-      }
-    }
+  const items: FollowUpItem[] = rows.map((row: any) => {
+    const contract = (Array.isArray(row.contracts) ? row.contracts[0] : row.contracts) || {};
+    const contacts = Array.isArray(contract.contract_contacts) ? contract.contract_contacts[0] : contract.contract_contacts;
+    const financials = Array.isArray(contract.contract_financials) ? contract.contract_financials[0] : contract.contract_financials;
+    const type = (row.sub_disposition?.name || "Promise to Pay") as FollowUpType;
+    const isCallBack = type === "Call Back";
 
-    let board_status: "Due Today" | "Upcoming" | "Broken" | "Kept" = "Upcoming";
+    const due_date = String((isCallBack ? row.dynamic_data?.follow_up_date : row.dynamic_data?.ptp_date) || "");
+    const rawAmount = row.dynamic_data?.ptp_amount;
+    const amount = !isCallBack && rawAmount !== undefined && rawAmount !== null && rawAmount !== "" ? Number(rawAmount) : null;
 
-    if (hasKept) {
-      board_status = "Kept";
-    } else if (hasBroken) {
-      board_status = "Broken";
-    } else if (ptpDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    // Outcome of later calls on the same contract (by anyone)
+    const loggedAt = new Date(row.created_at).getTime();
+    const later = (contract.dispositions || []).filter((d: any) => new Date(d.created_at).getTime() > loggedAt);
+    const laterNames = later.map((d: any) => d.sub_disposition?.name);
 
-      const pDate = new Date(ptpDate);
-      pDate.setHours(0, 0, 0, 0);
-
-      if (pDate.getTime() === today.getTime()) {
-        board_status = "Due Today";
-      } else if (pDate.getTime() < today.getTime()) {
-        board_status = "Broken";
-      } else {
-        board_status = "Upcoming";
-      }
+    let board_status: FollowUpStatus;
+    if (isCallBack ? later.length > 0 : laterNames.some((n: string) => KEPT_OUTCOMES.has(n))) {
+      board_status = "Done";
+    } else if (!isCallBack && laterNames.includes("Broken PTP")) {
+      board_status = "Overdue";
+    } else {
+      const dueDay = due_date.slice(0, 10);
+      board_status = !dueDay || dueDay > today ? "Upcoming" : dueDay === today ? "Due Today" : "Overdue";
     }
 
     return {
       contract_no: row.contract_no,
-      customer_name: contracts.customer_name || "Unknown Customer",
-      ptp_date: ptpDate,
-      ptp_amount: Number(ptpAmt),
-      total_outstanding,
-      pos,
-      primary_mobile,
+      customer_name: contract.customer_name || "Unknown Customer",
+      type,
+      due_date,
+      amount,
+      total_outstanding: Number(financials?.total_outstanding || 0),
+      pos: Number(financials?.pos || 0),
+      primary_mobile: contacts?.primary_mobile || "-",
       employee_name: row.employee_profile?.full_name || "System",
       board_status,
-      created_at: row.created_at
+      created_at: row.created_at,
     };
   });
+
+  items.sort((a, b) => (a.due_date || "9999").localeCompare(b.due_date || "9999"));
+
+  return { items, scopeLabel: scope.scopeLabel };
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { getPtpSchedules } from "@/app/actions/queueActions";
+import { getFollowUps } from "@/app/actions/queueActions";
 import {
   CalendarRange,
   ArrowRight,
@@ -12,10 +12,11 @@ import {
 import PtpClientView from "./PtpClientView";
 
 export default async function PtpPage() {
-  const ptpSchedules = await getPtpSchedules();
+  const { items: followUps, scopeLabel } = await getFollowUps();
 
-  // Financial calculations
-  const totalPtpAmount = ptpSchedules.reduce((acc, row) => acc + row.ptp_amount, 0);
+  // Open = not yet completed; expected collection counts open PTP/ATP commitments only
+  const openFollowUps = followUps.filter(row => row.board_status !== "Done");
+  const totalPtpAmount = openFollowUps.reduce((acc, row) => acc + (row.amount || 0), 0);
 
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -32,13 +33,13 @@ export default async function PtpPage() {
         <div className="flex items-center gap-1.5 text-xs text-ink-3">
           <span className="font-brand">GoalCryst CRM</span>
           <span>·</span>
-          <span>PTP Commitments Tracker</span>
+          <span>Follow-ups Tracker</span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink mt-1 font-serif">
-          Promise to Pay (PTP) Follow-ups
+          Follow-ups
         </h1>
         <p className="text-[13px] text-ink-2 mt-1">
-          Monitor and track upcoming customer commitment dates and collection schedules.
+          Promise to Pay, Agree to Pay and Call Back follow-ups. Showing: <strong className="text-ink font-semibold">{scopeLabel}</strong>
         </p>
       </div>
 
@@ -47,11 +48,11 @@ export default async function PtpPage() {
         {/* Metric 1 */}
         <div className="bg-surface border border-border-custom p-4 rounded-2xl shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold">Active Commitments</span>
+            <span className="text-[10px] text-ink-3 uppercase tracking-wider font-semibold">Open Follow-ups</span>
             <div className="text-2xl font-bold font-mono text-ink mt-1">
-              {ptpSchedules.length}
+              {openFollowUps.length}
             </div>
-            <span className="text-[10px] text-ink-2 mt-1 block">Scheduled promises</span>
+            <span className="text-[10px] text-ink-2 mt-1 block">Not yet completed</span>
           </div>
           <span className="p-3 bg-bg-warm rounded-xl text-ink-2">
             <ClipboardList className="w-5 h-5" />
@@ -65,7 +66,7 @@ export default async function PtpPage() {
             <div className="text-2xl font-bold font-mono text-good mt-1">
               {formatMoney(totalPtpAmount)}
             </div>
-            <span className="text-[10px] text-ink-2 mt-1 block">PTP expected sum</span>
+            <span className="text-[10px] text-ink-2 mt-1 block">Open PTP / ATP commitments</span>
           </div>
           <span className="p-3 bg-good-bg rounded-xl text-good">
             <Coins className="w-5 h-5" />
@@ -99,7 +100,7 @@ export default async function PtpPage() {
       </div>
 
       {/* ===== CLIENT VIEW CONTROLS (BOARD & LIST) ===== */}
-      <PtpClientView ptpSchedules={ptpSchedules} />
+      <PtpClientView followUps={followUps} />
     </div>
   );
 }
